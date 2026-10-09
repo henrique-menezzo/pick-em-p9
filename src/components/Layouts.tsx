@@ -172,7 +172,6 @@ function LiveVideo({ bare }: { bare?: boolean }) {
     <div className={'v-video' + (open ? '' : ' min') + (bare ? ' bare' : '')}>
       {open && (
         <div className="vid" ref={ref}>
-          <Wordmark className="vid-mark" />
           <span className="vid-live"><i />Live</span>
           <div className="vid-ctl">
             <button aria-label={muted ? 'Unmute' : 'Mute'} onClick={() => setMuted(!muted)}><Icon name={muted ? 'mute' : 'volume'} size={16} /></button>

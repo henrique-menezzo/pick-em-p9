@@ -110,7 +110,12 @@ export function FocusBody({ race }: { race: Race }) {
         <CandidateRow race={race} side="D" advance />
       </div>
 
-      {line && <div className={'fb-hint' + (line.tone === 'ok' ? ' ok' : '')}>{line.text}</div>}
+      {line && (
+        <div className={'fb-hint' + (line.tone ? ' ' + line.tone : '')}>
+          {line.tone && <span className="vd-i" aria-hidden><Icon name={line.tone === 'ok' ? 'check' : 'x'} size={12} stroke={3} /></span>}
+          {line.text}
+        </div>
+      )}
       {live && <JustCalled />}
     </div>
   );

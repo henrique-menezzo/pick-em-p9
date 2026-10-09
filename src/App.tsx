@@ -301,7 +301,7 @@ export function Legend() {
       {live ? (
         <>
           <span><i style={{ background: 'linear-gradient(90deg, var(--R) 50%, var(--D) 50%)' }} />Right <b className="num">{a}</b></span>
-          <span><i className="faded" />Missed <b className="num">{b}</b></span>
+          <span><i className="lg-x"><Icon name="x" size={8} stroke={3.6} /></i>Missed <b className="num">{b}</b></span>
           <span><i style={{ background: 'var(--dot-pending)' }} />To call <b className="num">{open}</b></span>
         </>
       ) : (

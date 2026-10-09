@@ -915,3 +915,51 @@
 .p9 .dx-replay .tl .ticks { font-size: 12px; color: #8f8f8f; margin-top: 4px; }
 .p9 .dx-replay .tl .play { background: #2e2e2e; }
 .p9 .dx-replay .when .live-dot { display: none; }
+
+.vid-live, .vid-ctl { z-index: 2; }
+
+/* election night, the race: the winner named in words, your pick tagged, and one clear verdict */
+.p9 .dx-race .cand .tag { font-size: 12px; font-weight: 600; letter-spacing: 0; padding: 2px 8px; border-radius: 999px; background: #2e2e2e; color: #fafafa; }
+.p9 .dx-race .cand .tag.win { background: #fafafa; color: #151515; }
+.p9 .dx-race .cand .tag.miss { padding: 2px 8px; background: #2e2e2e; color: #8f8f8f; text-decoration: line-through; }
+.p9 .dx-race .fb-hint { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 16px; padding: 10px 12px; border-radius: 12px; background: #232323; font-size: 14px; font-weight: 600; color: #8f8f8f; }
+.p9 .dx-race .fb-hint.ok, .p9 .dx-race .fb-hint.miss { color: #fafafa; }
+.p9 .dx-race .fb-hint .vd-i { width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; flex: none; }
+.p9 .dx-race .fb-hint.ok .vd-i { background: #fafafa; color: #151515; }
+.p9 .dx-race .fb-hint.miss .vd-i { background: #5c5c5c; color: #fafafa; }
+.map .miss-x circle { fill: #fafafa; }
+.map .miss-x path { fill: none; stroke: #151515; stroke-width: 1.7; stroke-linecap: round; }
+
+/* election night, the squares as the answer sheet */
+.p9 .dx-cell { display: grid; place-items: center; color: #fff; }
+.p9 .dx-cell svg { width: 72%; height: 72%; }
+.p9 .dx-cell.right.w-R { background: var(--R); }
+.p9 .dx-cell.right.w-D { background: var(--D); }
+.p9 .dx-cell.miss.w-R, .p9 .dx-cell.open.w-R { background: color-mix(in srgb, var(--R) 28%, #1a1a1a); }
+.p9 .dx-cell.miss.w-D, .p9 .dx-cell.open.w-D { background: color-mix(in srgb, var(--D) 32%, #1a1a1a); }
+.p9 .dx-cell.miss { color: #fafafa; }
+.legend i.lg-x { display: inline-grid; place-items: center; width: 12px; height: 12px; border-radius: 50%; background: #fafafa; color: #151515; }
+/* the replay in the map's head, compact */
+.p9 .dx-mact.dx-tl .tl { gap: 12px; }
+.p9 .dx-mact.dx-tl .tl .play { width: 44px; height: 44px; background: #2e2e2e; }
+.p9 .dx-mact.dx-tl .tl .when { display: block; min-width: 0; }
+.p9 .dx-mact.dx-tl .tl .when small { display: none; }
+.p9 .dx-mact.dx-tl .tl .when .live-dot { display: none; }
+.p9 .dx-mact.dx-tl .tl input[type=range] { width: 180px; }
+.p9 .dx-mact.dx-tl .tl .ticks { font-size: 12px; color: #8f8f8f; }
+.p9 .dx-board .nb-line { width: 100%; text-align: start; padding: 8px 12px; margin-inline: -12px; width: calc(100% + 24px); border-radius: 12px; transition: background-color .15s; }
+@media (hover: hover) { .p9 .dx-board .nb-line:hover { background: #2e2e2e; } }
+.p9 .dx-board .nb-line .dx-board-l > span:first-child { color: #fafafa; }
+.p9 .dx-board .nb-line + .nb-line { margin-top: -10px; }
+/* the show a little lower on the night, so the answer sheet fits under the race */
+.p9 .dx-side.night > .dx-card.flat .vid { aspect-ratio: 2 / 1; }
+/* the night's column is tight: the race and the answer sheet a little more compact */
+.p9 .dx-side.night > .dx-card:not(.flat) { padding: 20px 24px; }
+.p9 .dx-side.night .dx-race .cand { min-height: 52px; padding-block: 4px; }
+.p9 .dx-side.night .dx-race .fb-hint { margin-top: 10px; padding: 8px 12px; }
+.p9 .dx-side.night .dx-board { gap: 12px !important; }
+.p9 .dx-mact.dx-tl .tl { flex-wrap: nowrap; }
+/* the show is plain black until there is a stream */
+.p9 .vid { background: #000; animation: none; }
+.p9 .dx-side.night > .dx-card.flat .vid { aspect-ratio: 2.2 / 1; }
+.p9 .dx-board .nb-line { padding-block: 6px; }

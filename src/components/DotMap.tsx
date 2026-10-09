@@ -290,6 +290,17 @@ export default function DotMap({ fit }: { fit?: boolean }) {
                 {st}
               </text>
             ))}
+            {/* on the night, a race you missed carries an ✕ under its initials: the faded colour alone
+                was read as a win */}
+            {live && ORDER.filter((st) => LABELS[st] && st !== lifted && /(^| )miss( |$)/.test(looks[st].cls)).map((st) => {
+              const k = sizeOf(st) / 11;
+              return (
+                <g key={'x' + st} className="miss-x" transform={`translate(${LABELS[st][0]} ${LABELS[st][1] + sizeOf(st) * 1.25}) scale(${k})`}>
+                  <circle r="6" />
+                  <path d="M-2.4 -2.4L2.4 2.4M2.4 -2.4L-2.4 2.4" />
+                </g>
+              );
+            })}
           </g>
           {lifted && (
             <Lift key={lifted} st={lifted} c={looks[lifted].c} light={looks[lifted].label} sel={lifted === curSt} af={/(^| )af( |$)/.test(looks[lifted].cls)}

@@ -154,8 +154,8 @@ function DxMap({ noSave }: { noSave?: boolean }) {
         <div className="dx-mname"><h1>The Midterms Pick Em</h1><button className="dx-help" aria-label="How to play" onClick={() => setTour(0)}><Icon name="help" size={20} stroke={1.44} /></button></div>
         <p className="dx-mlock num">{sc ? <><i className="sd live-dot" />Live · {sc.called} of {ALL.length} called</> : locked ? 'Picks are locked' : <>Lock in <b>{left}</b></>}</p>
       </header>
-      {/* on the night the replay has its own card under the race, so the map's head stays clear */}
-      {!live && <div className="dx-mact"><CatActions noSave={noSave} /></div>}
+      {/* on the night the replay sits where the picking actions were, out of the way of the cards */}
+      <div className={'dx-mact' + (live ? ' dx-tl' : '')}>{live ? <Foot /> : <CatActions noSave={noSave} />}</div>
       <MapBox />
       <div className="dx-mfoot"><Presented /><Legend /></div>
     </section>
@@ -189,8 +189,9 @@ function Side({ children, cls = '', noRace, partOnly, before, after, bare }: { c
     return (
       <aside className="e-panel dx-side night">
         <div className="dx-card flat"><LiveVideo bare /></div>
-        <div className="dx-card grow"><RaceCard className="inner e-nightrace dx-race" /></div>
-        <div className="dx-card dx-replay"><Foot /></div>
+        <div className="dx-card"><RaceCard className="inner e-nightrace dx-race" /></div>
+        {/* the squares again, now as the answer sheet: a check where you were right, an ✕ where not */}
+        <div className="dx-card grow"><Board8 row="frac" /></div>
       </aside>
     );
   }
@@ -661,6 +662,12 @@ function Board8({ head = 'none', row = 'frac', done = 'check', dot, title = true
             <Split R={p.R} D={p.D} n={p.n} thin />
           </button>
         );
+        // on the night the answer sheet is for the map on screen; the other two are one line each
+        if (live && k !== tab) return (
+          <button key={k} className="dx-board-row p8-row nb-line" onClick={() => setTab(k)}>
+            <span className="dx-board-l"><span>{TAB_LABEL[k]}</span><RowFig p={p} row={row} /></span>
+          </button>
+        );
         return (
           <div key={k} className={'dx-board-row p8-row' + (tab === k ? ' on' : '') + (full ? ' full' : '')}>
             {row === 'col' ? (
@@ -672,14 +679,17 @@ function Board8({ head = 'none', row = 'frac', done = 'check', dot, title = true
               {RACES[k].map((r, i) => {
                 const pk = picks[r.id];
                 let c: string = pk ?? 'open';
-                if (live) { const called = t >= RESULTS[r.id].call; c = !called ? 'wait' : !pk ? 'open' : pk === RESULTS[r.id].winner ? 'right' : 'miss'; }
+                if (live) { const called = t >= RESULTS[r.id].call; c = !called ? 'wait' : (!pk ? 'open' : pk === RESULTS[r.id].winner ? 'right' : 'miss') + ' w-' + RESULTS[r.id].winner; }
                 // a click works like a click on the map; hovering opens the race in a small card
                 return <button key={r.id} className={'dx-cell ' + c + (!live && pk && auto[r.id] ? ' af' : '') + (r.id === cur ? ' cur' : '') + (pop.at?.id === r.id ? ' pop' : '')}
                   aria-label={`${TAB_LABEL[k]}, ${r.stateName}, ${pk ? (pk === 'R' ? 'Republican' : 'Democrat') + (auto[r.id] ? `, autofilled from ${AUTO_NAME[auto[r.id]]}` : '') : 'open'}`}
                   style={{ ['--i' as string]: i }}
                   onClick={() => { if (live) { setTab(k); select(r.id); } else tap(r.id); }}
                   onPointerEnter={(e) => { if (e.pointerType !== 'mouse') return; pop.open(r.id, e.currentTarget); }}
-                  onPointerLeave={(e) => { if (e.pointerType !== 'mouse') return; pop.leave(); }} />;
+                  onPointerLeave={(e) => { if (e.pointerType !== 'mouse') return; pop.leave(); }}>
+                  {c.startsWith('right') && <Icon name="check" size={10} stroke={3.4} />}
+                  {c.startsWith('miss') && <Icon name="x" size={9} stroke={3.4} />}
+                </button>;
               })}
             </div>
             {row === 'bar' && <span className="p8-rowbar" aria-hidden><i style={{ width: pct(live ? p.right : p.done, p.n) + '%' }} /></span>}

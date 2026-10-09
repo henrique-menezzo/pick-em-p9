@@ -75,20 +75,23 @@ export function CandidateRow({ race, side, advance }: { race: Race; side: Side; 
     const called = now.status === 'called';
     const won = called && res.winner === side;
     const mine = pick === side;
+    // a check here read as "you got it" even on a race the reader had missed: the winner is named in
+    // words instead, and whether you were right is said once, under the candidates
     return (
       <button className={`cand ${side === 'R' ? 'r' : 'd'} ${won ? 'on' : called ? 'off' : ''}`} disabled>
         <Face side={side} />
         <span className="t">
           <span className="n">{name}</span>
           <span className="p">
-            {mine ? <span className={'tag' + (called && !won ? ' miss' : '')}>{called && !won ? '✕ Your pick' : 'Your pick'}</span> : PARTY[side]}
+            {won && <span className="tag win">Winner</span>}
+            {mine && <span className={'tag' + (called && !won ? ' miss' : '')}>Your pick</span>}
+            {!won && !mine && PARTY[side]}
           </span>
           {now.status !== 'polls' && (
             <span className="vbar"><i style={{ width: share + '%', background: side === 'R' ? 'var(--R)' : 'var(--D)' }} /></span>
           )}
         </span>
         {now.status !== 'polls' ? <span className="pct num">{share.toFixed(1)}%</span> : null}
-        {won && <span className="ck"><Icon name="check" size={12} stroke={2.6} /></span>}
       </button>
     );
   }
@@ -114,8 +117,10 @@ export function liveLine(race: Race, t: number, pick?: Side) {
   const now = statusAt(race.id, t);
   if (now.status === 'polls') return { text: `Polls close ${clock(res.close)}`, tone: '' };
   if (now.status === 'counting') return { text: `Counting · ${now.reporting}%`, tone: '' };
-  if (!pick) return { text: `Called ${clock(res.call)}`, tone: '' };
-  return pick === res.winner ? { text: `✓ Called ${clock(res.call)}`, tone: 'ok' } : { text: `✕ Called ${clock(res.call)}`, tone: 'miss' };
+  if (!pick) return { text: `Called ${clock(res.call)} · you did not pick this race`, tone: '' };
+  return pick === res.winner
+    ? { text: `You got it right · Called ${clock(res.call)}`, tone: 'ok' }
+    : { text: `You missed this one · Called ${clock(res.call)}`, tone: 'miss' };
 }
 
 /** True for a moment after Autofill fills, swaps or clears, long enough for its sweep to cross. */
