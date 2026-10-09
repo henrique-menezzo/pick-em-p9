@@ -1180,3 +1180,5 @@ html[data-tour-step="save"] .p9p.touring .p9p-panel { transform: none; opacity: 
 .p9.p9p .p9p-card .dx-cell { border-radius: 8px; }
 .p9.p9p .p9p-card .dx-cell::after { inset: -3px; }
 .p9.p9p .p9p-card .dx-cell svg { width: 50%; height: 50%; }
+/* phone: the picks panel with the same air as the tour's sheet: 24px at the sides, 20px on top */
+.p9p-panel { padding: 20px 24px calc(16px + env(safe-area-inset-bottom)); gap: 14px; }
