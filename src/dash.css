@@ -1241,3 +1241,17 @@ html[data-tour-step="save"] .p9p.touring .p9p-panel { transform: none; opacity: 
 .p9.p9p .p9p-card .dx-board { gap: 32px !important; }
 /* phone: the squares closer together (8px), 8 to a row so they keep about the same size (about 33px) */
 .p9.p9p .p9p-card .dx-board-cells { grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 8px; }
+
+/* phone: the candidates are cards again (Figma 440:11140): a raised fill on the panel says "tap me";
+   the chosen one takes its party's tint and the check */
+.p9p-cands .cand { background: var(--p9-pill); }
+.p9p-cands .cand.on.r { background: color-mix(in srgb, var(--R) 22%, var(--p9-pill)); }
+.p9p-cands .cand.on.d { background: color-mix(in srgb, var(--D) 26%, var(--p9-pill)); }
+.p9p-cands.night .cand { background: transparent; }
+.p9p-cands.night .cand.on { background: var(--p9-pill); }
+/* light: the map card's buttons white on its #f4f4f4 (grey on grey nearly vanished), the square's card white */
+:root[data-theme='light'] .p9 .dx-mact .btn { background: #ffffff; }
+@media (hover: hover) { :root[data-theme='light'] .p9 .dx-mact .btn:not(:disabled):hover { background: #eaeaea; } }
+:root[data-theme='light'] .sq-pop { background: #ffffff; }
+:root[data-theme='light'] .p9 .dx-mact.dx-tl .tl .play { background: #ffffff; }
+.p9 .dx-mfoot { justify-content: flex-end; }

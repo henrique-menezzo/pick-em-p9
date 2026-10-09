@@ -157,13 +157,15 @@ function DxMap({ noSave }: { noSave?: boolean }) {
   return (
     <section className="e-map dx-map">
       <header className="dx-mhead">
+        {/* as in the Figma frame (425:13606): the sponsor first, over the name */}
+        <Presented />
         <div className="dx-mname"><h1>The Midterms Pick Em</h1><button className="dx-help" aria-label="How to play" onClick={() => setTour(0)}><Icon name="help" size={20} stroke={1.44} /></button></div>
         <p className="dx-mlock num">{sc ? <><i className="sd live-dot" />Live · {sc.called} of {ALL.length} called</> : locked ? 'Picks are locked' : <>Lock in <b>{left}</b></>}</p>
       </header>
       {/* on the night the replay sits where the picking actions were, out of the way of the cards */}
       <div className={'dx-mact' + (live ? ' dx-tl' : '')}>{live ? <Foot /> : <CatActions noSave={noSave} />}</div>
       <MapBox />
-      <div className="dx-mfoot"><Presented /><Legend /></div>
+      <div className="dx-mfoot"><Legend /></div>
     </section>
   );
 }
