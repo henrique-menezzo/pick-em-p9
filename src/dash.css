@@ -1160,3 +1160,10 @@ body:has(.p9p) .tour.phone .tour-card { padding: 24px 24px calc(20px + env(safe-
   body:has(.p9p) .auth-logo { margin: 0 auto; }
   body:has(.p9p) .auth-text { margin-top: 48px; }
 }
+/* keyboard up on iOS: the backdrop covers the whole layout screen in the sheet's own colour (so no page
+   shows between the sheet and the keyboard), and only the sheet follows the visible part */
+@media (max-width: 760px) {
+  body:has(.p9p) .auth-back { top: 0; bottom: 0; height: auto; display: block; padding: 0; background: #151515; }
+  body:has(.p9p) .auth { margin-top: var(--vvt, 0px); height: var(--vvh, 100dvh); }
+}
+@media (max-width: 760px) { body:has(.p9p) .auth { box-shadow: none; } }
