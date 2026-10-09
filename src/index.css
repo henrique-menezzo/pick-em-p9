@@ -2454,3 +2454,6 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 }
 /* the edge around what the tour lights: white at a quarter, on the group so overlapping lines never add up */
 .tour-edge { opacity: .25; }
+/* a state with no race this chamber: the hub's no-data grey (#8f8f8f) under its hatch, label in white */
+:root { --map-nodata: #8f8f8f; }
+.map .st path.hatch { fill: url(#hatch-no-data); stroke: none; pointer-events: none; transition: none; }

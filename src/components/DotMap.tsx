@@ -37,7 +37,7 @@ const HOVER = Q2.get('hover') || '';
 const HELD = new Set((Q2.get('hov') || '').split(',').filter(Boolean));
 
 // three colours only, as in the hub's map: Safe R, Safe D and the empty state
-const COLOR = { R: 'var(--R)', D: 'var(--D)', open: 'var(--dot-open)', none: 'var(--dot-open)', pending: 'var(--dot-open)' };
+const COLOR = { R: 'var(--R)', D: 'var(--D)', open: 'var(--dot-open)', none: 'var(--map-nodata)', pending: 'var(--dot-open)' };
 
 // ---- one state: its shape, and its abbreviation on top -------------------------------------------
 /** The piece under the pointer, drawn again on top of the whole map: three copies of itself
@@ -90,6 +90,8 @@ const State = memo(function State({ st, cls, c, o, tapX, tapY, tapN }: { st: str
   return (
     <g className={'st ' + cls} data-st={st} style={{ ['--c' as string]: c, ['--d' as string]: DELAY[st] + 'ms', opacity: o }}>
       <path d={SHAPES[st]} />
+      {/* no race here: the hub's no-data look, grey under a diagonal hatch */}
+      {cls.startsWith('nr') && <path className="hatch" d={SHAPES[st]} />}
       {tapN ? <Splash st={st} x={tapX!} y={tapY!} c={c} n={tapN} /> : null}
     </g>
   );
@@ -249,6 +251,12 @@ export default function DotMap({ fit }: { fit?: boolean }) {
           onPointerLeave={onLeave}
           onPointerUp={onUp}
         >
+          <defs>
+            {/* the Election Hub's hatch-no-data, as they draw it */}
+            <pattern id="hatch-no-data" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(-45)">
+              <line x1="0" y1="0" x2="0" y2="7" stroke="#fafafa" strokeOpacity="0.26" strokeWidth="2.4" />
+            </pattern>
+          </defs>
           {ORDER.map((st) => (
             // `soc` = this state has a copy of itself raised above it, so what is left on the board
             // is the socket it came out of. Only then does it darken — a state that darkens with
