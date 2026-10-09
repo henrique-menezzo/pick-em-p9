@@ -309,6 +309,36 @@ export default function Onboarding({ ready = true }: { ready?: boolean }) {
                 on this rect, ever: a transform on a masked element drags the mask's contents with
                 it, and the hole ends up that far from the thing it is meant to be cut around */}
             <rect x="0" y="0" width="100%" height="100%" style={{ fill: 'var(--tour-dim)' }} mask="url(#tour-hole)" />
+            {/* a faint white edge around what is lit, so the eye finds it. The same shapes, stroked and
+                put through the same mask: only the half of the line that falls on the dim shows, so the
+                seams between states inside the hole never draw and overlaps never add up (the group
+                carries the opacity, not each line) */}
+            <g className="tour-edge" fill="none" stroke="#fff" strokeWidth={3} strokeLinejoin="round" mask="url(#tour-hole)">
+              <motion.rect
+                rx={spot.r}
+                initial={{ x: spot.x + spot.w * 0.12, y: spot.y + spot.h * 0.12, width: spot.w * 0.76, height: spot.h * 0.76, opacity: 0 }}
+                animate={{ x: spot.x, y: spot.y, width: spot.w, height: spot.h, opacity: cut ? 0 : 1 }}
+                transition={spring}
+              />
+              {shape && (
+                <motion.g initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.22 }}>
+                  <path d={shape.d} transform={shape.m} vectorEffect="non-scaling-stroke" />
+                  <path d={shape.d} transform={shape.mUp} vectorEffect="non-scaling-stroke" />
+                </motion.g>
+              )}
+              {dots && (
+                <motion.g initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.22 }}>
+                  {dots.map((d, i) => <circle key={i} cx={d.cx} cy={d.cy} r={d.r} />)}
+                </motion.g>
+              )}
+              {all && mapCut && (
+                <g transform={mapCut.m}>
+                  {mapKind === 'dots'
+                    ? MAP_DOTS.map((d, i) => <circle key={i} cx={d.x} cy={d.y} r={d.r} vectorEffect="non-scaling-stroke" />)
+                    : MAP_SHAPES.map((d, i) => <path key={i} d={d} vectorEffect="non-scaling-stroke" />)}
+                </g>
+              )}
+            </g>
           </svg>
           {/* and one card, which travels with it */}
           <motion.div

@@ -2452,3 +2452,5 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
   .zz.fz > .v-map { top: 100px; bottom: 90px; }
   .fz-pres { bottom: 24px; }
 }
+/* the edge around what the tour lights: white at a quarter, on the group so overlapping lines never add up */
+.tour-edge { opacity: .25; }

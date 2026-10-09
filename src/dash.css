@@ -790,3 +790,8 @@
 .p9 .p8-seg { gap: 12px; }
 .p9 .p22-map { padding: 22px 24px; } .p9 .dx-race .fb-head { padding-bottom: 6px; }
 @media (min-height: 841px) { .p9 .dx-card.grow > .dx-board { -webkit-mask-image: none; mask-image: none; padding-bottom: 0; } }
+/* the ring on the chosen square sits 4px outside it, and the board scrolls, so a square on the
+   board's edge had its ring cut off. Room on every side, given back with a negative margin so
+   nothing else moves */
+.p9 .dx-card.grow > .dx-board { padding: 6px; margin: -6px; }
+@media (max-height: 840px) { .p9 .dx-card.grow > .dx-board { padding-bottom: 18px; } }
