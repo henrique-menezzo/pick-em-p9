@@ -1095,3 +1095,19 @@ html[data-afl="3"] .map .af-mark, html[data-afl="3"] .dx-cell .af-mark { display
 .p9p-verdict.miss .vd-i { background: #5c5c5c; color: #fafafa; }
 .p9p-bar .tl .play { width: 50px; height: 50px; background: #292929; }
 .p9p-bar .sh-btn { height: 48px; padding: 0 18px; border-radius: 999px; background: #292929; }
+/* the phone's tour is a bottom sheet in the picks panel's place; the panel steps down while it is up
+   and comes back up when the tour ends or is closed */
+.p9p-panel { transition: transform .32s cubic-bezier(.2, 0, 0, 1); }
+.p9p.touring .p9p-panel { transform: translateY(110%); }
+@media (prefers-reduced-motion: reduce) { .p9p-panel { transition: opacity .2s; } .p9p.touring .p9p-panel { transform: none; opacity: 0; pointer-events: none; } }
+body:has(.p9p) .tour.phone .tour-card { width: 100vw; border-radius: 24px 24px 0 0; padding: 20px 16px calc(16px + env(safe-area-inset-bottom)); background: #1a1a1a; box-shadow: 0 -12px 32px rgba(0, 0, 0, .45); }
+/* the night on a phone: replay and Share in one row in the page */
+.p9p-night { display: flex; align-items: center; gap: 12px; margin-top: -8px; }
+.p9p-night .tl { flex: 1; min-width: 0; gap: 12px; }
+.p9p-night .tl .play { width: 44px; height: 44px; background: #292929; }
+.p9p-night .tl .when { display: none; }
+.p9p-night .tl > div:last-child { flex: 1; min-width: 0; }
+.p9p-night .tl input[type=range] { width: 100%; }
+.p9p-night .tl .ticks { font-size: 12px; color: #8f8f8f; }
+.p9p-night .sh-btn { flex: none; height: 44px; padding: 0 16px; border-radius: 999px; background: #292929; display: inline-flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; }
+.p9p.night { padding-bottom: 280px; }

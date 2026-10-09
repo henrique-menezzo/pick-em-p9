@@ -1189,8 +1189,9 @@ export function P9Phone() {
   const { left, locked } = useCountdown();
   const sc = live ? liveScore(picks, t) : null;
   const [menu, setMenu] = useState(false);
+  const touring = useStore((s) => s.tour !== null);
   return (
-    <div className={'p9 dx p9p' + (live ? ' night' : '')}>
+    <div className={'p9 dx p9p' + (live ? ' night' : '') + (touring ? ' touring' : '')}>
       <header className="p9p-top">
         <button className="p9p-ic" aria-label="Menu"><Icon name="menu" size={22} stroke={1.8} /></button>
         <Wordmark className="p9p-logo" />
@@ -1214,6 +1215,8 @@ export function P9Phone() {
           </div>
           <button className="p9p-help" aria-label="How to play" onClick={() => setTour(0)}><Icon name="help" size={20} stroke={1.5} /></button>
         </div>
+        {/* the night's replay and Share live in the page, under the name, not in the fixed panel */}
+        {live && <div className="p9p-night"><Foot /><ShareButton /></div>}
 
         <div className="p9p-tabs" role="tablist" aria-label="Parts of the game">
           {TABS.map((k) => (
@@ -1247,9 +1250,7 @@ export function P9Phone() {
             {l.tone && <span className="vd-i" aria-hidden><Icon name={l.tone === 'ok' ? 'check' : 'x'} size={12} stroke={3} /></span>}{l.text}
           </div>
         ); })()}
-        <div className="p9p-bar">
-          {live ? <><Foot /><ShareButton /></> : <><ResetButton className="btn reset" /><AutofillButton /><SaveMaps /></>}
-        </div>
+        {!live && <div className="p9p-bar"><ResetButton className="btn reset" /><AutofillButton /><SaveMaps /></div>}
       </section>
       <PartDone />
     </div>

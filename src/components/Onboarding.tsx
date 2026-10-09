@@ -84,7 +84,7 @@ const STEPS: Step[] = [
   {
     title: 'Or pick from the panel',
     body: 'The panel shows both candidates for the selected race. The arrows take you to the next one.',
-    aim: '.pal, .m-sheet, .p9p-panel',
+    aim: '.pal, .m-sheet',
     align: 'end',
     ask: 'Pick a candidate in the panel',
     wait: (done) => onClickOf('.pal .cand, .p9p-cands .cand', done),
@@ -111,7 +111,7 @@ const STEPS: Step[] = [
   {
     title: 'Save as you go',
     body: 'Save any time and keep picking until the deadline. On election night we compare your picks with the live calls.',
-    aim: '.btn.save, .m-btn.primary',
+    aim: '.p9-tabs .btn.save, .m-btn.primary',
     align: 'end', // its right edge on the button's right edge
     ask: 'Hit Save to finish',
     wait: (done) => onClickOf('.btn.save', done),
@@ -453,9 +453,10 @@ function usePhoneTour() {
 }
 
 function dockPhone(s: Spot, c: { w: number; h: number }) {
-  const M = 12;
-  const low = s.y + s.h / 2 > innerHeight / 2;
-  return { left: M, top: low ? M : Math.max(M, innerHeight - c.h - M) };
+  // a bottom sheet: it stays at the foot of the screen from the first step to the last, where the
+  // picks panel lives, which steps aside while the tour is up
+  void s;
+  return { left: 0, top: innerHeight - c.h };
 }
 
 function useSpot(sel: string | undefined, step: number | null, fit?: 'states'): Spot | null {
