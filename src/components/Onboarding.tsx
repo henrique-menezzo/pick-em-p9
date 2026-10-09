@@ -11,6 +11,8 @@ import { MAP_DOTS, stateDotsOnScreen } from './DotGrid';
 import { Icon } from './ui';
 
 type Step = {
+  /** a name the page can style against while the step is up (written on <html> as data-tour-step) */
+  key?: string;
   title: string;
   body: string;
   /** what the light is on. A list is allowed: only one layout is in the document at a time, so
@@ -117,13 +119,14 @@ const STEPS: Step[] = [
     wait: (done) => onClickOf('.mx-btn, .v-dot, .dx-cell, .sq-pop .cand', done),
   },
   {
+    key: 'save', // on a phone the picks panel comes back up for this step: the Save is in it
     title: 'Save as you go',
     body: 'Save any time and keep picking until the deadline. On election night we compare your picks with the live calls.',
-    aim: '.p9-tabs .btn.save, .m-btn.primary',
+    aim: '.p9-tabs .btn.save, .p9p-bar .btn.save, .m-btn.primary',
     align: 'end', // its right edge on the button's right edge
     // pressing it ends the tour, like Done; it never asks for an account here (no real pick yet)
     ask: 'Hit Save to finish',
-    wait: (done) => onClickOf('.p9-tabs .btn.save', done),
+    wait: (done) => onClickOf('.p9-tabs .btn.save, .p9p-bar .btn.save', done),
   },
 ];
 
@@ -157,6 +160,10 @@ export default function Onboarding({ ready = true }: { ready?: boolean }) {
   }, [step]);
 
   const s = step === null ? null : STEPS[step];
+  useEffect(() => {
+    document.documentElement.dataset.tourStep = s?.key ?? '';
+    return () => { document.documentElement.dataset.tourStep = ''; };
+  }, [s]);
   const next = () => (step! >= STEPS.length - 1 ? setTour(null) : setTour(step! + 1));
   const nextRef = useRef(next);
   nextRef.current = next;
@@ -480,7 +487,10 @@ function usePhoneTour() {
 function dockPhone(s: Spot, c: { w: number; h: number }) {
   // a bottom sheet: it stays at the foot of the screen from the first step to the last, where the
   // picks panel lives, which steps aside while the tour is up
-  void s;
+  // …except when the step points into the picks panel (Save): the panel is back up, and the sheet
+  // rests right on top of it
+  const panel = document.querySelector('.p9p-panel');
+  if (panel && s.y > innerHeight * 0.6) return { left: 0, top: Math.max(0, panel.getBoundingClientRect().top - c.h) };
   return { left: 0, top: innerHeight - c.h };
 }
 
