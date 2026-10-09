@@ -1160,3 +1160,9 @@ body:has(.p9p) .tour.phone .tour-card { padding: 24px 24px calc(20px + env(safe-
   body:has(.p9p) .auth-logo { margin: 0 auto; }
   body:has(.p9p) .auth-text { margin-top: 24px; }
 }
+/* as Airbnb does it: a tall sheet that starts just under the top of the screen, round at the top, its
+   content at the top, and running on down behind the keyboard so nothing of the page shows under it */
+@media (max-width: 760px) {
+  body:has(.p9p) .auth { top: calc(var(--vvt, 0px) + 24px); bottom: auto; height: calc(100lvh - 24px); max-height: none; border-radius: 24px 24px 0 0; padding-top: 48px; }
+  body:has(.p9p) .auth-x { top: 20px; right: 20px; }
+}
