@@ -154,7 +154,8 @@ function DxMap({ noSave }: { noSave?: boolean }) {
         <div className="dx-mname"><h1>The Midterms Pick Em</h1><button className="dx-help" aria-label="How to play" onClick={() => setTour(0)}><Icon name="help" size={20} stroke={1.44} /></button></div>
         <p className="dx-mlock num">{sc ? <><i className="sd live-dot" />Live · {sc.called} of {ALL.length} called</> : locked ? 'Picks are locked' : <>Lock in <b>{left}</b></>}</p>
       </header>
-      <div className="dx-mact">{live ? <Foot /> : <CatActions noSave={noSave} />}</div>
+      {/* on the night the replay has its own card under the race, so the map's head stays clear */}
+      {!live && <div className="dx-mact"><CatActions noSave={noSave} /></div>}
       <MapBox />
       <div className="dx-mfoot"><Presented /><Legend /></div>
     </section>
@@ -189,6 +190,7 @@ function Side({ children, cls = '', noRace, partOnly, before, after, bare }: { c
       <aside className="e-panel dx-side night">
         <div className="dx-card flat"><LiveVideo bare /></div>
         <div className="dx-card grow"><RaceCard className="inner e-nightrace dx-race" /></div>
+        <div className="dx-card dx-replay"><Foot /></div>
       </aside>
     );
   }

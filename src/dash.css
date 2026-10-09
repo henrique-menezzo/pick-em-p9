@@ -902,3 +902,16 @@
 @media (prefers-reduced-motion: no-preference) {
   .map.wave .st.af path.af-tex { animation: af-in .4s ease-out var(--w) backwards; }
 }
+
+/* election night: the show as wide as the cards under it, the replay on a card of its own */
+.p9 .dx-side.night > .dx-card.flat { padding: 0; }
+.p9 .dx-side.night > .dx-card.flat .vid { width: 100%; }
+.p9 .dx-replay { padding: 20px 24px 18px; }
+.p9 .dx-replay .tl { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 12px 14px; }
+.p9 .dx-replay .tl .when { display: block; min-width: 0; }
+.p9 .dx-replay .tl .when small { margin-top: 4px; color: #8f8f8f; }
+.p9 .dx-replay .tl > div:last-child { grid-column: 1 / -1; }
+.p9 .dx-replay .tl input[type=range] { width: 100%; display: block; }
+.p9 .dx-replay .tl .ticks { font-size: 12px; color: #8f8f8f; margin-top: 4px; }
+.p9 .dx-replay .tl .play { background: #2e2e2e; }
+.p9 .dx-replay .when .live-dot { display: none; }
