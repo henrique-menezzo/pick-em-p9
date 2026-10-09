@@ -786,6 +786,7 @@ const PART_STATES: Record<Tab, Record<string, string>> = Object.fromEntries(TABS
 /** `labels`: the big map's initials too, at the same scale, as in the frame. */
 function MiniMap({ k, className = '', labels }: { k: Tab; className?: string; labels?: boolean }) {
   const picks = useStore((s) => s.picks);
+  const auto = useStore((s) => s.auto);
   const live = useLive();
   const t = useStore((s) => s.t);
   const own = PART_STATES[k];
@@ -793,7 +794,7 @@ function MiniMap({ k, className = '', labels }: { k: Tab; className?: string; la
     const id = own[st];
     if (!id) return 'no';
     const p = picks[id];
-    if (!live) return p ?? 'open';
+    if (!live) return p ? p + (auto[id] ? ' af' : '') : 'open';
     return statusAt(id, t).status === 'called' ? (p === RESULTS[id].winner ? RESULTS[id].winner : 'miss') : 'open';
   };
   const cls = Object.fromEntries(STATES.map((st) => [st, look(st)]));
@@ -803,7 +804,7 @@ function MiniMap({ k, className = '', labels }: { k: Tab; className?: string; la
       {labels && (
         <g className="mm-lb">
           {LABELED.map(([st, x, y]) => (
-            <text key={st} x={x} y={y} fontSize={us.labelSize} textAnchor="middle" dominantBaseline="central" className={cls[st] === 'R' || cls[st] === 'D' ? 'on' : undefined}>{st}</text>
+            <text key={st} x={x} y={y} fontSize={us.labelSize} textAnchor="middle" dominantBaseline="central" className={/^[RD]/.test(cls[st]) ? 'on' : undefined}>{st}</text>
           ))}
         </g>
       )}

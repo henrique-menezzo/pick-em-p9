@@ -94,14 +94,19 @@ const STEPS: Step[] = [
     body: 'Senate, governor and House races each have a map of their own. Switch between them here. Each one saves on its own.',
     aim: '.mt-rail, .mt, .tt, .pp, .v-tabs, .p-tabs',
     align: 'start',
+    // the tabs answer during this step, and opening one moves the tour on
+    ask: 'Open another map',
+    wait: (done) => onClickOf('.mt [role=tab]', done),
   },
   {
     title: 'Every race, at a glance',
-    body: 'One dot per race on this map. Click a dot to jump straight to that state.',
-    aim: '.matrix, .m-matrix, .v-dots',
+    body: 'One square per race, across all three maps. Hover a square to see both candidates and pick right there.',
+    aim: '.matrix, .m-matrix, .v-dots, .dx-card.grow',
+    // the card a square opens is drawn on the page, outside the board, so it has to answer too
+    live: '.matrix, .m-matrix, .v-dots, .dx-card.grow, .sq-pop',
     align: 'start',
-    ask: 'Click any dot',
-    wait: (done) => onClickOf('.mx-btn, .v-dot', done),
+    ask: 'Click a square or a candidate',
+    wait: (done) => onClickOf('.mx-btn, .v-dot, .dx-cell, .sq-pop .cand', done),
   },
   {
     title: 'Save as you go',

@@ -849,3 +849,33 @@
 .sq-pop .cand:focus-visible { outline: 2px solid #fafafa; outline-offset: -2px; }
 .p9 .dx-cell { cursor: pointer; transition: filter .15s; }
 .p9 .dx-cell.pop { filter: brightness(1.4); }
+
+/* Autofill's picks: the party in a quieter shade, so your own calls stand out; the source is named
+   on the candidate it chose, in the legend and in the menu */
+:root { --R-af: color-mix(in srgb, var(--R) 45%, #292929); --D-af: color-mix(in srgb, var(--D) 45%, #292929); }
+.p9 .dx-cell.R.af { background: var(--R-af); }
+.p9 .dx-cell.D.af { background: var(--D-af); }
+.mm .R.af { fill: var(--R-af); }
+.mm .D.af { fill: var(--D-af); }
+.cand.r.af .ck.on { background: var(--R-af); }
+.cand.d.af .ck.on { background: var(--D-af); }
+.cand .af-from { display: inline-flex; align-items: center; gap: 4px; }
+.p9 .autofill-menu { width: 292px; }
+.p9 .autofill-menu .af-scope { padding: 8px 10px 6px; margin: 0; font-size: 12px; line-height: 1.45; color: #8f8f8f; }
+.p9 .autofill-menu button { position: relative; padding-inline-end: 36px; }
+.p9 .autofill-menu b { font-size: 14px; }
+.p9 .autofill-menu small { font-size: 12px; color: #8f8f8f; }
+.p9 .autofill-menu .af-on small { color: #fafafa; }
+.p9 .autofill-menu .af-ck { position: absolute; inset-inline-end: 12px; top: 50%; translate: 0 -50%; display: grid; color: #fafafa; }
+.p9 .autofill-menu .af-clear { margin-top: 4px; }
+.pb-row.R.af .ck { background: var(--R-af); } .pb-row.D.af .ck { background: var(--D-af); }
+.cand .af-sep { font-style: normal; margin-inline-end: 2px; }
+/* the square's card, compact: smaller faces, tighter rows, the source alone on an autofilled pick */
+.sq-pop { width: 216px; padding: 6px; border-radius: 16px; }
+.sq-pop-h { gap: 6px; padding: 6px 8px 4px; }
+.sq-pop-h b { font-size: 12px; }
+.sq-pop .cand { padding: 6px; gap: 8px; border-radius: 10px; }
+.sq-pop .cand .face { width: 28px; height: 28px; }
+.sq-pop .cand .t { gap: 2px; }
+.sq-pop .cand .ck { width: 18px; height: 18px; margin-right: 2px; }
+.sq-pop .cand.af .cand-party, .sq-pop .cand.af .af-sep { display: none; }

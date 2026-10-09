@@ -39,6 +39,8 @@ interface State {
   savedAt: number | null;
   /** each part saves on its own: the picks of that part as they were when it was saved */
   savedPicks: Partial<Record<Tab, Record<string, Side>>>;
+  /** picks Autofill made, and from where. A pick you make yourself takes the race out of here. */
+  auto: Record<string, AutoSource>;
   user: User | null;
   panelMin: boolean;
   tourDone: boolean;
@@ -65,7 +67,8 @@ interface State {
   toggle(id: string, side: Side, opts?: { advance?: boolean }): void;
   tap(id: string): void;
   step(dir: 1 | -1): void;
-  autofill(source: 'polls' | 'market'): void;
+  autofill(source: AutoSource): void;
+  clearAuto(): void;
   save(): void;
   saveCat(tab: Tab): void;
   resetPicks(): void;
@@ -111,6 +114,9 @@ export const CONTINUING = (() => {
   } catch { return false; }
 })();
 
+export type AutoSource = 'polls' | 'market';
+export const AUTO_NAME: Record<AutoSource, string> = { polls: 'DDHQ', market: 'Polymarket' };
+
 export const useStore = create<State>()(
   persist(
     (set, get) => ({
@@ -122,6 +128,7 @@ export const useStore = create<State>()(
       playing: false,
       savedAt: null,
       savedPicks: {},
+      auto: {},
       user: null,
       panelMin: false,
       tourDone: false,
@@ -155,7 +162,10 @@ export const useStore = create<State>()(
           if (isLocked()) return {};
           const picks = { ...s.picks };
           if (side) picks[id] = side; else delete picks[id];
-          return { picks, savedAt: saveStamp(s), pulse: { ...s.pulse, [id]: (s.pulse[id] ?? 0) + 1 } };
+          // touched by hand: from here on it is your pick, not Autofill's
+          const auto = { ...s.auto };
+          delete auto[id];
+          return { picks, auto, savedAt: saveStamp(s), pulse: { ...s.pulse, [id]: (s.pulse[id] ?? 0) + 1 } };
         }),
       toggle: (id, side, opts) => {
         const s = get();
@@ -202,26 +212,42 @@ export const useStore = create<State>()(
         }
         s.select(list[(((i + dir) % len) + len) % len].id);
       },
-      // Only ever the open races of the category you are in. P1 fell through to the whole map
-      // when the category was full, which is the "Autofill twice" bug from the sessions.
+      // Only the races of the part you are in, and never one you picked yourself. Autofill can be run
+      // again: it fills what is still open and swaps the races it filled before to the new source.
       autofill: (source) => {
         const s = get();
         if (isLocked()) return;
-        const todo = RACES[s.tab].filter((r) => !s.picks[r.id]);
-        const name = source === 'market' ? 'Polymarket' : 'DDHQ';
+        const name = AUTO_NAME[source];
         const cat = TAB_LABEL[s.tab];
-        if (!todo.length) return s.say(`Every ${cat} race already has a pick`);
+        const todo = RACES[s.tab].filter((r) => !s.picks[r.id] || s.auto[r.id]);
+        if (!todo.length) return s.say(`Every ${cat} race is your own pick`);
+        if (todo.every((r) => s.auto[r.id] === source)) return s.say(`${cat} is already filled from ${name}`);
+        const swapped = todo.filter((r) => s.auto[r.id]).length;
         const picks = { ...s.picks };
-        for (const r of todo) picks[r.id] = source === 'market' ? r.market : r.poll;
-        set({ picks, savedAt: saveStamp(s) });
-        get().say(`Filled ${todo.length} ${cat} ${todo.length === 1 ? 'race' : 'races'} with ${name}`);
+        const auto = { ...s.auto };
+        for (const r of todo) { picks[r.id] = source === 'market' ? r.market : r.poll; auto[r.id] = source; }
+        set({ picks, auto, savedAt: saveStamp(s) });
+        get().say(swapped
+          ? `${todo.length} ${cat} ${todo.length === 1 ? 'race' : 'races'} now from ${name}`
+          : `Filled ${todo.length} ${cat} ${todo.length === 1 ? 'race' : 'races'} from ${name}`);
+      },
+      clearAuto: () => {
+        const s = get();
+        if (isLocked()) return;
+        const ids = RACES[s.tab].filter((r) => s.auto[r.id]).map((r) => r.id);
+        if (!ids.length) return;
+        const picks = { ...s.picks };
+        const auto = { ...s.auto };
+        for (const id of ids) { delete picks[id]; delete auto[id]; }
+        set({ picks, auto, savedAt: saveStamp(s) });
+        get().say(`Removed ${ids.length} autofilled ${TAB_LABEL[s.tab]} ${ids.length === 1 ? 'pick' : 'picks'}`);
       },
       save: () => set({ savedAt: Date.now() }),
       saveCat: (tab) => set((s) => ({
         savedAt: Date.now(),
         savedPicks: { ...s.savedPicks, [tab]: Object.fromEntries(RACES[tab].filter((r) => s.picks[r.id]).map((r) => [r.id, s.picks[r.id]])) },
       })),
-      resetPicks: () => set((s) => (isLocked() ? {} : { picks: {}, savedAt: null, savedPicks: {}, cursor: { senate: RACES.senate[0].id, gov: RACES.gov[0].id, house: RACES.house[0].id }, pulse: { ...s.pulse } })),
+      resetPicks: () => set((s) => (isLocked() ? {} : { picks: {}, auto: {}, savedAt: null, savedPicks: {}, cursor: { senate: RACES.senate[0].id, gov: RACES.gov[0].id, house: RACES.house[0].id }, pulse: { ...s.pulse } })),
       setLive: (live) => set({ live, playing: false, hoverId: null }),
       setT: (t) => set({ t: Math.max(0, Math.min(T_MAX, t)) }),
       setPlaying: (playing) => set((s) => ({ playing, t: playing && s.t >= T_MAX ? 0 : s.t })),
@@ -260,7 +286,7 @@ export const useStore = create<State>()(
     }),
     {
       name: 'pick-em-p9',
-      partialize: (s) => ({ picks: s.picks, tab: s.tab, cursor: s.cursor, live: s.live, t: s.t, savedAt: s.savedAt, savedPicks: s.savedPicks, user: s.user, tourDone: s.tourDone, panelMin: s.panelMin, theme: s.theme, mapKind: s.mapKind, layout: s.layout }),
+      partialize: (s) => ({ picks: s.picks, auto: s.auto, tab: s.tab, cursor: s.cursor, live: s.live, t: s.t, savedAt: s.savedAt, savedPicks: s.savedPicks, user: s.user, tourDone: s.tourDone, panelMin: s.panelMin, theme: s.theme, mapKind: s.mapKind, layout: s.layout }),
       onRehydrateStorage: () => (st) => applyTheme(st?.theme ?? 'dark'),
     },
   ),

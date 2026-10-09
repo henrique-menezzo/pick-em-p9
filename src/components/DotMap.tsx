@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'motion/react';
 import us from '../data/usmap-hub.json';
 import { BY_ID, RESULTS, STATES, TAB_LABEL, raceIn, statusAt, type Side } from '../data/races';
-import { useStore } from '../lib/store';
+import { AUTO_NAME, useStore } from '../lib/store';
 import { Icon, PARTY, facePhoto } from './ui';
 
 // ---- geometry ------------------------------------------------------------------------------------
@@ -37,7 +37,7 @@ const HOVER = Q2.get('hover') || '';
 const HELD = new Set((Q2.get('hov') || '').split(',').filter(Boolean));
 
 // three colours only, as in the hub's map: Safe R, Safe D and the empty state
-const COLOR = { R: 'var(--R)', D: 'var(--D)', open: 'var(--dot-open)', none: 'var(--map-nodata)', pending: 'var(--dot-open)' };
+const COLOR = { R: 'var(--R)', D: 'var(--D)', Raf: 'var(--R-af)', Daf: 'var(--D-af)', open: 'var(--dot-open)', none: 'var(--map-nodata)', pending: 'var(--dot-open)' };
 
 // ---- one state: its shape, and its abbreviation on top -------------------------------------------
 /** The piece under the pointer, drawn again on top of the whole map: three copies of itself
@@ -103,6 +103,7 @@ const FIT_VB = '0 0 975 610';
 export default function DotMap({ fit }: { fit?: boolean }) {
   const tab = useStore((s) => s.tab);
   const picks = useStore((s) => s.picks);
+  const auto = useStore((s) => s.auto);
   const curId = useStore((s) => s.cursor[s.tab]);
   const live = useStore((s) => s.live);
   const t = useStore((s) => s.t);
@@ -147,8 +148,10 @@ export default function DotMap({ fit }: { fit?: boolean }) {
       const pick = picks[race.id];
       const sel = showSel && race.id === curId;
       if (!live) {
-        const c = pick ? COLOR[pick] : COLOR.open;
-        out[st] = { cls: (pick ? 'pk ' : '') + (sel ? 'sel' : '') + hv, c, o: pick ? dim : dimGrey, label: !!pick };
+        // a pick Autofill made sits back in a quieter shade of the party, so your own calls stand out
+        const af = !!pick && !!auto[race.id];
+        const c = pick ? COLOR[af ? (`${pick}af` as 'Raf' | 'Daf') : pick] : COLOR.open;
+        out[st] = { cls: (pick ? 'pk ' : '') + (af ? 'af ' : '') + (sel ? 'sel' : '') + hv, c, o: pick ? dim : dimGrey, label: !!pick };
         continue;
       }
       const now = statusAt(race.id, t);
@@ -165,7 +168,7 @@ export default function DotMap({ fit }: { fit?: boolean }) {
       }
     }
     return out;
-  }, [tab, picks, curId, live, t, focusSt, showSel, hov?.st, tourLock]);
+  }, [tab, picks, auto, curId, live, t, focusSt, showSel, hov?.st, tourLock]);
 
 
   // ---- pop: a ripple of the state's dots when it gets a pick, or gets called on election night ----
@@ -349,6 +352,7 @@ function anchorTo(svg: SVGSVGElement, st: string, w: number, h: number) {
 // ---- the pick you just made on the map, shown right next to the state -------------------------------
 function PickBadge({ svg, vb, badge, onDone }: { svg: React.RefObject<SVGSVGElement | null>; vb: VB; badge: { id: string; n: number } | null; onDone: () => void }) {
   const pick = useStore((s) => (badge ? s.picks[badge.id] : undefined));
+  const auto = useStore((s) => (badge ? s.auto[badge.id] : undefined));
   const live = useStore((s) => s.live);
   const [pos, setPos] = useState<ReturnType<typeof anchorTo> | null>(null);
   const race = badge ? BY_ID[badge.id] : null;
@@ -381,7 +385,7 @@ function PickBadge({ svg, vb, badge, onDone }: { svg: React.RefObject<SVGSVGElem
           <AnimatePresence mode="popLayout" initial={false}>
             <motion.div
               key={pick ?? 'none'}
-              className={'pb-row ' + (pick ?? '')}
+              className={'pb-row ' + (pick ?? '') + (pick && auto ? ' af' : '')}
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
@@ -392,7 +396,7 @@ function PickBadge({ svg, vb, badge, onDone }: { svg: React.RefObject<SVGSVGElem
                   <span className={'face ' + pick}><img src={facePhoto(pick)} alt="" /></span>
                   <span className="t">
                     <b>{race[pick]}</b>
-                    <small>{race.stateName} · {PARTY[pick]}</small>
+                    <small>{race.stateName} · {auto ? `Autofill, ${AUTO_NAME[auto]}` : PARTY[pick]}</small>
                   </span>
                   <span className="ck"><Icon name="check" size={11} stroke={2.8} /></span>
                 </>

@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'motion/react';
 import { ALL, TAB_LABEL, TABS, T_MAX, clock, statusAt } from './data/races';
-import { CONTINUING, LOCK_AT, isLocked, liveScore, useStore } from './lib/store';
+import { AUTO_NAME, CONTINUING, LOCK_AT, isLocked, liveScore, useStore, type AutoSource } from './lib/store';
 import DotMap from './components/DotMap';
 import DotGrid from './components/DotGrid';
 import Palette from './components/Palette';
@@ -274,15 +274,18 @@ function useBuckets() {
   const live = useStore((s) => s.live);
   const t = useStore((s) => s.t);
   const picks = useStore((s) => s.picks);
+  const auto = useStore((s) => s.auto);
   const tab = useStore((s) => s.tab);
   const list = RACES[tab];
   if (live) {
     const sc = liveScore(picks, t, tab);
-    return { live, a: sc.correct, b: sc.missed, open: list.length - sc.correct - sc.missed };
+    return { live, a: sc.correct, b: sc.missed, af: 0, src: null, open: list.length - sc.correct - sc.missed };
   }
-  const R = list.filter((r) => picks[r.id] === 'R').length;
-  const D = list.filter((r) => picks[r.id] === 'D').length;
-  return { live, a: R, b: D, open: list.length - R - D };
+  const R = list.filter((r) => picks[r.id] === 'R' && !auto[r.id]).length;
+  const D = list.filter((r) => picks[r.id] === 'D' && !auto[r.id]).length;
+  const filled = list.filter((r) => picks[r.id] && auto[r.id]);
+  const src = filled.length ? AUTO_NAME[auto[filled[0].id]] : null;
+  return { live, a: R, b: D, af: filled.length, src, open: list.length - R - D - filled.length };
 }
 
 /** Plain progress: how much of the map is picked. The R/D split is in the legend. */
@@ -292,7 +295,7 @@ function Progress() {
 }
 
 export function Legend() {
-  const { live, a, b, open } = useBuckets();
+  const { live, a, b, af, src, open } = useBuckets();
   return (
     <div className="legend">
       {live ? (
@@ -305,6 +308,7 @@ export function Legend() {
         <>
           <span><i style={{ background: 'var(--R)' }} />Republican <b className="num">{a}</b></span>
           <span><i style={{ background: 'var(--D)' }} />Democrat <b className="num">{b}</b></span>
+          {af > 0 && <span><i style={{ background: 'linear-gradient(90deg, var(--R-af) 50%, var(--D-af) 50%)' }} />Autofill, {src} <b className="num">{af}</b></span>}
           <span><i style={{ background: 'var(--dot-open)' }} />Open <b className="num">{open}</b></span>
         </>
       )}
@@ -505,7 +509,9 @@ export function Actions() {
 export function AutofillButton() {
   const tab = useStore((s) => s.tab);
   const autofill = useStore((s) => s.autofill);
-  const say = useStore((s) => s.say);
+  const clearAuto = useStore((s) => s.clearAuto);
+  const picks = useStore((s) => s.picks);
+  const auto = useStore((s) => s.auto);
   const [open, setOpen] = useState(false);
   useEffect(() => {
     if (!open) return;
@@ -513,15 +519,18 @@ export function AutofillButton() {
     window.addEventListener('pointerdown', off);
     return () => window.removeEventListener('pointerdown', off);
   }, [open]);
-  const pick = (source: 'polls' | 'market') => {
+  const pick = (source: AutoSource) => {
     autofill(source);
     setOpen(false);
   };
-  void say;
+  // what Autofill has filled in this part, and from where (one source per part: running it again swaps it)
+  const filled = RACES[tab].filter((r) => picks[r.id] && auto[r.id]);
+  const using = filled.length ? auto[filled[0].id] : null;
+  const opts: [AutoSource, string][] = [['polls', 'The polling favourite in each race'], ['market', 'The market favourite in each race']];
   return (
     <div className="autofill">
-      <Tip text="Fill every open race at once — from DDHQ polling data or from Polymarket.">
-        <button className="btn" onClick={() => setOpen(!open)} disabled={isLocked()}>
+      <Tip text="Fill the races you have not picked, from DDHQ polling data or from Polymarket.">
+        <button className="btn" onClick={() => setOpen(!open)} disabled={isLocked()} aria-expanded={open}>
           <Icon name="wand" size={18} stroke={1.8} />
           Autofill<span className="af-cat"> {TAB_LABEL[tab]}</span>
           <Icon name="chevDown" size={14} stroke={2} />
@@ -530,9 +539,23 @@ export function AutofillButton() {
       <AnimatePresence>
         {open && (
           <motion.div className="autofill-menu" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 6 }} transition={{ duration: 0.15 }}>
-            <p className="af-scope">Fills the empty {TAB_LABEL[tab]} races only. Your own picks stay.</p>
-            <button onClick={() => pick('polls')}><b>Polling data · DDHQ</b><small>The polling favourite in each empty race</small></button>
-            <button onClick={() => pick('market')}><b>Polymarket</b><small>The market favourite in each empty race</small></button>
+            <p className="af-scope">
+              {using
+                ? <>{filled.length} {TAB_LABEL[tab]} {filled.length === 1 ? 'race is' : 'races are'} filled from {AUTO_NAME[using]}. Pick the other source to swap them. Your own picks always stay.</>
+                : <>Fills the {TAB_LABEL[tab]} races you have not picked. Your own picks always stay.</>}
+            </p>
+            {opts.map(([k, sub]) => (
+              <button key={k} className={using === k ? 'af-on' : undefined} onClick={() => pick(k)}>
+                <b>{k === 'polls' ? 'Polling data · DDHQ' : 'Polymarket'}</b>
+                <small>{using === k ? 'In use' : sub}</small>
+                {using === k && <span className="af-ck" aria-hidden><Icon name="check" size={14} stroke={2.6} /></span>}
+              </button>
+            ))}
+            {using && (
+              <button className="af-clear" onClick={() => { clearAuto(); setOpen(false); }}>
+                <b>Remove autofill</b><small>Clears the {filled.length} autofilled races, keeps yours</small>
+              </button>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
