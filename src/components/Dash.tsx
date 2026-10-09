@@ -1022,10 +1022,11 @@ function SaveMaps() {
 }
 
 /** A part is finished: a card of its own says so, shows where the three maps stand, and offers the
- *  next one. Only when the last open race is picked by hand (Autofill filling a whole part is
- *  something you asked for), once per part, and never during the tour. */
+ *  next one. However it was finished, by hand or by Autofill; once each time a part fills up, and
+ *  never during the tour. */
 function PartDone() {
   const picks = useStore((s) => s.picks);
+  const auto = useStore((s) => s.auto);
   const tour = useStore((s) => s.tour);
   const select = useStore((s) => s.select);
   const setTab = useStore((s) => s.setTab);
@@ -1043,7 +1044,9 @@ function PartDone() {
     const p = prev.current;
     prev.current = done;
     if (!p || live || tour !== null) return;
-    const k = TABS.find((x) => p[x] === RACES[x].length - 1 && done[x] === RACES[x].length && !shown.current.has(x));
+    // a part that is open again can be finished again
+    for (const x of TABS) if (done[x] < RACES[x].length) shown.current.delete(x);
+    const k = TABS.find((x) => p[x] < RACES[x].length && done[x] === RACES[x].length && !shown.current.has(x));
     if (!k) return;
     shown.current.add(k);
     // a beat first, so the last state is seen taking its colour before the card comes up
@@ -1069,6 +1072,14 @@ function PartDone() {
   const next = open ? [...TABS.slice(i + 1), ...TABS.slice(0, i)].find((k) => done[k] < RACES[k].length) : undefined;
   const n = open ? RACES[open].length : 0;
   const total = TABS.reduce((a, k) => a + RACES[k].length, 0);
+  // how much of the part Autofill filled, and from where
+  const filled = open ? RACES[open].filter((r) => auto[r.id]) : [];
+  const from = filled.length ? AUTO_NAME[auto[filled[0].id]] : '';
+  const head = !open ? '' : filled.length === n
+    ? `All ${n} ${NOUN[open]} races are filled from ${from}.`
+    : filled.length
+      ? `All ${n} ${NOUN[open]} races have a pick, ${filled.length} of them from ${from}.`
+      : `You called all ${n} ${NOUN[open]} races.`;
 
   return createPortal(
     <AnimatePresence>
@@ -1084,7 +1095,7 @@ function PartDone() {
             <h2 id="pd-title">{next ? `${TAB_LABEL[open]} complete` : 'Every race is picked'}</h2>
             <p id="pd-text">
               {next
-                ? `You called all ${n} ${NOUN[open]} races. Keep going with the next map, or stay here to look over your picks.`
+                ? `${head} Keep going with the next map, or stay here to look over your picks.`
                 : `All ${total} races are called. Save your maps to keep them, then come back on election night to see how you did.`}
             </p>
             <div className="pd-maps">
