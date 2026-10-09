@@ -1024,6 +1024,8 @@ function useSaveMaps() {
   const unsaved = parts.filter((k) => !catSaved(picks, savedPicks, k));
   const saved = parts.length > 0 && !unsaved.length;
   const run = () => {
+    // during the tour Save is only being shown: pressing it ends the tour, nothing is saved or asked
+    if (useStore.getState().tour !== null) return;
     if (!parts.length) return say('Pick at least one race to save your maps');
     if (saved) return say('Your maps are saved. Change a pick to save again.');
     if (!user) return openAuth('save');

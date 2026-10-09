@@ -113,7 +113,9 @@ const STEPS: Step[] = [
     body: 'Save any time and keep picking until the deadline. On election night we compare your picks with the live calls.',
     aim: '.p9-tabs .btn.save, .m-btn.primary',
     align: 'end', // its right edge on the button's right edge
-    // shown, not pressed: a Save during the tour would ask for an account before a single real pick
+    // pressing it ends the tour, like Done; it never asks for an account here (no real pick yet)
+    ask: 'Hit Save to finish',
+    wait: (done) => onClickOf('.p9-tabs .btn.save', done),
   },
 ];
 
