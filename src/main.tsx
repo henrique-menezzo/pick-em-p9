@@ -16,3 +16,5 @@ createRoot(document.getElementById('root')!).render(
   </StrictMode>,
 );
 import './dash.css';
+// the phone's restack of that same page — last, so it can overrule the desktop's own rules
+import './mobile/phone.css';

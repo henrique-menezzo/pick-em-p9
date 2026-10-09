@@ -84,26 +84,26 @@ const STEPS: Step[] = [
   {
     title: 'Or pick from the panel',
     body: 'The panel shows both candidates for the selected race. The arrows take you to the next one.',
-    aim: '.pal, .m-sheet',
+    aim: '.pal, .m-sheet, .p9p-panel',
     align: 'end',
     ask: 'Pick a candidate in the panel',
-    wait: (done) => onClickOf('.pal .cand', done),
+    wait: (done) => onClickOf('.pal .cand, .p9p-cands .cand', done),
   },
   {
     title: 'Three maps, one game',
     body: 'Senate, governor and House races each have a map of their own. Switch between them here. Each one saves on its own.',
-    aim: '.mt-rail, .mt, .tt, .pp, .v-tabs, .p-tabs',
+    aim: '.mt-rail, .mt, .tt, .pp, .v-tabs, .p-tabs, .p9p-tabs',
     align: 'start',
     // the tabs answer during this step, and opening one moves the tour on
     ask: 'Open another map',
-    wait: (done) => onClickOf('.mt [role=tab]', done),
+    wait: (done) => onClickOf('.mt [role=tab], .p9p-tabs [role=tab]', done),
   },
   {
     title: 'Every race, at a glance',
     body: 'One square per race, across all three maps. Hover a square to see both candidates and pick right there.',
-    aim: '.matrix, .m-matrix, .v-dots, .dx-card.grow',
+    aim: '.matrix, .m-matrix, .v-dots, .dx-card.grow, .p9p-card:last-child',
     // the card a square opens is drawn on the page, outside the board, so it has to answer too
-    live: '.matrix, .m-matrix, .v-dots, .dx-card.grow, .sq-pop',
+    live: '.matrix, .m-matrix, .v-dots, .dx-card.grow, .p9p-card:last-child, .sq-pop',
     align: 'start',
     ask: 'Click a square or a candidate',
     wait: (done) => onClickOf('.mx-btn, .v-dot, .dx-cell, .sq-pop .cand', done),

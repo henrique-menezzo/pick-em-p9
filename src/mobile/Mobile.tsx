@@ -132,7 +132,7 @@ function MobileMap({ onTap }: { onTap: (id: string) => void }) {
 /** Everything that is not "pick a winner" lives behind the avatar: which map, which mode, and the
  *  way into election night. On a phone those three controls in the page were three rows of chrome
  *  around a game that only needs one. */
-function ProfileMenu({ onClose }: { onClose: () => void }) {
+export function ProfileMenu({ onClose }: { onClose: () => void }) {
   const user = useStore((s) => s.user);
   const openAuth = useStore((s) => s.openAuth);
   const signOut = useStore((s) => s.signOut);
@@ -208,7 +208,7 @@ function ProfileMenu({ onClose }: { onClose: () => void }) {
   );
 }
 
-function TopBar() {
+export function TopBar() {
   const user = useStore((s) => s.user);
   const [menu, setMenu] = useState(false);
   // the hairline only appears once content scrolls under the bar

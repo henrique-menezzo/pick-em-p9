@@ -18,6 +18,8 @@ import LockLine from './components/LockLine';
 import HeaderVariant, { CardHelp, CardTitleRow, FooterClock, HDR, HeaderSwitch, clockInFooter, helpInCard, titleInCard } from './components/HeaderVariants';
 import { ResetButton, Toast } from './components/Common';
 import Mobile from './mobile/Mobile';
+import { P9Phone } from './components/Dash';
+import { CatActions } from './components/Layouts';
 import Layout from './components/Dash';
 import { STUDY, V, VERSIONS } from './lib/variants';
 import { RACES } from './data/races';
@@ -35,6 +37,7 @@ if (Q.get('off')) document.documentElement.dataset.off = Q.get('off')!;
 /** ?legacy=1 shows P1's original scaled frame, for side-by-side comparison */
 const LEGACY = Q.has('legacy');
 if (Q.get('layout')) useStore.getState().setLayout(Math.min(VERSIONS.length, Math.max(1, Number(Q.get('layout')) || 1)));
+const OLD_PHONE = Q.get('mobile') === 'old';
 const SKIP_INTRO = Q.get('intro') === '0' || Q.has('tour') || Q.has('board');
 // A usability build fixes everything the session is not testing: one map, dark, and one half of
 // the game. The floating switches go with it — a participant should not be able to find the other
@@ -113,7 +116,12 @@ export default function App() {
   }, [phase, setPhase]);
   if (V.mobile || isPhone) return (
     <>
-      <Mobile />
+      {/* The phone runs the desktop's own page — same chamber rail, same map card, same race card,
+          "Your map" and "Every race" — restacked into one column by mobile/phone.css. ?mobile=old
+          still opens the earlier hand-built phone layout for comparison. */}
+      {OLD_PHONE ? <Mobile /> : (
+        <P9Phone />
+      )}
       <AuthModal />
       {/* the phone gets the same first-visit tour: the steps name both layouts' selectors */}
       <Onboarding ready={phase === 'live'} />

@@ -1,0 +1,93 @@
+/* Pick Em · P9 — the phone.
+
+   The phone runs the same page as the desktop. The chamber rail, the map card, the race card,
+   "Your map" and "Every race" are the same components, so anything that changes on the desktop
+   changes here too. All this file does is take the two-column board apart, stand it up in one
+   column and shrink it to a phone — it never invents a component of its own. The one thing it
+   moves is the action row: reset, Autofill and Save leave the corner of the map and become a
+   bar fixed to the bottom of the screen, where a thumb is. */
+
+.p9m { padding-bottom: calc(92px + env(safe-area-inset-bottom)); background: var(--bg); overflow-x: hidden; }
+
+/* the fixed-height two-column card becomes a plain column: the desktop sizes everything to fit
+   one window, which on a phone would mean clipping most of the page away */
+.p9m .v-wrap, .p9m .v { display: block; }
+.p9m .v-wrap, .p9m .v, .p9m .e-cards, .p9m .e-map, .p9m .e-panel, .p9m .dx-side, .p9m .dx-card, .p9m .dx-side > section {
+  height: auto !important; max-height: none !important; min-height: 0 !important; overflow: visible !important;
+}
+.p9m .e-cards, .p9m .e-cards.tall { display: block; }
+.p9m .dx-one, .p9m .e-map, .p9m .e-panel { border-radius: 0; }
+
+/* ---- the chamber rail ------------------------------------------------------------------------
+   Three cards, each with its own small map, scrolling sideways under the top bar. The folder
+   look is a desktop idea (the tab merges into the card below it), so its notches are dropped. */
+.p9m .p9-tabs { position: sticky; top: 48px; z-index: 4; display: block; padding: 6px 0 0; background: var(--bg); }
+.p9m .p9-tabs .p9-save { display: none; }
+.p9m .mt-folder { display: flex; gap: 6px; padding: 0 12px 8px; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.p9m .mt-folder::-webkit-scrollbar { display: none; }
+.p9m .mt-tab { flex: none; gap: 8px; padding: 8px 12px; border-radius: 14px; background: transparent; }
+.p9m .mt-tab::before, .p9m .mt-tab::after { display: none !important; }
+.p9m .mt-tab.on { background: var(--card); }
+.p9m .mt-tab .mm { width: 42px; height: 26px; }
+.p9m .p9 .mt-folder .mt-t b { font-size: 14px; }
+.p9m .p9 .mt-folder .mt-t small { font-size: 11px; }
+
+/* ---- the map card ----------------------------------------------------------------------------
+   On the desktop the name, the actions and the legend float over a big map. A phone has no room
+   to float anything, so the same three pieces simply stack. */
+.p9m .dx-map { position: static; padding: 0; }
+.p9m .dx-map .dx-mhead { position: static; inset: auto; flex-direction: column; align-items: flex-start; gap: 2px; padding: 12px 16px 0; }
+.p9m .dx-mname h1 { font-size: 19px; line-height: 1.15; }
+.p9m .dx-mname .dx-help { width: 24px; height: 24px; }
+.p9m .dx-mname .dx-help svg { width: 17px; height: 17px; }
+.p9m .dx-mlock { font-size: 12px; }
+.p9m .dx-mact { display: none; }
+/* .v-map holds an absolutely positioned .mapbox, so it keeps being a containing block —
+   only its placement changes, from a panel pinned inside the card to a box in the flow */
+.p9m .e-map > .v-map { position: relative !important; inset: auto !important; height: 216px; margin: 6px 0 0; }
+.p9m .dx-mfoot { position: static; inset: auto; flex-direction: column-reverse; align-items: flex-start; gap: 10px; padding: 10px 16px 14px; }
+.p9m .dx-mfoot .legend { position: static; flex-wrap: wrap; gap: 8px 14px; }
+.p9m .e-pres { opacity: .7; }
+
+/* on the night the replay takes the actions' place; on a phone it belongs under the map */
+.p9m .dx-mact.dx-tl { display: flex; position: static; inset: auto; gap: 10px; padding: 10px 16px 0; }
+
+/* ---- the column that was the right-hand panel ------------------------------------------------
+   The race you are on, then "Your map", then "Every race" — the desktop's own order, which is
+   also the order a thumb wants: act first, then check where you stand. */
+.p9m .e-panel, .p9m .dx-side { display: block; width: auto !important; padding: 0 !important; overflow: visible; }
+.p9m .dx-side > * + * { margin-top: 10px; }
+.p9m .dx-side { margin-top: 10px; }
+.p9m .dx-side > section { display: block; }
+.p9m .dx-card { padding: 14px 16px; border-radius: 18px; }
+.p9m .dx-card.grow { display: block; }
+.p9m .dx-card.grow > section { display: block; }
+
+/* the race card: the two people are the point, so they get the room */
+.p9m .dx-race { gap: 10px; }
+.p9m .dx-race .cand { padding: 8px; }
+.p9m .dx-race .cand .face { width: 40px; height: 40px; }
+
+/* "Your map" and "Every race" */
+.p9m .p8-seg-top .p8-pct { font-size: 22px; }
+.p9m .dx-board { gap: 14px !important; }
+.p9m .dx-board-row { gap: 6px; }
+.p9m .dx-board-cells { grid-template-columns: repeat(auto-fill, minmax(16px, 1fr)); gap: 4px; }
+
+/* ---- the action bar ---------------------------------------------------------------------------
+   Reset, Autofill and Save, off the map and on the bottom edge. */
+.p9m-bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); background: color-mix(in srgb, var(--bg) 84%, transparent); backdrop-filter: blur(18px); box-shadow: 0 -1px 0 var(--hair); }
+.p9m-bar .actions { display: flex; align-items: center; gap: 8px; }
+.p9m-bar .actions .autofill { flex: 1; min-width: 0; }
+.p9m-bar .actions .autofill > .btn { width: 100%; justify-content: center; padding: 0 12px; }
+/* the chamber's name rides along on the desktop; on a phone the bar has no room for it */
+.p9m-bar .af-cat { display: none; }
+.p9m-bar .actions .btn.save { flex: none; padding: 0 18px; }
+.p9m-bar .autofill-menu { bottom: calc(100% + 8px); top: auto; }
+
+/* the phone's own top bar keeps the page's chrome to one 48px line */
+.p9m .m-top { height: 48px; }
+
+/* nothing in the column may be wider than the screen */
+.p9m .e-map, .p9m .dx-side, .p9m .dx-card, .p9m .e-cards { max-width: 100%; }
+.p9m-bar * { min-width: 0; }

@@ -8,10 +8,15 @@ import { AnimatePresence, motion } from 'motion/react';
 import { ALL, BY_ID, RACES, RESULTS, TAB_LABEL, TABS, type Race, type Tab } from '../data/races';
 import { catSaved, liveScore, useStore } from '../lib/store';
 import { useCountdown } from './LockLine';
-import { CandidateRow, Face, Flag, Icon, useAutoWave } from './ui';
+import { CandidateRow, Face, Flag, Icon, liveLine, useAutoWave } from './ui';
 import { CatActions, Foot, LiveVideo, MapBox, MapTabs, MiniMap, Presented, Race as RaceCard } from './Layouts';
 import { Legend } from '../App';
 import { ShareButton } from './Share';
+import { AutofillButton } from '../App';
+import { ResetButton } from './Common';
+import { usePanelRace } from './Palette';
+import { Wordmark } from './Nav';
+import { ProfileMenu } from '../mobile/Mobile';
 
 const useLive = () => useStore((s) => s.live);
 const NOUN: Record<Tab, string> = { senate: 'Senate', gov: 'governor', house: 'House' };
@@ -1162,6 +1167,90 @@ function ThePage() {
     <div className={'v vE r big rows mtw mtw-folder dx dx7 p8 p22 p9 sel-' + TABS.indexOf(tab)}>
       <div className="p9-tabs"><MapTabs look="folder" /><SaveMaps /></div>
       <div className="e-cards tall dx-one"><DxMap noSave /><Side cls="board" before={<MapCard6b />}><Board8 row="frac" /></Side></div>
+      <PartDone />
+    </div>
+  );
+}
+
+// ---- P9 on a phone: the Figma frame "Pick Em · P5 mobile (from code)" (440:9844) -------------------
+// One column: the DW header, the name, the three parts as a segmented control, the map with its legend,
+// "Your map" and "Every race"; and a panel fixed to the bottom with the race on screen, its two
+// candidates side by side, and the actions.
+export function P9Phone() {
+  const tab = useStore((s) => s.tab);
+  const setTab = useStore((s) => s.setTab);
+  const setTour = useStore((s) => s.setTour);
+  const user = useStore((s) => s.user);
+  const live = useLive();
+  const t = useStore((s) => s.t);
+  const picks = useStore((s) => s.picks);
+  const step = useStore((s) => s.step);
+  const race = usePanelRace();
+  const { left, locked } = useCountdown();
+  const sc = live ? liveScore(picks, t) : null;
+  const [menu, setMenu] = useState(false);
+  return (
+    <div className={'p9 dx p9p' + (live ? ' night' : '')}>
+      <header className="p9p-top">
+        <button className="p9p-ic" aria-label="Menu"><Icon name="menu" size={22} stroke={1.8} /></button>
+        <Wordmark className="p9p-logo" />
+        <div className="p9p-acts">
+          <button className="p9p-ic" aria-label="Search"><Icon name="search" size={20} stroke={1.8} /></button>
+          <div className="p9p-acct">
+            <button className={'p9p-av' + (user ? ' in' : '')} onClick={() => setMenu(!menu)} aria-label="Account and settings" aria-expanded={menu}>
+              {user ? user.initials : <Icon name="user" size={18} />}
+            </button>
+            <AnimatePresence>{menu && <ProfileMenu onClose={() => setMenu(false)} />}</AnimatePresence>
+          </div>
+        </div>
+      </header>
+
+      <main className="p9p-play">
+        <div className="p9p-head">
+          <div>
+            <Presented />
+            <h1>The Midterms Pick Em</h1>
+            <p className="p9p-lock num">{sc ? <><i className="sd live-dot" />Live · {sc.called} of {ALL.length} called</> : locked ? 'Picks are locked' : <>Lock in <b>{left}</b></>}</p>
+          </div>
+          <button className="p9p-help" aria-label="How to play" onClick={() => setTour(0)}><Icon name="help" size={20} stroke={1.5} /></button>
+        </div>
+
+        <div className="p9p-tabs" role="tablist" aria-label="Parts of the game">
+          {TABS.map((k) => (
+            <button key={k} role="tab" aria-selected={tab === k} className={tab === k ? 'on' : ''} onClick={() => setTab(k)}>
+              {tab === k && <motion.span layoutId="p9p-tab" className="hl" transition={{ type: 'spring', stiffness: 500, damping: 40 }} />}
+              <span>{TAB_LABEL[k]}</span>
+            </button>
+          ))}
+        </div>
+
+        <div className="p9p-map"><MapBox /></div>
+        <Legend />
+
+        <div className="p9p-cards">
+          <div className="dx-card p22-map p9p-card"><BoardHead head="seg" /></div>
+          <div className="dx-card p9p-card"><Board8 row="frac" /></div>
+        </div>
+      </main>
+
+      <section className="p9p-panel" aria-label="The race">
+        <div className="p9p-race">
+          <div className="p9p-name"><Flag st={race.state} /><h3>{race.stateName}</h3></div>
+          <div className="p9p-nav">
+            <button aria-label="Previous race" onClick={() => step(-1)}><Icon name="chevLeft" size={20} stroke={2} /></button>
+            <button aria-label="Next race" onClick={() => step(1)}><Icon name="chevRight" size={20} stroke={2} /></button>
+          </div>
+        </div>
+        <div key={race.id} className={'p9p-cands' + (live ? ' night' : '')}><CandidateRow race={race} side="R" /><CandidateRow race={race} side="D" /></div>
+        {live && (() => { const l = liveLine(race, t, picks[race.id]); return (
+          <div className={'p9p-verdict' + (l.tone ? ' ' + l.tone : '')}>
+            {l.tone && <span className="vd-i" aria-hidden><Icon name={l.tone === 'ok' ? 'check' : 'x'} size={12} stroke={3} /></span>}{l.text}
+          </div>
+        ); })()}
+        <div className="p9p-bar">
+          {live ? <><Foot /><ShareButton /></> : <><ResetButton className="btn reset" /><AutofillButton /><SaveMaps /></>}
+        </div>
+      </section>
       <PartDone />
     </div>
   );

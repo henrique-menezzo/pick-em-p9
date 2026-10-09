@@ -20,7 +20,7 @@ export function Flag({ st, sm }: { st: string; sm?: boolean }) {
   return <img className={'flag' + (sm ? ' sm' : '')} src={asset(`flags/us-${st.toLowerCase()}.png`)} alt="" draggable={false} />;
 }
 
-type IconName = 'arrowLeft' | 'arrowRight' | 'chevDown' | 'chevUp' | 'check' | 'x' | 'list' | 'focus' | 'zoom' | 'play' | 'pause' | 'user' | 'wand' | 'collapse' | 'reset' | 'lock' | 'plus' | 'minus' | 'download' | 'search' | 'help' | 'chevRight' | 'chevLeft' | 'sun' | 'moon' | 'volume' | 'mute' | 'expand' | 'share' | 'link';
+type IconName = 'arrowLeft' | 'arrowRight' | 'chevDown' | 'chevUp' | 'check' | 'x' | 'list' | 'focus' | 'zoom' | 'play' | 'pause' | 'user' | 'wand' | 'collapse' | 'reset' | 'lock' | 'plus' | 'minus' | 'download' | 'search' | 'help' | 'chevRight' | 'chevLeft' | 'sun' | 'moon' | 'volume' | 'mute' | 'expand' | 'share' | 'link' | 'menu';
 const PATHS: Record<IconName, string> = {
   arrowLeft: 'M19 12H5 M11 6l-6 6 6 6',
   arrowRight: 'M5 12h14 M13 6l6 6-6 6',
@@ -50,6 +50,7 @@ const PATHS: Record<IconName, string> = {
   volume: 'M4 9.5h3.5L12 5.5v13l-4.5-4H4z M15.5 9a4 4 0 0 1 0 6 M18 6.5a7.5 7.5 0 0 1 0 11',
   mute: 'M4 9.5h3.5L12 5.5v13l-4.5-4H4z M16 9.5l5 5 M21 9.5l-5 5',
   expand: 'M4 9V4h5 M20 9V4h-5 M4 15v5h5 M20 15v5h-5',
+  menu: 'M4 7h16 M4 12h16 M4 17h16',
   share: 'M12 15V4 M7.5 8.5L12 4l4.5 4.5 M5 13v5.5h14V13',
   link: 'M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1 M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1',
 };
