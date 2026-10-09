@@ -226,10 +226,12 @@ export const useStore = create<State>()(
         if (isLocked()) return;
         const name = AUTO_NAME[source];
         const cat = TAB_LABEL[s.tab];
-        const todo = RACES[s.tab].filter((r) => !s.picks[r.id] || s.auto[r.id]);
+        // an Autofill mark only counts while its pick is still there
+        const isAuto = (id: string) => !!s.picks[id] && !!s.auto[id];
+        const todo = RACES[s.tab].filter((r) => !s.picks[r.id] || isAuto(r.id));
         if (!todo.length) return s.say(`Every ${cat} race is your own pick`);
-        if (todo.every((r) => s.auto[r.id] === source)) return s.say(`${cat} is already filled from ${name}`);
-        const swapped = todo.filter((r) => s.auto[r.id]).length;
+        if (todo.every((r) => isAuto(r.id) && s.auto[r.id] === source)) return s.say(`${cat} is already filled from ${name}`);
+        const swapped = todo.filter((r) => isAuto(r.id)).length;
         const picks = { ...s.picks };
         const auto = { ...s.auto };
         for (const r of todo) { picks[r.id] = source === 'market' ? r.market : r.poll; auto[r.id] = source; }
@@ -241,7 +243,7 @@ export const useStore = create<State>()(
       clearAuto: () => {
         const s = get();
         if (isLocked()) return;
-        const ids = RACES[s.tab].filter((r) => s.auto[r.id]).map((r) => r.id);
+        const ids = RACES[s.tab].filter((r) => s.picks[r.id] && s.auto[r.id]).map((r) => r.id);
         if (!ids.length) return;
         const picks = { ...s.picks };
         const auto = { ...s.auto };

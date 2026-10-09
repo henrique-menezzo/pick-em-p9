@@ -53,7 +53,7 @@ if (Q.has('reset')) {
   // working, so that keeps everything.
   if (!CONTINUING) {
     useStore.setState({
-      picks: {}, savedAt: null, savedPicks: {}, user: null, live: false, playing: false, tourDone: false, tour: null,
+      picks: {}, auto: {}, savedAt: null, savedPicks: {}, user: null, live: false, playing: false, tourDone: false, tour: null,
       panelMin: false, tab: 'senate',
       cursor: { senate: RACES.senate.find((r) => r.state === 'NM')!.id, gov: RACES.gov[0].id, house: RACES.house[0].id },
     });
@@ -75,7 +75,7 @@ if (Q.has('reset')) {
   // A prototype, not a product: every reload starts the story from the top — empty map, signed out,
   // onboarding from step one. Nothing carries over from the last visit.
   useStore.setState({
-    picks: {}, savedAt: null, savedPicks: {}, user: null, live: false, playing: false, tourDone: false, tour: null,
+    picks: {}, auto: {}, savedAt: null, savedPicks: {}, user: null, live: false, playing: false, tourDone: false, tour: null,
     panelMin: false, tab: 'senate',
     cursor: { senate: RACES.senate.find((r) => r.state === 'NM')!.id, gov: RACES.gov[0].id, house: RACES.house[0].id },
   });
