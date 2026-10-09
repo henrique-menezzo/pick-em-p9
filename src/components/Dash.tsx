@@ -1024,8 +1024,8 @@ function SaveMaps() {
 }
 
 /** A part is finished: a card of its own says so, shows where the three maps stand, and offers the
- *  next one. However it was finished, by hand or by Autofill; once each time a part fills up, and
- *  never during the tour. */
+ *  next one. However it was finished, by hand or by Autofill; once per part and no more (seen and
+ *  stayed means seen, even if the part is emptied and filled again), and never during the tour. */
 function PartDone() {
   const picks = useStore((s) => s.picks);
   const auto = useStore((s) => s.auto);
@@ -1046,8 +1046,6 @@ function PartDone() {
     const p = prev.current;
     prev.current = done;
     if (!p || live || tour !== null) return;
-    // a part that is open again can be finished again
-    for (const x of TABS) if (done[x] < RACES[x].length) shown.current.delete(x);
     const k = TABS.find((x) => p[x] < RACES[x].length && done[x] === RACES[x].length && !shown.current.has(x));
     if (!k) return;
     shown.current.add(k);
