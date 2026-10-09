@@ -736,3 +736,6 @@
 .p9 .dx-board { gap: 16px !important; }
 /* when the board scrolls inside its card (short windows), the fade says there is more */
 .p9 .dx-card.grow > .dx-board { -webkit-mask-image: linear-gradient(#000 calc(100% - 20px), transparent); mask-image: linear-gradient(#000 calc(100% - 20px), transparent); padding-bottom: 12px; }
+/* both arrows of the race card read as available: they always lead somewhere */
+.p9 .dx-race .fb-nav button, .p9 .dx-race .fb-nav button:first-child { color: var(--fg); }
+@media (hover: hover) { .p9 .dx-race .fb-nav button:hover { background: var(--s3); } }
