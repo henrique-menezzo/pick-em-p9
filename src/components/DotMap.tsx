@@ -287,7 +287,7 @@ export default function DotMap({ fit }: { fit?: boolean }) {
           {curSt && curSt !== lifted && raceIn(tab, curSt) && <path className="sel-outline" d={SHAPES[curSt]} />}
           <g className="labels" aria-hidden>
             {ORDER.filter((st) => LABELS[st] && st !== lifted).map((st) => (
-              <text key={st} className={'lb' + (looks[st].label ? ' light' : '')} x={LABELS[st][0]} y={LABELS[st][1]} fontSize={sizeOf(st)} textAnchor="middle" dominantBaseline="central"
+              <text key={st} className={'lb' + (looks[st].label ? ' light' : '') + (/^nr/.test(looks[st].cls) ? ' nrl' : '')} x={LABELS[st][0]} y={LABELS[st][1]} fontSize={sizeOf(st)} textAnchor="middle" dominantBaseline="central"
 >
                 {st}
               </text>
