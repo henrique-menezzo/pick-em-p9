@@ -58,7 +58,7 @@ if (Q.has('reset')) {
     useStore.setState({
       picks: {}, auto: {}, savedAt: null, savedPicks: {}, user: null, live: false, playing: false, tourDone: false, tour: null,
       panelMin: false, tab: 'senate',
-      cursor: { senate: RACES.senate.find((r) => r.state === 'NM')!.id, gov: RACES.gov[0].id, house: RACES.house[0].id },
+      cursor: { senate: RACES.senate[0].id, gov: RACES.gov[0].id, house: RACES.house[0].id },
     });
   }
   // The one thing a session build never keeps is which half of the game you were in. Election
@@ -80,7 +80,7 @@ if (Q.has('reset')) {
   useStore.setState({
     picks: {}, auto: {}, savedAt: null, savedPicks: {}, user: null, live: false, playing: false, tourDone: false, tour: null,
     panelMin: false, tab: 'senate',
-    cursor: { senate: RACES.senate.find((r) => r.state === 'NM')!.id, gov: RACES.gov[0].id, house: RACES.house[0].id },
+    cursor: { senate: RACES.senate[0].id, gov: RACES.gov[0].id, house: RACES.house[0].id },
   });
   const s = useStore.getState();
   // ?fill=1 — screenshot helper: a complete map picked like the polls (swaps a few so there are misses)

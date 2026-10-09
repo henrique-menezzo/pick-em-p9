@@ -127,7 +127,7 @@ export const useStore = create<State>()(
     (set, get) => ({
       picks: seedPicks(),
       tab: 'senate',
-      cursor: { senate: RACES.senate.find((r) => r.state === 'NM')!.id, gov: RACES.gov[0].id, house: RACES.house[0].id },
+      cursor: { senate: RACES.senate[0].id, gov: RACES.gov[0].id, house: RACES.house[0].id },
       live: false,
       t: 162,
       playing: false,

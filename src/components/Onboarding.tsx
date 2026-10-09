@@ -113,8 +113,7 @@ const STEPS: Step[] = [
     body: 'Save any time and keep picking until the deadline. On election night we compare your picks with the live calls.',
     aim: '.p9-tabs .btn.save, .m-btn.primary',
     align: 'end', // its right edge on the button's right edge
-    ask: 'Hit Save to finish',
-    wait: (done) => onClickOf('.btn.save', done),
+    // shown, not pressed: a Save during the tour would ask for an account before a single real pick
   },
 ];
 
@@ -132,6 +131,16 @@ export default function Onboarding({ ready = true }: { ready?: boolean }) {
     const h = setTimeout(() => useStore.getState().setTour(0), 420);
     return () => clearTimeout(h);
   }, [ready, tourDone, step, live]);
+
+  // The tour's practice picks (Texas, a candidate in the panel) are practice: when the tour ends, by
+  // finishing or by closing it, the map goes back to exactly how it was before the tour began. Left
+  // in, they nudged the first real map towards a Democrat in Texas before the reader chose anything.
+  const before = useRef<Partial<ReturnType<typeof useStore.getState>> | null>(null);
+  useEffect(() => {
+    const st = useStore.getState();
+    if (step !== null && !before.current) before.current = { picks: st.picks, auto: st.auto, cursor: st.cursor, tab: st.tab, savedAt: st.savedAt };
+    if (step === null && before.current) { useStore.setState(before.current); before.current = null; }
+  }, [step]);
 
   const s = step === null ? null : STEPS[step];
   const next = () => (step! >= STEPS.length - 1 ? setTour(null) : setTour(step! + 1));
