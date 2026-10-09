@@ -891,3 +891,14 @@
 }
 /* a finished map says so with a check, in the tab too */
 .mt-tab .mt-t small { display: inline-flex; align-items: center; gap: 4px; }
+
+/* Autofill without colour: its picks keep the party's full colour and wear a fine dot screen instead
+   (dots, never lines, so they cannot be read as the no-race hatch) */
+:root { --R-af: var(--R); --D-af: var(--D); }
+.map .st path.af-tex, .map .lift-overlay path.af-tex { fill: url(#af-dots); stroke: none; pointer-events: none; transition: none; filter: none; }
+.p9 .dx-board .dx-cell.af { background-image: radial-gradient(circle, rgba(255, 255, 255, .42) 1px, transparent 1.4px); background-size: 4px 4px; background-position: center; }
+.legend i.af-sw { background: radial-gradient(circle, rgba(255, 255, 255, .55) .7px, transparent 1px) 0 0 / 3px 3px, linear-gradient(90deg, var(--R) 50%, var(--D) 50%); }
+@keyframes af-in { from { opacity: 0; } }
+@media (prefers-reduced-motion: no-preference) {
+  .map.wave .st.af path.af-tex { animation: af-in .4s ease-out var(--w) backwards; }
+}
