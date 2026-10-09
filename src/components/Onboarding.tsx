@@ -292,10 +292,12 @@ export default function Onboarding({ ready = true }: { ready?: boolean }) {
                     opacity motion writes on mount never animates away — the hole stays shut */}
                 {all && mapCut && (
                   <>
-                    <g fill="#000" transform={mapCut.m}>
+                    {/* the country with air around it: every shape stroked MAP_AIR wide on each side, so
+                        the light does not sit right on the coastline */}
+                    <g fill="#000" stroke="#000" strokeWidth={MAP_AIR * 2} strokeLinejoin="round" strokeLinecap="round" transform={mapCut.m}>
                       {mapKind === 'dots'
-                        ? MAP_DOTS.map((d, i) => <circle key={i} cx={d.x} cy={d.y} r={d.r} />)
-                        : MAP_SHAPES.map((d, i) => <path key={i} d={d} stroke="#000" strokeWidth={2} strokeLinejoin="round" vectorEffect="non-scaling-stroke" />)}
+                        ? MAP_DOTS.map((d, i) => <circle key={i} cx={d.x} cy={d.y} r={d.r} vectorEffect="non-scaling-stroke" />)
+                        : MAP_SHAPES.map((d, i) => <path key={i} d={d} vectorEffect="non-scaling-stroke" />)}
                     </g>
                     {/* and give back the strip the panel covers: white paints the dim on again */}
                     {mapCut.over && (
@@ -332,7 +334,7 @@ export default function Onboarding({ ready = true }: { ready?: boolean }) {
                 </motion.g>
               )}
               {all && mapCut && (
-                <g transform={mapCut.m}>
+                <g transform={mapCut.m} strokeWidth={MAP_AIR * 2 + 3}>
                   {mapKind === 'dots'
                     ? MAP_DOTS.map((d, i) => <circle key={i} cx={d.x} cy={d.y} r={d.r} vectorEffect="non-scaling-stroke" />)
                     : MAP_SHAPES.map((d, i) => <path key={i} d={d} vectorEffect="non-scaling-stroke" />)}
@@ -399,6 +401,9 @@ function statesBox() {
  *  scaled wrapper and the step may scroll it — and the panel that floats on top of it. The map
  *  runs under that panel, and lighting the country through it would say the panel is part of what
  *  the step is pointing at. It is not; it is the thing in front. */
+/** How far the light around the whole country stands off its coastline, in screen pixels */
+const MAP_AIR = 16;
+
 function useMapCut(on: boolean, kind: 'shape' | 'dots') {
   const [cut, setCut] = useState<{ m: string; over: { x: number; y: number; w: number; h: number; r: number } | null } | null>(null);
   useEffect(() => {
