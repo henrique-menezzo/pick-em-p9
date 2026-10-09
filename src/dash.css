@@ -1147,3 +1147,10 @@ body:has(.p9p) .tour.phone .tour-card { padding: 24px 24px calc(20px + env(safe-
   body:has(.p9p) .auth-btn { height: 46px; border-radius: 4px; }
   body:has(.auth-back) .p9p-panel { visibility: hidden; }
 }
+
+/* phone: a finger on the map scrolls the page (the desktop's touch-action: none kept it from moving
+   unless you dragged at the very edge); a tap still picks, a drag is a scroll */
+.p9p .map { touch-action: manipulation; }
+/* phone: bigger squares, 12 to a row across the card's width */
+.p9.p9p .p9p-card .dx-board-cells { grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 5px; }
+.p9.p9p .p9p-card .dx-cell { border-radius: 5px; }

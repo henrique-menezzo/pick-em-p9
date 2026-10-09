@@ -33,7 +33,7 @@ type Step = {
   fit?: 'states';
   /** hang the card off this instead of off what the light is on. The first step lights the whole
       map, and a card hung from the map's own bottom edge sits higher than the one the next step
-      puts beside Texas — so the card jumps the moment you press Next. Same anchor, no jump. */
+      puts beside Nebraska — so the card jumps the moment you press Next. Same anchor, no jump. */
   anchor?: string;
 };
 
@@ -56,12 +56,12 @@ const STEPS: Step[] = [
   },
   {
     title: 'Click a state to pick',
-    // the lesson is "click a state", so the spotlight closes in on one — Texas: big, central, and
-    // impossible to miss — and the card comes to sit beside it
-    body: 'Try it now: click Texas, lit below, and it becomes your Republican pick.',
-    aim: '.map g[data-st="TX"]',
-    live: '.map', // the map works out the state itself, so let the click through and lock it to Texas
-    ask: 'Click Texas to continue',
+    // the lesson is "click a state", so the spotlight closes in on one: Nebraska, in the middle of the
+    // country (Texas sat at the bottom edge of the map), and the card comes to sit beside it
+    body: 'Try it now: click Nebraska, lit on the map, and it becomes your Republican pick.',
+    aim: '.map g[data-st="NE"]',
+    live: '.map', // the map works out the state itself, so let the click through and lock it to Nebraska
+    ask: 'Click Nebraska to continue',
     wait: (done) => {
       const before = Object.keys(picksOf()).length;
       return useStore.subscribe((s) => { if (Object.keys(s.picks).length > before) setTimeout(done, 320); });
@@ -70,9 +70,9 @@ const STEPS: Step[] = [
   {
     title: 'Click again to switch',
     body: 'A second click on the same state switches it to the Democrat, a third clears it.',
-    aim: '.map g[data-st="TX"]', // the same state, so the spotlight holds still while the colour changes
+    aim: '.map g[data-st="NE"]', // the same state, so the spotlight holds still while the colour changes
     live: '.map',
-    ask: 'Click Texas again',
+    ask: 'Click Nebraska again',
     wait: (done) => {
       const before = { ...picksOf() };
       return useStore.subscribe((s) => {
@@ -89,14 +89,22 @@ const STEPS: Step[] = [
     ask: 'Pick a candidate in the panel',
     wait: (done) => onClickOf('.pal .cand, .p9p-cands .cand', done),
   },
+  // the three maps, one at a time: the spotlight on the one tab to press, and only that tab answers
   {
     title: 'Three maps, one game',
-    body: 'Senate, governor and House races each have a map of their own. Switch between them here. Each one saves on its own.',
-    aim: '.mt-rail, .mt, .tt, .pp, .v-tabs, .p-tabs, .p9p-tabs',
+    body: 'Senate, governor and House races each have a map of their own. Open Governor to see the governor races.',
+    aim: '.mt [role=tab]:nth-child(2), .p9p-tabs [role=tab]:nth-child(2)',
     align: 'start',
-    // the tabs answer during this step, and opening one moves the tour on
-    ask: 'Open another map',
-    wait: (done) => onClickOf('.mt [role=tab], .p9p-tabs [role=tab]', done),
+    ask: 'Open Governor',
+    wait: (done) => useStore.subscribe((s) => { if (s.tab === 'gov') setTimeout(done, 320); }),
+  },
+  {
+    title: 'And one for the House',
+    body: 'The House races are on the third map. Each map saves on its own, so you can finish one and come back for the next.',
+    aim: '.mt [role=tab]:nth-child(3), .p9p-tabs [role=tab]:nth-child(3)',
+    align: 'start',
+    ask: 'Open House',
+    wait: (done) => useStore.subscribe((s) => { if (s.tab === 'house') setTimeout(done, 320); }),
   },
   {
     title: 'Every race, at a glance',
@@ -134,13 +142,17 @@ export default function Onboarding({ ready = true }: { ready?: boolean }) {
     return () => clearTimeout(h);
   }, [ready, tourDone, step, live]);
 
-  // The tour's practice picks (Texas, a candidate in the panel) are practice: when the tour ends, by
+  // The tour's practice picks (Nebraska, a candidate in the panel) are practice: when the tour ends, by
   // finishing or by closing it, the map goes back to exactly how it was before the tour began. Left
-  // in, they nudged the first real map towards a Democrat in Texas before the reader chose anything.
+  // in, they nudged the first real map towards a Democrat in Nebraska before the reader chose anything.
+  // The tour itself always starts on the Senate map, so its steps read the same however it was opened.
   const before = useRef<Partial<ReturnType<typeof useStore.getState>> | null>(null);
   useEffect(() => {
     const st = useStore.getState();
-    if (step !== null && !before.current) before.current = { picks: st.picks, auto: st.auto, cursor: st.cursor, tab: st.tab, savedAt: st.savedAt };
+    if (step !== null && !before.current) {
+      before.current = { picks: st.picks, auto: st.auto, cursor: st.cursor, tab: st.tab, savedAt: st.savedAt };
+      if (st.tab !== 'senate') st.setTab('senate');
+    }
     if (step === null && before.current) { useStore.setState(before.current); before.current = null; }
   }, [step]);
 
