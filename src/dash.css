@@ -1115,3 +1115,27 @@ body:has(.p9p) .tour.phone .tour-card { width: 100vw; border-radius: 24px 24px 0
 .tour.phone .tour-edge { opacity: .14; }
 .p9p-top { box-shadow: 0 1px 0 #292929; }
 .p9p-bar .p9-save { justify-content: center; text-align: center; }
+/* phone: no "who you picked" badge over the map, the panel already says it */
+body:has(.p9p) .pick-badge { display: none; }
+
+/* phone: the sign-up / log-in sheet in the P9 phone's own language: a grabber, round corners, compact
+   heading, 16px inputs (no iOS zoom), rounded fields and a pill button */
+@media (max-width: 760px) {
+  body:has(.p9p) .auth { padding: 12px 0 calc(16px + env(safe-area-inset-bottom)); border-radius: 24px 24px 0 0; background: #1a1a1a; }
+  body:has(.p9p) .auth::before { content: ''; display: block; width: 40px; height: 4px; margin: 0 auto 8px; border-radius: 999px; background: #3a3a3a; }
+  body:has(.p9p) .auth-x { top: 16px; right: 12px; width: 36px; height: 36px; }
+  body:has(.p9p) .auth-main { padding: 8px 16px 0; }
+  body:has(.p9p) .auth-logo { width: 112px; height: 11px; margin: 0; }
+  body:has(.p9p) .auth-text { margin-top: 20px; text-align: start; }
+  body:has(.p9p) .auth-text h2 { font-size: 20px; letter-spacing: -.01em; }
+  body:has(.p9p) .auth-text p { margin-top: 6px; font-size: 14px; color: #8f8f8f; }
+  body:has(.p9p) .auth-fields { margin-top: 20px; gap: 8px; }
+  body:has(.p9p) .field { height: 56px; padding: 0 16px; border-radius: 12px; background: #232323; border-color: transparent; }
+  body:has(.p9p) .field:focus-within { border-color: #5c5c5c; }
+  body:has(.p9p) .field .lb { left: 16px; }
+  body:has(.p9p) .field.up .lb { top: 14px; }
+  body:has(.p9p) .field input { font-size: 16px; padding-top: 16px; }
+  body:has(.p9p) .auth-foot { margin-top: 16px; gap: 14px; }
+  body:has(.p9p) .auth-btn { height: 48px; border-radius: 999px; text-transform: none; }
+  body:has(.p9p) .auth-terms { text-align: start; }
+}

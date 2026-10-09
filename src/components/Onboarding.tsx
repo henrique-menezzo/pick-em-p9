@@ -267,7 +267,7 @@ export default function Onboarding({ ready = true }: { ready?: boolean }) {
   return createPortal(
     <AnimatePresence>
       {s && spot && (
-        <motion.div className={'tour' + (phone ? ' phone' : '')} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.22 }}>
+        <motion.div className={'tour' + (phone ? ' phone' : '')} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={phone ? { opacity: 0, transition: { duration: 0 } } : { opacity: 0 }} transition={{ duration: phone ? 0.16 : 0.22 }}>
           {/* one spotlight for the whole tour: it opens onto the map and then travels and resizes
               from step to step, instead of blinking out and back in. The dim is its own shadow, so
               there is nothing to keep in sync and nothing to clip per frame. */}
