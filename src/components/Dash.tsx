@@ -687,6 +687,9 @@ function Board8({ head = 'none', row = 'frac', done = 'check', dot, title = true
                   onClick={() => { if (live) { setTab(k); select(r.id); } else tap(r.id); }}
                   onPointerEnter={(e) => { if (e.pointerType !== 'mouse') return; pop.open(r.id, e.currentTarget); }}
                   onPointerLeave={(e) => { if (e.pointerType !== 'mouse') return; pop.leave(); }}>
+                  {!live && pk && (auto[r.id]
+                    ? <svg className="af-mark" viewBox="-4 -4 8 8" aria-hidden><path d="M0 -3.4L.9 -.9L3.4 0L.9 .9L0 3.4L-.9 .9L-3.4 0L-.9 -.9Z" /></svg>
+                    : <svg className="own-mark" viewBox="-4 -4 8 8" aria-hidden><path d="M-2.6 0L-.8 1.9L2.8 -2" /></svg>)}
                   {c.startsWith('right') && <Icon name="check" size={10} stroke={3.4} />}
                   {c.startsWith('miss') && <Icon name="x" size={9} stroke={3.4} />}
                 </button>;

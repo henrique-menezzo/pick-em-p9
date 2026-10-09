@@ -49,6 +49,8 @@ interface State {
   /** the design system has both modes; the switch by "My picks" chooses one */
   theme: Theme;
   mapKind: MapKind;
+  /** review switch: how Autofill's picks are told apart from yours (1 nothing on the map, 2 a check on yours, 3 a spark on Autofill's) */
+  afLook: number;
   layout: number;
   setLayout(n: number): void;
   /** the opening transition: the waveform, then the screen assembling itself, then the game */
@@ -88,6 +90,7 @@ interface State {
   setPanelMin(min: boolean): void;
   setTheme(theme: Theme): void;
   setMapKind(kind: MapKind): void;
+  setAfLook(n: number): void;
   /** Election Night needs an account and a saved map. */
   goLive(on: boolean): void;
 }
@@ -137,6 +140,7 @@ export const useStore = create<State>()(
       tourDone: false,
       theme: (new URLSearchParams(location.search).get('theme') as Theme) || 'dark',
       mapKind: (new URLSearchParams(location.search).get('map') === '2' ? 'dots' : 'shape'),
+      afLook: 1,
       layout: 1,
       setLayout: (layout) => set({ layout, hoverId: null }),
       phase: 'intro',
@@ -277,6 +281,7 @@ export const useStore = create<State>()(
       setTheme: (theme) => { applyTheme(theme); set({ theme }); },
       // the spotlight and the tour read the map straight from the DOM, so swapping it ends any hover
       setMapKind: (mapKind) => set({ mapKind, hoverId: null }),
+      setAfLook: (afLook) => set({ afLook }),
       setPhase: (phase) => set({ phase }),
       setTour: (tour) => set({ tour, tourDone: tour === null ? true : get().tourDone }),
       goLive: (on) => {

@@ -80,7 +80,6 @@ const Lift = memo(function Lift({ st, c, light, sel, af, tapX, tapY, tapN }: { s
       {[3, 2, 1].map((i) => <path key={i} className="lift-side" d={SHAPES[st]} transform={`translate(0 ${i * 1.7})`} />)}
       <path className="lift-shape" d={SHAPES[st]} />
       <path className="lift-face" d={SHAPES[st]} />
-      {af && <path className="af-tex" d={SHAPES[st]} />}
       {tapN ? <Splash st={st} x={tapX!} y={tapY!} c={c} n={tapN} /> : null}
       {sel && <path className="sel-outline" d={SHAPES[st]} />}
       {at && (
@@ -98,8 +97,7 @@ const State = memo(function State({ st, cls, c, o, tapX, tapY, tapN }: { st: str
       <path d={SHAPES[st]} />
       {/* no race here: the hub's no-data look, grey under a diagonal hatch */}
       {cls.startsWith('nr') && <path className="hatch" d={SHAPES[st]} />}
-      {/* Autofill's pick: the party's own colour, under a fine dot screen that says "not yours" */}
-      {/(^| )af( |$)/.test(cls) && <path className="af-tex" d={SHAPES[st]} />}
+
       {tapN ? <Splash st={st} x={tapX!} y={tapY!} c={c} n={tapN} /> : null}
     </g>
   );
@@ -268,10 +266,6 @@ export default function DotMap({ fit }: { fit?: boolean }) {
             <pattern id="hatch-no-data" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(-45)">
               <line x1="0" y1="0" x2="0" y2="7" stroke="#fafafa" strokeOpacity="0.26" strokeWidth="2.4" />
             </pattern>
-            {/* Autofill's dot screen: dots, not lines, so it never reads as the no-race hatch */}
-            <pattern id="af-dots" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-              <circle cx="3.5" cy="3.5" r="1.4" fill="#fff" fillOpacity="0.36" />
-            </pattern>
           </defs>
           {ORDER.map((st) => (
             // `soc` = this state has a copy of itself raised above it, so what is left on the board
@@ -290,6 +284,18 @@ export default function DotMap({ fit }: { fit?: boolean }) {
                 {st}
               </text>
             ))}
+            {/* Autofill looks 2 and 3: a check under the initials of your own picks, or a spark under
+                Autofill's. Only one of the two groups is ever shown, by the switch on <html>. */}
+            {!live && ORDER.filter((st) => LABELS[st] && st !== lifted && /(^| )pk( |$)/.test(looks[st].cls)).map((st) => {
+              const k = sizeOf(st) / 11;
+              const af = /(^| )af( |$)/.test(looks[st].cls);
+              return (
+                <g key={'m' + st} className={af ? 'af-mark' : 'own-mark'} transform={`translate(${LABELS[st][0]} ${LABELS[st][1] + sizeOf(st) * 1.25}) scale(${k})`}>
+                  <circle r="6" />
+                  {af ? <path d="M0 -3.4L.9 -.9L3.4 0L.9 .9L0 3.4L-.9 .9L-3.4 0L-.9 -.9Z" /> : <path d="M-2.6 0L-.8 1.9L2.8 -2" />}
+                </g>
+              );
+            })}
             {/* on the night, a race you missed carries an ✕ under its initials: the faded colour alone
                 was read as a win */}
             {live && ORDER.filter((st) => LABELS[st] && st !== lifted && /(^| )miss( |$)/.test(looks[st].cls)).map((st) => {

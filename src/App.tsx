@@ -347,6 +347,8 @@ function ViewSwitch() {
       <span className="vs-div" />
       <MapSwitch />
       <span className="vs-div" />
+      <AfSwitch />
+      <span className="vs-div" />
       <ThemeSwitch />
     </div>,
     document.body,
@@ -383,6 +385,27 @@ function MapSwitch() {
           <button className={kind === k ? 'on' : ''} onClick={() => set(k)} aria-pressed={kind === k}>
             <span className="vs-n">Map</span> {n}
             {kind === k && <motion.span layoutId="vs-map-hl" className="hl" initial={false} transition={{ type: 'spring', stiffness: 500, damping: 38 }} />}
+          </button>
+        </Tip>
+      ))}
+    </div>
+  );
+}
+
+/** Autofill's picks are the same colour as yours. Three ways to tell them apart anyway, to compare:
+ *  the choice sits on <html> so the cards drawn outside the page follow it too. */
+const AF_LOOKS = ['Nothing on the map, the source in words only', 'A check on your own picks', 'A spark on Autofill\'s picks'];
+function AfSwitch() {
+  const n = useStore((s) => s.afLook);
+  const set = useStore((s) => s.setAfLook);
+  useEffect(() => { document.documentElement.dataset.afl = String(n); }, [n]);
+  return (
+    <div className="vs-seg vs-map">
+      {AF_LOOKS.map((tip, i) => (
+        <Tip key={i} text={`Autofill ${i + 1}: ${tip}`}>
+          <button className={n === i + 1 ? 'on' : ''} onClick={() => set(i + 1)} aria-pressed={n === i + 1} aria-label={`Autofill look ${i + 1}, ${tip}`}>
+            {i === 0 && <span className="vs-n">Autofill</span>} {i + 1}
+            {n === i + 1 && <motion.span layoutId="vs-af-hl" className="hl" initial={false} transition={{ type: 'spring', stiffness: 500, damping: 38 }} />}
           </button>
         </Tip>
       ))}

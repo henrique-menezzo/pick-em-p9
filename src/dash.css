@@ -892,16 +892,6 @@
 /* a finished map says so with a check, in the tab too */
 .mt-tab .mt-t small { display: inline-flex; align-items: center; gap: 4px; }
 
-/* Autofill without colour: its picks keep the party's full colour and wear a fine dot screen instead
-   (dots, never lines, so they cannot be read as the no-race hatch) */
-:root { --R-af: var(--R); --D-af: var(--D); }
-.map .st path.af-tex, .map .lift-overlay path.af-tex { fill: url(#af-dots); stroke: none; pointer-events: none; transition: none; filter: none; }
-.p9 .dx-board .dx-cell.af { background-image: radial-gradient(circle, rgba(255, 255, 255, .42) 1px, transparent 1.4px); background-size: 4px 4px; background-position: center; }
-.legend i.af-sw { background: radial-gradient(circle, rgba(255, 255, 255, .55) .7px, transparent 1px) 0 0 / 3px 3px, linear-gradient(90deg, var(--R) 50%, var(--D) 50%); }
-@keyframes af-in { from { opacity: 0; } }
-@media (prefers-reduced-motion: no-preference) {
-  .map.wave .st.af path.af-tex { animation: af-in .4s ease-out var(--w) backwards; }
-}
 
 /* election night: the show as wide as the cards under it, the replay on a card of its own */
 .p9 .dx-side.night > .dx-card.flat { padding: 0; }
@@ -963,3 +953,20 @@
 .p9 .vid { background: #000; animation: none; }
 .p9 .dx-side.night > .dx-card.flat .vid { aspect-ratio: 2.2 / 1; }
 .p9 .dx-board .nb-line { padding-block: 6px; }
+
+/* ---- Autofill: the exact same colour as your own picks. Three looks to compare (data-afl on <html>) ---- */
+:root { --R-af: var(--R); --D-af: var(--D); }
+.p9 .dx-board .dx-cell.af { background-image: none; }
+.map .own-mark, .map .af-mark, .dx-cell .own-mark, .dx-cell .af-mark { display: none; }
+/* 2 · a check on your own picks */
+html[data-afl="2"] .map .own-mark, html[data-afl="2"] .dx-cell .own-mark { display: inline; }
+.map .own-mark circle { fill: #fafafa; }
+.map .own-mark path { fill: none; stroke: #151515; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.dx-cell .own-mark, .dx-cell .af-mark { width: 72%; height: 72%; }
+.dx-cell .own-mark path { fill: none; stroke: #fff; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+/* 3 · a spark on Autofill's picks, the spark of the Autofill button */
+html[data-afl="3"] .map .af-mark, html[data-afl="3"] .dx-cell .af-mark { display: inline; }
+.map .af-mark circle { fill: #151515; }
+.map .af-mark path { fill: #fafafa; }
+.dx-cell .af-mark path { fill: #fff; }
+.legend i.af-sw { background: linear-gradient(90deg, var(--R) 50%, var(--D) 50%); }
