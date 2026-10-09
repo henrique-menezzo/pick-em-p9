@@ -17,6 +17,35 @@ export default function AuthModal() {
   const close = useStore((s) => s.closeAuth);
   // on a phone the card is a bottom sheet that slides up from the edge
   const sheet = window.matchMedia('(max-width: 760px)').matches;
+  // On a phone the keyboard shrinks what is visible but not the page fixed things are laid out on, so
+  // Safari lets the sheet float and the page behind it scroll. While the sheet is up: the page is
+  // held where it was, and the sheet's backdrop follows the visible part of the screen exactly.
+  const back = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!auth || !sheet) return;
+    const y = window.scrollY;
+    const b = document.body.style;
+    const was = { position: b.position, top: b.top, left: b.left, right: b.right, overflow: b.overflow };
+    Object.assign(b, { position: 'fixed', top: -y + 'px', left: '0', right: '0', overflow: 'hidden' });
+    const vv = window.visualViewport;
+    const fit = () => {
+      const el = back.current;
+      if (!el || !vv) return;
+      el.style.setProperty('--vvh', vv.height + 'px');
+      el.style.setProperty('--vvt', vv.offsetTop + 'px');
+    };
+    fit();
+    const raf = requestAnimationFrame(fit);
+    vv?.addEventListener('resize', fit);
+    vv?.addEventListener('scroll', fit);
+    return () => {
+      cancelAnimationFrame(raf);
+      vv?.removeEventListener('resize', fit);
+      vv?.removeEventListener('scroll', fit);
+      Object.assign(b, was);
+      window.scrollTo(0, y);
+    };
+  }, [auth, sheet]);
   useEffect(() => {
     if (!auth) return;
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') { e.stopImmediatePropagation(); close(); } };
@@ -29,6 +58,7 @@ export default function AuthModal() {
       {auth && (
         <motion.div
           key="back"
+          ref={back}
           className="auth-back"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}

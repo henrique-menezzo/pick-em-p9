@@ -1142,3 +1142,21 @@ body:has(.p9p) .pick-badge { display: none; }
 .p9p-share .sh-btn { width: 100%; height: 48px; justify-content: center; border-radius: 999px; background: #292929; font-size: 14px; font-weight: 600; }
 .p9p-night .tl { width: 100%; }
 body:has(.p9p) .tour.phone .tour-card { padding: 24px 24px calc(20px + env(safe-area-inset-bottom)); }
+/* the sheet sits on the part of the screen the keyboard leaves visible, and scrolls inside itself */
+@media (max-width: 760px) {
+  .auth-back { top: var(--vvt, 0px); bottom: auto; height: var(--vvh, 100dvh); overscroll-behavior: contain; }
+  .auth { max-height: var(--vvh, 92dvh); overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+  body:has(.auth-back) .p9p-panel { visibility: hidden; }
+}
+/* the phone's sign-up, the way Airbnb does it: a full screen that slides up over the page, a 56px bar
+   with the close on the left and the wordmark in the middle over a hairline, the form scrolling under it,
+   always the height of what the keyboard leaves visible */
+@media (max-width: 760px) {
+  body:has(.p9p) .auth-back { align-items: stretch; background: rgba(0, 0, 0, .5); backdrop-filter: none; }
+  body:has(.p9p) .auth { height: var(--vvh, 100dvh); max-height: none; padding: 0 0 calc(24px + env(safe-area-inset-bottom)); border-radius: 0;
+    background: linear-gradient(#292929, #292929) 0 56px / 100% 1px no-repeat, #151515; overflow-y: auto; }
+  body:has(.p9p) .auth-x { left: 12px; right: auto; top: 12px; width: 32px; height: 32px; }
+  body:has(.p9p) .auth-main { padding: 22px 16px 0; }
+  body:has(.p9p) .auth-logo { margin: 0 auto; }
+  body:has(.p9p) .auth-text { margin-top: 48px; }
+}
