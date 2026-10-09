@@ -259,6 +259,8 @@ export default function Onboarding({ ready = true }: { ready?: boolean }) {
   }, [step, s, !!spot]);
 
   const phone = usePhoneTour();
+  // on a phone the light sits close to the coastline: less to draw, and less of a halo on a small map
+  const air = phone ? 4 : MAP_AIR;
   const at = spot ? (phone ? dockPhone(spot, size) : place(anchor ?? spot, size, s?.align, s?.dock)) : null;
   const spring = { type: 'spring' as const, stiffness: 260, damping: 32, mass: 0.9 };
 
@@ -299,7 +301,7 @@ export default function Onboarding({ ready = true }: { ready?: boolean }) {
                   <>
                     {/* the country with air around it: every shape stroked MAP_AIR wide on each side, so
                         the light does not sit right on the coastline */}
-                    <g fill="#000" stroke="#000" strokeWidth={MAP_AIR * 2} strokeLinejoin="round" strokeLinecap="round" transform={mapCut.m}>
+                    <g fill="#000" stroke="#000" strokeWidth={air * 2} strokeLinejoin="round" strokeLinecap="round" transform={mapCut.m}>
                       {mapKind === 'dots'
                         ? MAP_DOTS.map((d, i) => <circle key={i} cx={d.x} cy={d.y} r={d.r} vectorEffect="non-scaling-stroke" />)
                         : MAP_SHAPES.map((d, i) => <path key={i} d={d} vectorEffect="non-scaling-stroke" />)}
@@ -339,7 +341,7 @@ export default function Onboarding({ ready = true }: { ready?: boolean }) {
                 </motion.g>
               )}
               {all && mapCut && (
-                <g transform={mapCut.m} strokeWidth={MAP_AIR * 2 + 3}>
+                <g transform={mapCut.m} strokeWidth={air * 2 + 3}>
                   {mapKind === 'dots'
                     ? MAP_DOTS.map((d, i) => <circle key={i} cx={d.x} cy={d.y} r={d.r} vectorEffect="non-scaling-stroke" />)
                     : MAP_SHAPES.map((d, i) => <path key={i} d={d} vectorEffect="non-scaling-stroke" />)}
@@ -479,7 +481,8 @@ function useSpot(sel: string | undefined, step: number | null, fit?: 'states'): 
           // instantly, not smoothly: the card is placed from a measurement taken right after this,
           // and a scroll still in flight puts it somewhere between where it was and where it is
           // going — which is why the same step landed in a different place on a replay
-          scrollTo({ top: Math.max(0, scrollY + b.top - Math.max(24, (innerHeight - b.height) / 2)), behavior: 'auto' });
+          // (on a phone the card is docked to the bottom whatever happens, so there it can glide)
+          scrollTo({ top: Math.max(0, scrollY + b.top - Math.max(24, (innerHeight - b.height) / 2)), behavior: matchMedia('(max-width: 760px)').matches ? 'smooth' : 'auto' });
         }
       }
     }

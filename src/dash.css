@@ -1111,3 +1111,7 @@ body:has(.p9p) .tour.phone .tour-card { width: 100vw; border-radius: 24px 24px 0
 .p9p-night .tl .ticks { font-size: 12px; color: #8f8f8f; }
 .p9p-night .sh-btn { flex: none; height: 44px; padding: 0 16px; border-radius: 999px; background: #292929; display: inline-flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; }
 .p9p.night { padding-bottom: 280px; }
+/* phone: a quieter edge round what the tour lights, the header's hairline as on the desktop, Save centred */
+.tour.phone .tour-edge { opacity: .14; }
+.p9p-top { box-shadow: 0 1px 0 #292929; }
+.p9p-bar .p9-save { justify-content: center; text-align: center; }
