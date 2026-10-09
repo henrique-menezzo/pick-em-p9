@@ -1237,3 +1237,5 @@ html[data-tour-step="save"] .p9p.touring .p9p-panel { transform: none; opacity: 
 /* the Polymarket mark is white artwork: ink it on the light page */
 :root[data-theme='light'] .e-pres img { filter: brightness(0); opacity: .85; }
 :root[data-theme='light'] .dx-cell.wait { background: repeating-linear-gradient(135deg, #e6e6e6 0 3px, #d1d1d1 3px 6px); }
+/* phone: one map's squares end well before the next map's name starts (twice the 16px inside a map) */
+.p9.p9p .p9p-card .dx-board { gap: 32px !important; }
