@@ -1049,6 +1049,10 @@ function PartDone() {
   const live = useLive();
   const save = useSaveMaps();
   const [open, setOpen] = useState<Tab | null>(null);
+  // finished by Autofill: the next step is saving, not staying
+  const [byAuto, setByAuto] = useState(false);
+  const autoRun = useStore((s) => s.autoRun);
+  const lastRun = useRef(autoRun);
   const done = Object.fromEntries(TABS.map((k) => [k, RACES[k].filter((r) => picks[r.id]).length])) as Record<Tab, number>;
   const key = TABS.map((k) => done[k]).join(',');
   const prev = useRef<Record<Tab, number> | null>(null);
@@ -1059,12 +1063,14 @@ function PartDone() {
   useEffect(() => {
     const p = prev.current;
     prev.current = done;
+    const viaAuto = autoRun !== lastRun.current;
+    lastRun.current = autoRun;
     if (!p || live || tour !== null) return;
     const k = TABS.find((x) => p[x] < RACES[x].length && done[x] === RACES[x].length && !shown.current.has(x));
     if (!k) return;
     shown.current.add(k);
     // a beat first, so the last state is seen taking its colour before the card comes up
-    timer.current = window.setTimeout(() => { back.current = document.activeElement as HTMLElement; setOpen(k); }, 650);
+    timer.current = window.setTimeout(() => { back.current = document.activeElement as HTMLElement; setByAuto(viaAuto); setOpen(k); }, 650);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
   useEffect(() => () => clearTimeout(timer.current), []);
@@ -1102,7 +1108,7 @@ function PartDone() {
             <h2 id="pd-title">{next ? `${TAB_LABEL[open]} complete` : 'Every race is picked'}</h2>
             <p id="pd-text">
               {next
-                ? `${head} Keep going with the next map, or stay here to look over your picks.`
+                ? `${head} ${byAuto ? 'Save them now, or keep going with the next map.' : 'Keep going with the next map, or stay here to look over your picks.'}`
                 : `All ${total} races are called. Save your maps to keep them, then come back on election night to see how you did.`}
             </p>
             <div className="pd-maps">
@@ -1121,7 +1127,13 @@ function PartDone() {
               })}
             </div>
             <div className="pd-acts">
-              {next ? (
+              {next && byAuto ? (
+                // Autofill finished it: save (which opens sign-up or log-in when there is no account)
+                <>
+                  <button className="pd-quiet" onClick={() => go(next)}>Go to {TAB_LABEL[next]}<Icon name="arrowRight" size={16} stroke={2.2} /></button>
+                  <button ref={first} className="pd-go" onClick={() => { setOpen(null); save.run(); }}>Save</button>
+                </>
+              ) : next ? (
                 <>
                   <button className="pd-quiet" onClick={close}>Stay on {TAB_LABEL[open]}</button>
                   <button ref={first} className="pd-go" onClick={() => go(next)}>Go to {TAB_LABEL[next]}<Icon name="arrowRight" size={16} stroke={2.2} /></button>
