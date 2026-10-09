@@ -739,3 +739,54 @@
 /* both arrows of the race card read as available: they always lead somewhere */
 .p9 .dx-race .fb-nav button, .p9 .dx-race .fb-nav button:first-child { color: var(--fg); }
 @media (hover: hover) { .p9 .dx-race .fb-nav button:hover { background: var(--s3); } }
+/* more air inside the three cards on the right (the space between them stays) */
+.p9 .dx-side > .dx-card:first-child, .p9 .p22-map, .p9 .dx-card.grow { padding: 24px; }
+.p9 .dx-race .fb-head { padding-bottom: 10px; }
+.p9 .dx-race .cand { min-height: 64px; padding: 10px 0; gap: 14px; }
+.p9 .p8-seg { gap: 14px; }
+.p9 .p8-seg-top { margin-bottom: 2px; }
+.p9 .dx-board { gap: 20px !important; }
+.p9 .dx-board-row { gap: 8px; }
+@media (max-height: 840px) { .p9 .dx-side > .dx-card:first-child, .p9 .p22-map, .p9 .dx-card.grow { padding: 22px; } .p9 .dx-race .cand { min-height: 60px; padding: 8px 0; } .p9 .dx-board { gap: 16px !important; } }
+
+/* ======================================================================================================
+   P9 · the whole page on four sizes and two text colours. Hierarchy comes from weight and place, not from
+   more sizes or greys.
+   18  the page's name and the titles of the cards, the map's figure
+   16  the people and the three maps' names
+   14  everything you read: the site links, buttons, parties, the rows of Every race
+   12  captions: counts, the deadline, labels under the bar, the legend, "Presented by", a map's status
+   Colours: #fafafa for what matters, #8f8f8f for everything that supports it.
+   ====================================================================================================== */
+:root:has(.p9) { --t2: #8f8f8f; --t3: #8f8f8f; --muted: #8f8f8f; }
+.p9.p9 { --t2: #8f8f8f; --t3: #8f8f8f; }
+.p9 .dx-mname h1 { font-size: 18px; letter-spacing: -.02em; }
+.p9 .dx-mlock { font-size: 12px; color: #8f8f8f; }
+.p9 .dx-mlock b { font-weight: 600; color: #8f8f8f; }
+.p9 .mt-folder .mt-t b { font-size: 16px; font-weight: 600; }
+.p9 .mt-folder .mt-t small { font-size: 12px; color: #8f8f8f; }
+.p9 .mt-folder .mt-tab.on .mt-t small { color: #8f8f8f; }
+.p9 .mt-folder .mt-tab:not(.on) .mt-t b { color: #8f8f8f; }
+.p9 .btn { font-size: 14px; }
+.p9 .legend span { font-size: 12px; color: #8f8f8f; }
+.p9 .legend b { font-weight: 600; color: var(--fg); }
+.p9 .e-pres i { font-size: 12px; color: #8f8f8f; }
+.p9 .dx-race .cand .p, .p9 .p8-seg-lbl, .p9 .p8-frac, .p9 .p8-seg-top .p8-pct small { color: #8f8f8f; }
+.p9 .dx-board-row:not(.on) .dx-board-l > span:first-child { color: #8f8f8f; }
+
+/* the candidates: hovering draws a soft box around the person instead of underlining the name */
+.p9 .dx-race .fb-cands { margin-inline: -12px; }
+.p9 .dx-race .cand { padding-inline: 12px; border-radius: 14px; transition: background-color .15s; }
+.p9 .dx-race .cand .ck { inset-inline-end: 12px; }
+@media (hover: hover) {
+  .p9 .dx-race .cand:not([disabled]):hover { background: #262626; }
+  .p9 .dx-race .cand:not([disabled]):hover .n { text-decoration: none; }
+}
+.p9 .dx-race .cand:focus-visible { outline: 2px solid var(--fg); outline-offset: -2px; }
+/* keep all three rows of Every race in view at 1440 x 900 with the new padding */
+.p9 .dx-race .cand { min-height: 60px; padding-block: 8px; }
+.p9 .dx-board { gap: 16px !important; }
+.p9 .dx-board-row { gap: 6px; }
+.p9 .p8-seg { gap: 12px; }
+.p9 .p22-map { padding: 22px 24px; } .p9 .dx-race .fb-head { padding-bottom: 6px; }
+@media (min-height: 841px) { .p9 .dx-card.grow > .dx-board { -webkit-mask-image: none; mask-image: none; padding-bottom: 0; } }
