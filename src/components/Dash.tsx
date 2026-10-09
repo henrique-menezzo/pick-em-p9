@@ -1215,8 +1215,7 @@ export function P9Phone() {
           </div>
           <button className="p9p-help" aria-label="How to play" onClick={() => setTour(0)}><Icon name="help" size={20} stroke={1.5} /></button>
         </div>
-        {/* the night's replay and Share live in the page, under the name, not in the fixed panel */}
-        {live && <div className="p9p-night"><Foot /><ShareButton /></div>}
+
 
         <div className="p9p-tabs" role="tablist" aria-label="Parts of the game">
           {TABS.map((k) => (
@@ -1230,6 +1229,10 @@ export function P9Phone() {
         <div className="p9p-map"><MapBox /></div>
         <Legend />
 
+        {/* the night: the replay, then the show, then the score */}
+        {live && <div className="p9p-night"><Foot /></div>}
+        {live && <div className="p9p-vid"><LiveVideo bare /></div>}
+        {live && <div className="p9p-share"><ShareButton /></div>}
         <div className="p9p-cards">
           <div className="dx-card p22-map p9p-card"><BoardHead head="seg" /></div>
           <div className="dx-card p9p-card"><Board8 row="frac" /></div>
