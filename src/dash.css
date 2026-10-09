@@ -1148,22 +1148,15 @@ body:has(.p9p) .tour.phone .tour-card { padding: 24px 24px calc(20px + env(safe-
   .auth { max-height: var(--vvh, 92dvh); overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
   body:has(.auth-back) .p9p-panel { visibility: hidden; }
 }
-/* the phone's sign-up, the way Airbnb does it: a full screen that slides up over the page, a 56px bar
-   with the close on the left and the wordmark in the middle over a hairline, the form scrolling under it,
-   always the height of what the keyboard leaves visible */
+/* the phone's sign-up: a bottom sheet the height of its content (the DS modal inside), whose foot always
+   sits on the bottom of what is visible, so with the keyboard up it rests right on the keyboard; the dim
+   covers the whole screen behind it */
 @media (max-width: 760px) {
-  body:has(.p9p) .auth-back { align-items: stretch; background: rgba(0, 0, 0, .5); backdrop-filter: none; }
-  body:has(.p9p) .auth { height: var(--vvh, 100dvh); max-height: none; padding: 0 0 calc(24px + env(safe-area-inset-bottom)); border-radius: 0;
-    background: linear-gradient(#292929, #292929) 0 56px / 100% 1px no-repeat, #151515; overflow-y: auto; }
-  body:has(.p9p) .auth-x { left: 12px; right: auto; top: 12px; width: 32px; height: 32px; }
-  body:has(.p9p) .auth-main { padding: 22px 16px 0; }
+  body:has(.p9p) .auth-back { top: 0; bottom: 0; height: auto; display: block; padding: 0; background: rgba(0, 0, 0, .62); backdrop-filter: none; }
+  body:has(.p9p) .auth { position: absolute; left: 0; right: 0; bottom: var(--vvb, 0px); width: auto; height: auto; max-height: var(--vvh, 92dvh); margin: 0; overflow-y: auto;
+    padding: 40px 0 calc(24px + env(safe-area-inset-bottom)); border-radius: 16px 16px 0 0; background: #151515; box-shadow: none; }
+  body:has(.p9p) .auth-x { left: auto; right: 16px; top: 16px; width: 24px; height: 24px; }
+  body:has(.p9p) .auth-main { padding: 0 16px; }
   body:has(.p9p) .auth-logo { margin: 0 auto; }
-  body:has(.p9p) .auth-text { margin-top: 48px; }
+  body:has(.p9p) .auth-text { margin-top: 24px; }
 }
-/* keyboard up on iOS: the backdrop covers the whole layout screen in the sheet's own colour (so no page
-   shows between the sheet and the keyboard), and only the sheet follows the visible part */
-@media (max-width: 760px) {
-  body:has(.p9p) .auth-back { top: 0; bottom: 0; height: auto; display: block; padding: 0; background: #151515; }
-  body:has(.p9p) .auth { margin-top: var(--vvt, 0px); height: var(--vvh, 100dvh); }
-}
-@media (max-width: 760px) { body:has(.p9p) .auth { box-shadow: none; } }

@@ -33,6 +33,9 @@ export default function AuthModal() {
       if (!el || !vv) return;
       el.style.setProperty('--vvh', vv.height + 'px');
       el.style.setProperty('--vvt', vv.offsetTop + 'px');
+      // how far the visible part ends above the bottom of the page fixed things sit on: the sheet's
+      // foot goes there, right on top of the keyboard
+      el.style.setProperty('--vvb', Math.max(0, document.documentElement.clientHeight - vv.height - vv.offsetTop) + 'px');
     };
     fit();
     const raf = requestAnimationFrame(fit);
