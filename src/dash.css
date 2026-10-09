@@ -795,3 +795,57 @@
    nothing else moves */
 .p9 .dx-card.grow > .dx-board { padding: 6px; margin: -6px; }
 @media (max-height: 840px) { .p9 .dx-card.grow > .dx-board { padding-bottom: 18px; } }
+
+/* candidates: the hover is a clear lift of the background, never a link */
+@media (hover: hover) { .p9 .dx-race .cand:not([disabled]):hover { background: #2e2e2e; } }
+.p9 .dx-race .cand { transition: background-color .15s; }
+
+/* the card that closes a part: a check, what you finished, the three maps, and the next one */
+.pd-back { position: fixed; inset: 0; z-index: 100; background: rgba(0, 0, 0, .62); backdrop-filter: blur(6px); display: grid; place-items: center; padding: 20px; overflow-y: auto; overscroll-behavior: contain; }
+.pd { position: relative; width: 480px; max-width: 100%; padding: 32px; border-radius: 24px; background: #1a1a1a; box-shadow: var(--sh-xl); display: flex; flex-direction: column; align-items: flex-start; }
+.pd-x { position: absolute; right: 16px; top: 16px; width: 36px; height: 36px; display: grid; place-items: center; border-radius: 999px; color: #8f8f8f; transition: background-color .15s, color .15s; }
+.pd-badge { width: 40px; height: 40px; border-radius: 50%; background: #fafafa; color: #151515; display: grid; place-items: center; }
+.pd h2 { margin: 20px 0 8px; font-size: 18px; line-height: 1.2; font-weight: 600; letter-spacing: -.01em; color: #fafafa; }
+.pd p { margin: 0; font-size: 14px; line-height: 1.5; color: #8f8f8f; text-wrap: pretty; }
+.pd-maps { align-self: stretch; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 24px; }
+.pd-map { --mm-bg: #232323; display: flex; flex-direction: column; align-items: flex-start; gap: 12px; padding: 16px 12px 12px; border-radius: 14px; background: #232323; text-align: start; transition: background-color .15s, scale .15s ease-out; }
+.pd-map .mm { width: 100%; height: 52px; }
+.pd-map-t { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.pd-map-t b { font-size: 14px; font-weight: 600; color: #fafafa; }
+.pd-map-t small { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: #8f8f8f; }
+.pd-map.pd-this .pd-map-t small { color: #fafafa; }
+.pd-acts { align-self: stretch; display: flex; justify-content: flex-end; gap: 8px; margin-top: 24px; }
+.pd-quiet, .pd-go { height: 44px; border-radius: 999px; font-size: 14px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: background-color .15s, scale .15s ease-out; }
+.pd-quiet { padding: 0 16px; color: #fafafa; }
+.pd-go { padding: 0 20px; background: #fafafa; color: #151515; }
+.pd button:focus-visible { outline: 2px solid #fafafa; outline-offset: 2px; }
+.pd button:active { scale: .96; }
+@media (hover: hover) {
+  .pd-x:hover { background: #2e2e2e; color: #fafafa; }
+  .pd-map:hover { --mm-bg: #2e2e2e; background: #2e2e2e; }
+  .pd-quiet:hover { background: #2e2e2e; }
+  .pd-go:hover { background: #fff; }
+}
+@media (max-width: 520px) {
+  .pd { padding: 24px; }
+  .pd-maps { gap: 6px; }
+  .pd-acts { flex-direction: column-reverse; }
+}
+
+/* hovering a square: the race in a small card, both candidates ready to pick */
+.sq-pop { position: fixed; z-index: 90; width: 272px; padding: 12px; border-radius: 22px; background: #232323; box-shadow: var(--sh-lg); animation: sq-pop .12s ease-out both; }
+@keyframes sq-pop { from { opacity: 0; } }
+.sq-pop-h { display: flex; align-items: center; gap: 8px; padding: 2px 8px 8px; }
+.sq-pop-h b { font-size: 14px; font-weight: 600; color: #fafafa; }
+.sq-pop-h small { margin-inline-start: auto; font-size: 12px; color: #8f8f8f; }
+.sq-pop-c { display: flex; flex-direction: column; gap: 2px; }
+.sq-pop .cand { padding: 8px; gap: 10px; border-radius: 10px; transition: background-color .15s, opacity .15s; }
+.sq-pop .cand .face { width: 36px; height: 36px; }
+.sq-pop .cand .t { gap: 3px; }
+.sq-pop .cand .n { font-size: 14px; }
+.sq-pop .cand .p { font-size: 12px; color: #8f8f8f; }
+.sq-pop .cand .ck { width: 20px; height: 20px; }
+@media (hover: hover) { .sq-pop .cand:not([disabled]):not(.on):hover { background: #2e2e2e; } }
+.sq-pop .cand:focus-visible { outline: 2px solid #fafafa; outline-offset: -2px; }
+.p9 .dx-cell { cursor: pointer; transition: filter .15s; }
+.p9 .dx-cell.pop { filter: brightness(1.4); }

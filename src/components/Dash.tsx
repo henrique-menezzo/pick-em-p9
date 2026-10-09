@@ -2,11 +2,13 @@
 // card). The game stays where it was: the map, the race, the actions. What each version adds is a way to
 // see, at a glance, what is filled in and what is not, the way a good product dashboard does (Linear's
 // lists and sidebar, Brex's summary tiles and setup checklist).
-import { useState, type ReactNode } from 'react';
-import { ALL, RACES, RESULTS, TAB_LABEL, TABS, type Race, type Tab } from '../data/races';
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
+import { AnimatePresence, motion } from 'motion/react';
+import { ALL, BY_ID, RACES, RESULTS, TAB_LABEL, TABS, type Race, type Tab } from '../data/races';
 import { catSaved, liveScore, useStore } from '../lib/store';
 import { useCountdown } from './LockLine';
-import { Face, Flag, Icon } from './ui';
+import { CandidateRow, Face, Flag, Icon } from './ui';
 import { CatActions, Foot, LiveVideo, MapBox, MapTabs, MiniMap, Presented, Race as RaceCard } from './Layouts';
 import { Legend } from '../App';
 
@@ -635,11 +637,14 @@ function Board8({ head = 'none', row = 'frac', done = 'check', dot, title = true
   const cur = useStore((s) => s.cursor[s.tab]);
   const select = useStore((s) => s.select);
   const setTab = useStore((s) => s.setTab);
+  const tap = useStore((s) => s.tap);
   const live = useLive();
   const t = useStore((s) => s.t);
   const parts = TABS.map((k) => usePart(k));
+  const pop = useCellPop();
   return (
     <section className={'dx-board p8-board row-' + row + (dot ? ' dots' : '')} aria-label="Every race">
+      {pop.at && <CellPop {...pop.at} onEnter={pop.stay} onLeave={pop.leave} />}
       {title && head === 'none' && <h2 className="dx-h">Every race</h2>}
       <BoardHead head={head} />
       {parts.map((p) => {
@@ -664,8 +669,12 @@ function Board8({ head = 'none', row = 'frac', done = 'check', dot, title = true
                 const pk = picks[r.id];
                 let c: string = pk ?? 'open';
                 if (live) { const called = t >= RESULTS[r.id].call; c = !called ? 'wait' : !pk ? 'open' : pk === RESULTS[r.id].winner ? 'right' : 'miss'; }
-                return <button key={r.id} className={'dx-cell ' + c + (r.id === cur ? ' cur' : '')} title={`${r.stateName}: ${pk ? (pk === 'R' ? r.R : r.D) : 'open'}`}
-                  aria-label={`${TAB_LABEL[k]}, ${r.stateName}, ${pk ? (pk === 'R' ? 'Republican' : 'Democrat') : 'open'}`} onClick={() => { setTab(k); select(r.id); }} />;
+                // a click works like a click on the map; hovering opens the race in a small card
+                return <button key={r.id} className={'dx-cell ' + c + (r.id === cur ? ' cur' : '') + (pop.at?.id === r.id ? ' pop' : '')}
+                  aria-label={`${TAB_LABEL[k]}, ${r.stateName}, ${pk ? (pk === 'R' ? 'Republican' : 'Democrat') : 'open'}`}
+                  onClick={() => { if (live) { setTab(k); select(r.id); } else tap(r.id); }}
+                  onPointerEnter={(e) => { if (e.pointerType !== 'mouse') return; pop.open(r.id, e.currentTarget); }}
+                  onPointerLeave={(e) => { if (e.pointerType !== 'mouse') return; pop.leave(); }} />;
               })}
             </div>
             {row === 'bar' && <span className="p8-rowbar" aria-hidden><i style={{ width: pct(live ? p.right : p.done, p.n) + '%' }} /></span>}
@@ -673,6 +682,50 @@ function Board8({ head = 'none', row = 'frac', done = 'check', dot, title = true
         );
       })}
     </section>
+  );
+}
+
+/** Hovering a square: which square, and where it sits on screen. It stays open while the pointer
+ *  crosses the gap into the card, so the card can be used. */
+function useCellPop() {
+  const [at, setAt] = useState<{ id: string; x: number; top: number; bottom: number } | null>(null);
+  const timer = useRef(0);
+  const open = (id: string, el: HTMLElement) => {
+    clearTimeout(timer.current);
+    const b = el.getBoundingClientRect();
+    setAt({ id, x: b.left + b.width / 2, top: b.top, bottom: b.bottom });
+  };
+  const leave = () => { clearTimeout(timer.current); timer.current = window.setTimeout(() => setAt(null), 180); };
+  const stay = () => clearTimeout(timer.current);
+  useEffect(() => () => clearTimeout(timer.current), []);
+  return { at, open, leave, stay };
+}
+
+/** The race behind a square, small: the state, and both candidates to pick from right there. Drawn
+ *  on the page, not inside the board, so the board's scroll can never cut it. */
+function CellPop({ id, x, top, bottom, onEnter, onLeave }: { id: string; x: number; top: number; bottom: number; onEnter: () => void; onLeave: () => void }) {
+  const race = BY_ID[id];
+  const select = useStore((s) => s.select);
+  const ref = useRef<HTMLDivElement>(null);
+  const [pos, setPos] = useState<{ left: number; top: number } | null>(null);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const w = el.offsetWidth, h = el.offsetHeight, gap = 10, edge = 16;
+    const above = top - gap - h >= edge;
+    setPos({
+      left: Math.round(Math.min(Math.max(edge, x - w / 2), innerWidth - w - edge)),
+      top: Math.round(above ? top - gap - h : bottom + gap),
+    });
+  }, [id, x, top, bottom]);
+  return createPortal(
+    <div ref={ref} className="sq-pop" role="group" aria-label={`${race.stateName}, ${TAB_LABEL[race.type]}`}
+      style={pos ? { left: pos.left, top: pos.top } : { left: 0, top: 0, visibility: 'hidden' }}
+      onPointerEnter={onEnter} onPointerLeave={onLeave} onClickCapture={() => select(id)}>
+      <div className="sq-pop-h"><Flag st={race.state} sm /><b>{race.stateName}</b><small>{TAB_LABEL[race.type]}</small></div>
+      <div className="sq-pop-c"><CandidateRow race={race} side="R" /><CandidateRow race={race} side="D" /></div>
+    </div>,
+    document.body,
   );
 }
 
@@ -935,31 +988,140 @@ const P23 = () => <Base cls="dx7 p8 p22" side={<Side cls="board" before={<MapCar
 
 // ---- P9 · the last one: Figma "Pick Em · P8 version 23" as Henrique edited it (Oct 9) -------------------
 /** One Save for all three maps, beside the tabs. Lit while any map has picks that are not saved yet. */
-function SaveMaps() {
+/** Saving every map that has picks: the pill at the top and the card that closes a part share it. */
+function useSaveMaps() {
   const picks = useStore((s) => s.picks);
   const savedPicks = useStore((s) => s.savedPicks);
   const user = useStore((s) => s.user);
   const openAuth = useStore((s) => s.openAuth);
   const saveCat = useStore((s) => s.saveCat);
   const say = useStore((s) => s.say);
-  const live = useLive();
-  if (live) return null;
   const parts = TABS.filter((k) => RACES[k].some((r) => picks[r.id]));
   const unsaved = parts.filter((k) => !catSaved(picks, savedPicks, k));
   const saved = parts.length > 0 && !unsaved.length;
+  const run = () => {
+    if (!parts.length) return say('Pick at least one race to save your maps');
+    if (saved) return say('Your maps are saved. Change a pick to save again.');
+    if (!user) return openAuth('save');
+    unsaved.forEach((k) => saveCat(k));
+    say(unsaved.length === 1 ? `${TAB_LABEL[unsaved[0]]} map saved` : 'Maps saved');
+  };
+  return { saved, ready: unsaved.length > 0, run };
+}
+
+function SaveMaps() {
+  const live = useLive();
+  const { saved, ready, run } = useSaveMaps();
+  if (live) return null;
   return (
-    <button className={'btn save p9-save' + (saved ? ' saved' : unsaved.length ? ' ready' : '')}
-      onClick={() => {
-        if (!parts.length) return say('Pick at least one race to save your maps');
-        if (saved) return say('Your maps are saved. Change a pick to save again.');
-        if (!user) return openAuth('save');
-        unsaved.forEach((k) => saveCat(k));
-        say(unsaved.length === 1 ? `${TAB_LABEL[unsaved[0]]} map saved` : 'Maps saved');
-      }}>
+    <button className={'btn save p9-save' + (saved ? ' saved' : ready ? ' ready' : '')} onClick={run}>
       {saved ? <><Icon name="check" size={16} stroke={2.4} />Saved</> : 'Save maps'}
     </button>
   );
 }
+
+/** A part is finished: a card of its own says so, shows where the three maps stand, and offers the
+ *  next one. Only when the last open race is picked by hand (Autofill filling a whole part is
+ *  something you asked for), once per part, and never during the tour. */
+function PartDone() {
+  const picks = useStore((s) => s.picks);
+  const tour = useStore((s) => s.tour);
+  const select = useStore((s) => s.select);
+  const setTab = useStore((s) => s.setTab);
+  const live = useLive();
+  const save = useSaveMaps();
+  const [open, setOpen] = useState<Tab | null>(null);
+  const done = Object.fromEntries(TABS.map((k) => [k, RACES[k].filter((r) => picks[r.id]).length])) as Record<Tab, number>;
+  const key = TABS.map((k) => done[k]).join(',');
+  const prev = useRef<Record<Tab, number> | null>(null);
+  const shown = useRef(new Set<Tab>());
+  const back = useRef<HTMLElement | null>(null);
+  const first = useRef<HTMLButtonElement>(null);
+  const timer = useRef(0);
+  useEffect(() => {
+    const p = prev.current;
+    prev.current = done;
+    if (!p || live || tour !== null) return;
+    const k = TABS.find((x) => p[x] === RACES[x].length - 1 && done[x] === RACES[x].length && !shown.current.has(x));
+    if (!k) return;
+    shown.current.add(k);
+    // a beat first, so the last state is seen taking its colour before the card comes up
+    timer.current = window.setTimeout(() => { back.current = document.activeElement as HTMLElement; setOpen(k); }, 650);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key]);
+  useEffect(() => () => clearTimeout(timer.current), []);
+  const close = () => { setOpen(null); back.current?.focus?.(); };
+  useEffect(() => {
+    if (!open) return;
+    first.current?.focus();
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') { e.stopImmediatePropagation(); close(); } };
+    window.addEventListener('keydown', onKey, true);
+    return () => window.removeEventListener('keydown', onKey, true);
+  }, [open]);
+
+  const go = (k: Tab) => {
+    const firstOpen = RACES[k].find((r) => !picks[r.id]);
+    if (firstOpen) select(firstOpen.id); else setTab(k);
+    setOpen(null);
+  };
+  const i = open ? TABS.indexOf(open) : 0;
+  const next = open ? [...TABS.slice(i + 1), ...TABS.slice(0, i)].find((k) => done[k] < RACES[k].length) : undefined;
+  const n = open ? RACES[open].length : 0;
+  const total = TABS.reduce((a, k) => a + RACES[k].length, 0);
+
+  return createPortal(
+    <AnimatePresence>
+      {open && (
+        <motion.div key="pd" className="pd-back" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}
+          onPointerDown={(e) => { if (e.target === e.currentTarget) close(); }}>
+          <motion.div className="pd" role="dialog" aria-modal="true" aria-labelledby="pd-title" aria-describedby="pd-text"
+            initial={{ opacity: 0, y: 16, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 10, scale: 0.98, transition: { duration: 0.15 } }}
+            transition={{ type: 'spring', stiffness: 380, damping: 32 }}>
+            <button className="pd-x" aria-label="Close" onClick={close}><Icon name="x" size={18} stroke={1.9} /></button>
+            <span className="pd-badge" aria-hidden><Icon name="check" size={20} stroke={2.8} /></span>
+            <h2 id="pd-title">{next ? `${TAB_LABEL[open]} complete` : 'Every race is picked'}</h2>
+            <p id="pd-text">
+              {next
+                ? `You called all ${n} ${NOUN[open]} races. Keep going with the next map, or stay here to look over your picks.`
+                : `All ${total} races are called. Save your maps to keep them, then come back on election night to see how you did.`}
+            </p>
+            <div className="pd-maps">
+              {TABS.map((k) => {
+                const full = done[k] === RACES[k].length;
+                return (
+                  <button key={k} className={'pd-map' + (k === open ? ' pd-this' : '')} onClick={() => go(k)}
+                    aria-label={`${TAB_LABEL[k]}, ${full ? 'complete' : `${done[k]} of ${RACES[k].length} picked`}`}>
+                    <MiniMap k={k} />
+                    <span className="pd-map-t">
+                      <b>{TAB_LABEL[k]}</b>
+                      <small className="num">{full ? <><Icon name="check" size={12} stroke={3} />Complete</> : done[k] ? `${done[k]} of ${RACES[k].length}` : `${RACES[k].length} races`}</small>
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+            <div className="pd-acts">
+              {next ? (
+                <>
+                  <button className="pd-quiet" onClick={close}>Stay on {TAB_LABEL[open]}</button>
+                  <button ref={first} className="pd-go" onClick={() => go(next)}>Go to {TAB_LABEL[next]}<Icon name="arrowRight" size={16} stroke={2.2} /></button>
+                </>
+              ) : (
+                <>
+                  <button className="pd-quiet" onClick={close}>Close</button>
+                  <button ref={first} className="pd-go" onClick={() => { setOpen(null); save.run(); }}>{save.saved ? 'Saved' : 'Save maps'}</button>
+                </>
+              )}
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>,
+    document.body,
+  );
+}
+
 function ThePage() {
   const tab = useStore((s) => s.tab);
   const MapCard6b = () => <div className="dx-card p22-map"><BoardHead head="seg" /></div>;
@@ -967,6 +1129,7 @@ function ThePage() {
     <div className={'v vE r big rows mtw mtw-folder dx dx7 p8 p22 p9 sel-' + TABS.indexOf(tab)}>
       <div className="p9-tabs"><MapTabs look="folder" /><SaveMaps /></div>
       <div className="e-cards tall dx-one"><DxMap noSave /><Side cls="board" before={<MapCard6b />}><Board8 row="frac" /></Side></div>
+      <PartDone />
     </div>
   );
 }
