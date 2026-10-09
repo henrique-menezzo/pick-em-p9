@@ -889,3 +889,5 @@
   .p9 .dx-board.wave .dx-cell { transition: background-color .3s ease calc(var(--i) * 14ms), filter .15s; }
   .p9 .dx-board.wave .dx-cell.af { animation: af-flash .6s ease-out calc(var(--i) * 14ms); }
 }
+/* a finished map says so with a check, in the tab too */
+.mt-tab .mt-t small { display: inline-flex; align-items: center; gap: 4px; }

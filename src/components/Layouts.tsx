@@ -852,7 +852,7 @@ function MapTab({ k, on, look, named, labels, onClick }: { k: Tab; on: boolean; 
       <MiniMap k={k} labels={labels} />
       <span className="mt-t">
         <b>{TAB_LABEL[k]}{named && on ? ' Pick Em' : ''}</b>
-        {look !== 'chips' && <small>{word}</small>}
+        {look !== 'chips' && <small>{word.startsWith('Complete') ? <><Icon name="check" size={12} stroke={3} />{word}</> : word}</small>}
         {named && on && <ZzLock />}
       </span>
     </button>
