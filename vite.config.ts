@@ -7,4 +7,6 @@ import tailwindcss from '@tailwindcss/vite';
 export default defineConfig(({ command }) => ({
   base: process.env.VITE_BASE || (command === 'build' ? '/pick-em-p9/' : '/'),
   plugins: [react(), tailwindcss()],
+  // the harness assigns the dev port through PORT; without this Vite would ignore it
+  server: { port: process.env.PORT ? Number(process.env.PORT) : undefined, host: true },
 }));

@@ -995,3 +995,22 @@ html[data-afl="3"] .map .af-mark, html[data-afl="3"] .dx-cell .af-mark { display
 .sh-paper button { height: 36px; padding: 0 16px; border-radius: 999px; font-size: 14px; font-weight: 600; color: #8f8f8f; transition: background-color .15s, color .15s; }
 .sh-paper button.on { background: #3a3a3a; color: #fafafa; }
 .sh-paper button:focus-visible { outline: 2px solid #fafafa; outline-offset: 2px; }
+
+/* smaller laptop windows: the card never goes under the 700 of the 1440 × 900 frame, so all three boards
+   stay in view; the page scrolls a little instead. Everything inside keeps the 900 sizes too. */
+.vE.big.p9 .e-cards.tall { height: max(700px, min(940px, calc(100dvh - 184px), max(700px, calc(100dvh - 200px)))); }
+@media (max-height: 899px) {
+  .p9 .dx-board-cells { grid-template-columns: repeat(auto-fill, 14px); gap: 3px; }
+  .p9 .dx-board { gap: 16px !important; }
+  .vE.big.dx.p9 .e-cards.tall.dx-one > .e-map.dx-map > .v-map { top: 113px; bottom: 112px; }
+  .p9 .dx-side > .dx-card:first-child, .p9 .dx-card.grow { padding: 24px; }
+  .p9 .p22-map { padding: 22px 24px; }
+  .p9 .dx-race .cand { min-height: 60px; padding: 8px 12px; }
+  .p9 .dx-card.grow > .dx-board { -webkit-mask-image: none; mask-image: none; padding: 6px; }
+}
+/* the page grows past the window instead of clipping, with the switch's strip under the card */
+.p6:has(.p9) { height: auto; min-height: 100dvh; overflow: visible; }
+.vE.big.rows.p9:has(.e-cards.tall) { flex: 0 0 auto; height: auto; }
+.p6.p6.has-switch:has(.p9) { padding-bottom: 0; }
+@media (max-height: 899px) { .p6.p6.has-switch:has(.p9) { padding-bottom: 40px; } }
+.map.dots { overflow: visible; }

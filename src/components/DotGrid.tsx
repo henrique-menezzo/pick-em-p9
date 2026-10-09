@@ -32,6 +32,18 @@ for (const [st, pts] of Object.entries(grid.states as Record<string, number[][]>
   BOX[st] = { x0: Math.min(...xs), y0: Math.min(...ys), x1: Math.max(...xs), y1: Math.max(...ys) };
 }
 const ORDER = Object.keys(BY_ST);
+// Map 2 is drawn at exactly map 1's size: the same country width, on the same centre. Map 1 fits the hub's
+// 975 × 610 box into the same stage, and its country spans this, in its own units:
+const HUB = { w: 975, h: 610, x0: -57.63, y0: 12.98, x1: 957.06, y1: 606.57 };
+// …and the dots' country, in theirs (the seam dots are never seen, so they do not count)
+const DOTS_BOX = CELLS.filter((c) => !c.seam).reduce((a, c) => ({ x0: Math.min(a.x0, c.x - c.r), y0: Math.min(a.y0, c.y - c.r), x1: Math.max(a.x1, c.x + c.r), y1: Math.max(a.y1, c.y + c.r) }), { x0: Infinity, y0: Infinity, x1: -Infinity, y1: -Infinity });
+function matchMap1(bw: number, bh: number) {
+  const s1 = Math.min(bw / HUB.w, bh / HUB.h);
+  const left = (bw - HUB.w * s1) / 2 + HUB.x0 * s1, width = (HUB.x1 - HUB.x0) * s1;
+  const midY = (bh - HUB.h * s1) / 2 + ((HUB.y0 + HUB.y1) / 2) * s1;
+  const s2 = width / (DOTS_BOX.x1 - DOTS_BOX.x0);
+  return `${DOTS_BOX.x0 - left / s2} ${(DOTS_BOX.y0 + DOTS_BOX.y1) / 2 - midY / s2} ${bw / s2} ${bh / s2}`;
+}
 type VB = { x: number; y: number; w: number; h: number };
 const FULL: VB = { x: 0, y: 0, w: W, h: H };
 // The map's frame inside the card (Figma: 199,98 · 966×605). The SVG covers the whole card stage and the
@@ -144,7 +156,18 @@ export default function DotGrid() {
   const vb = FULL;
   const [hov, setHov] = useState<{ st: string; x: number; y: number } | null>(null);
   const k = FRAME.w / W; // screen px per map unit
-  const outer = `${-FRAME.x / k} ${-FRAME.y / k} ${STAGE_W / k} ${STAGE_H / k}`;
+  // the stage's own size, so map 2 can sit exactly where map 1 does
+  const [stage, setStage] = useState<{ w: number; h: number } | null>(null);
+  useLayoutEffect(() => {
+    const el = svgRef.current;
+    if (!el) return;
+    const m = () => { const w = el.clientWidth, h = el.clientHeight; if (w && h) setStage((o) => (o && o.w === w && o.h === h ? o : { w, h })); };
+    m();
+    const ro = new ResizeObserver(m);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  const outer = stage ? matchMap1(stage.w, stage.h) : `${-FRAME.x / k} ${-FRAME.y / k} ${STAGE_W / k} ${STAGE_H / k}`;
 
   useLayoutEffect(() => {
     const list = svgRef.current!.querySelectorAll('circle');
