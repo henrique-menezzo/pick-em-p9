@@ -8,7 +8,7 @@ import { AnimatePresence, motion } from 'motion/react';
 import { ALL, BY_ID, RACES, RESULTS, TAB_LABEL, TABS, type Race, type Tab } from '../data/races';
 import { AUTO_NAME, catSaved, liveScore, useStore } from '../lib/store';
 import { useCountdown } from './LockLine';
-import { CandidateRow, Face, Flag, Icon } from './ui';
+import { CandidateRow, Face, Flag, Icon, useAutoWave } from './ui';
 import { CatActions, Foot, LiveVideo, MapBox, MapTabs, MiniMap, Presented, Race as RaceCard } from './Layouts';
 import { Legend } from '../App';
 
@@ -643,8 +643,9 @@ function Board8({ head = 'none', row = 'frac', done = 'check', dot, title = true
   const t = useStore((s) => s.t);
   const parts = TABS.map((k) => usePart(k));
   const pop = useCellPop();
+  const wave = useAutoWave();
   return (
-    <section className={'dx-board p8-board row-' + row + (dot ? ' dots' : '')} aria-label="Every race">
+    <section className={'dx-board p8-board row-' + row + (dot ? ' dots' : '') + (wave ? ' wave' : '')} aria-label="Every race">
       {pop.at && <CellPop {...pop.at} onEnter={pop.stay} onLeave={pop.leave} />}
       {title && head === 'none' && <h2 className="dx-h">Every race</h2>}
       <BoardHead head={head} />
@@ -666,13 +667,14 @@ function Board8({ head = 'none', row = 'frac', done = 'check', dot, title = true
               <span className="dx-board-l"><span>{full && <Icon name="check" size={12} stroke={3} />}{TAB_LABEL[k]}</span><RowFig p={p} row={row} /></span>
             )}
             <div className="dx-board-cells">
-              {RACES[k].map((r) => {
+              {RACES[k].map((r, i) => {
                 const pk = picks[r.id];
                 let c: string = pk ?? 'open';
                 if (live) { const called = t >= RESULTS[r.id].call; c = !called ? 'wait' : !pk ? 'open' : pk === RESULTS[r.id].winner ? 'right' : 'miss'; }
                 // a click works like a click on the map; hovering opens the race in a small card
                 return <button key={r.id} className={'dx-cell ' + c + (!live && pk && auto[r.id] ? ' af' : '') + (r.id === cur ? ' cur' : '') + (pop.at?.id === r.id ? ' pop' : '')}
                   aria-label={`${TAB_LABEL[k]}, ${r.stateName}, ${pk ? (pk === 'R' ? 'Republican' : 'Democrat') + (auto[r.id] ? `, autofilled from ${AUTO_NAME[auto[r.id]]}` : '') : 'open'}`}
+                  style={{ ['--i' as string]: i }}
                   onClick={() => { if (live) { setTab(k); select(r.id); } else tap(r.id); }}
                   onPointerEnter={(e) => { if (e.pointerType !== 'mouse') return; pop.open(r.id, e.currentTarget); }}
                   onPointerLeave={(e) => { if (e.pointerType !== 'mouse') return; pop.leave(); }} />;

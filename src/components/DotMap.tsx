@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from 'motion/react';
 import us from '../data/usmap-hub.json';
 import { BY_ID, RESULTS, STATES, TAB_LABEL, raceIn, statusAt, type Side } from '../data/races';
 import { AUTO_NAME, useStore } from '../lib/store';
-import { Icon, PARTY, facePhoto } from './ui';
+import { Icon, PARTY, facePhoto, useAutoWave } from './ui';
 
 // ---- geometry ------------------------------------------------------------------------------------
 // The map is the Election Hub's (us-atlas, 975 by 610): one path per state, labels at the centre of
@@ -26,6 +26,11 @@ const TOP = Math.min(...Object.values(BOX).map((b) => b.y0));
 const BOTTOM = Math.max(...Object.values(BOX).map((b) => b.y1));
 const DELAY: Record<string, number> = {};
 for (const st of ORDER) DELAY[st] = ((BOX[st].y0 - TOP) / (BOTTOM - TOP)) * 620;
+// Autofill's sweep runs west to east, the way the data comes in across the country
+const LEFT = Math.min(...Object.values(BOX).map((b) => b.x0));
+const RIGHT = Math.max(...Object.values(BOX).map((b) => b.x1));
+const WAVE: Record<string, number> = {};
+for (const st of ORDER) WAVE[st] = Math.round((((BOX[st].x0 + BOX[st].x1) / 2 - LEFT) / (RIGHT - LEFT)) * 700);
 type VB = { x: number; y: number; w: number; h: number };
 const FULL: VB = { x: 0, y: 0, w: 975, h: 610 };
 const NAMES = (us as unknown as { names: Record<string, string> }).names;
@@ -88,7 +93,7 @@ const Lift = memo(function Lift({ st, c, light, sel, tapX, tapY, tapN }: { st: s
 
 const State = memo(function State({ st, cls, c, o, tapX, tapY, tapN }: { st: string; cls: string; c: string; o: number; label: boolean; tapX?: number; tapY?: number; tapN?: number }) {
   return (
-    <g className={'st ' + cls} data-st={st} style={{ ['--c' as string]: c, ['--d' as string]: DELAY[st] + 'ms', opacity: o }}>
+    <g className={'st ' + cls} data-st={st} style={{ ['--c' as string]: c, ['--d' as string]: DELAY[st] + 'ms', ['--w' as string]: WAVE[st] + 'ms', opacity: o }}>
       <path d={SHAPES[st]} />
       {/* no race here: the hub's no-data look, grey under a diagonal hatch */}
       {cls.startsWith('nr') && <path className="hatch" d={SHAPES[st]} />}
@@ -114,6 +119,7 @@ export default function DotMap({ fit }: { fit?: boolean }) {
   const tourLock = useStore((s) => s.tourLock);
 
   const svgRef = useRef<SVGSVGElement>(null);
+  const wave = useAutoWave();
   const vb = FULL;
   const [hov, setHov] = useState<{ st: string; x: number; y: number } | null>(null);
 
@@ -248,7 +254,7 @@ export default function DotMap({ fit }: { fit?: boolean }) {
       <div className={'mapbox' + (fit ? ' fit' : '') + (phase === 'enter' ? ' entering' : '')}>
         <svg
           ref={svgRef}
-          className={'map' + (live ? ' live' : '') + (HOVER ? ' hv-' + HOVER : '') + (tourLock !== null ? ' lit' : '')}
+          className={'map' + (live ? ' live' : '') + (HOVER ? ' hv-' + HOVER : '') + (tourLock !== null ? ' lit' : '') + (wave ? ' wave' : '')}
           viewBox={fit ? FIT_VB : FRAME_VB}
           onPointerMove={onMove}
           onPointerLeave={onLeave}

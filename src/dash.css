@@ -879,3 +879,13 @@
 .sq-pop .cand .t { gap: 2px; }
 .sq-pop .cand .ck { width: 18px; height: 18px; margin-right: 2px; }
 .sq-pop .cand.af .cand-party, .sq-pop .cand.af .af-sep { display: none; }
+
+/* Autofill's sweep, when it fills, swaps source or clears: the colours cross the map west to east and
+   run along the squares, each one catching a moment of light as it turns */
+@keyframes af-flash { 35% { filter: brightness(1.7); } }
+@media (prefers-reduced-motion: no-preference) {
+  .map.wave .st path { transition: fill .4s ease var(--w), filter .28s var(--ease); }
+  .map.wave .st.af path:not(.hatch) { animation: af-flash .7s ease-out var(--w); }
+  .p9 .dx-board.wave .dx-cell { transition: background-color .3s ease calc(var(--i) * 14ms), filter .15s; }
+  .p9 .dx-board.wave .dx-cell.af { animation: af-flash .6s ease-out calc(var(--i) * 14ms); }
+}

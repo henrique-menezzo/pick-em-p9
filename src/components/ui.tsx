@@ -1,4 +1,5 @@
 import { RESULTS, statusAt, clock, type Race, type Side } from '../data/races';
+import { useEffect, useRef, useState } from 'react';
 import { AUTO_NAME, useStore } from '../lib/store';
 
 export const PARTY: Record<Side, string> = { R: 'Republican', D: 'Democrat' };
@@ -115,4 +116,18 @@ export function liveLine(race: Race, t: number, pick?: Side) {
   if (now.status === 'counting') return { text: `Counting · ${now.reporting}%`, tone: '' };
   if (!pick) return { text: `Called ${clock(res.call)}`, tone: '' };
   return pick === res.winner ? { text: `✓ Called ${clock(res.call)}`, tone: 'ok' } : { text: `✕ Called ${clock(res.call)}`, tone: 'miss' };
+}
+
+/** True for a moment after Autofill fills, swaps or clears, long enough for its sweep to cross. */
+export function useAutoWave(ms = 1500) {
+  const run = useStore((s) => s.autoRun);
+  const first = useRef(run);
+  const [on, setOn] = useState(false);
+  useEffect(() => {
+    if (run === first.current) return;
+    setOn(true);
+    const h = setTimeout(() => setOn(false), ms);
+    return () => clearTimeout(h);
+  }, [run, ms]);
+  return on;
 }

@@ -41,6 +41,8 @@ interface State {
   savedPicks: Partial<Record<Tab, Record<string, Side>>>;
   /** picks Autofill made, and from where. A pick you make yourself takes the race out of here. */
   auto: Record<string, AutoSource>;
+  /** ticks each time Autofill fills, swaps or clears: the map and the squares play a sweep */
+  autoRun: number;
   user: User | null;
   panelMin: boolean;
   tourDone: boolean;
@@ -129,6 +131,7 @@ export const useStore = create<State>()(
       savedAt: null,
       savedPicks: {},
       auto: {},
+      autoRun: 0,
       user: null,
       panelMin: false,
       tourDone: false,
@@ -226,7 +229,7 @@ export const useStore = create<State>()(
         const picks = { ...s.picks };
         const auto = { ...s.auto };
         for (const r of todo) { picks[r.id] = source === 'market' ? r.market : r.poll; auto[r.id] = source; }
-        set({ picks, auto, savedAt: saveStamp(s) });
+        set({ picks, auto, savedAt: saveStamp(s), autoRun: s.autoRun + 1 });
         get().say(swapped
           ? `${todo.length} ${cat} ${todo.length === 1 ? 'race' : 'races'} now from ${name}`
           : `Filled ${todo.length} ${cat} ${todo.length === 1 ? 'race' : 'races'} from ${name}`);
@@ -239,7 +242,7 @@ export const useStore = create<State>()(
         const picks = { ...s.picks };
         const auto = { ...s.auto };
         for (const id of ids) { delete picks[id]; delete auto[id]; }
-        set({ picks, auto, savedAt: saveStamp(s) });
+        set({ picks, auto, savedAt: saveStamp(s), autoRun: s.autoRun + 1 });
         get().say(`Removed ${ids.length} autofilled ${TAB_LABEL[s.tab]} ${ids.length === 1 ? 'pick' : 'picks'}`);
       },
       save: () => set({ savedAt: Date.now() }),
