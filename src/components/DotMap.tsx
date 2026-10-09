@@ -168,7 +168,7 @@ export default function DotMap({ fit }: { fit?: boolean }) {
         // right = the winner's colour at full strength; missed = the same colour, well faded back
         const miss = !!pick && pick !== w;
         out[st] = miss
-          ? { cls: 'pk miss' + (sel ? ' sel' : '') + hv, c: COLOR[w], o: (sel || hv ? 0.45 : 0.22) * (off ? 0.8 : 1), label: false }
+          ? { cls: 'pk miss' + (sel ? ' sel' : '') + hv, c: COLOR[w], o: (sel || hv ? 0.7 : 0.5) * (off ? 0.8 : 1), label: false }
           : { cls: 'pk ' + (sel ? 'sel' : '') + hv, c: COLOR[w], o: dim, label: true };
       } else {
         // not called yet: dark grey, breathing while votes are counted
@@ -288,7 +288,7 @@ export default function DotMap({ fit }: { fit?: boolean }) {
           <g className="labels" aria-hidden>
             {ORDER.filter((st) => LABELS[st] && st !== lifted).map((st) => (
               <text key={st} className={'lb' + (looks[st].label ? ' light' : '')} x={LABELS[st][0]} y={LABELS[st][1]} fontSize={sizeOf(st)} textAnchor="middle" dominantBaseline="central"
-                style={{ opacity: looks[st].o < 1 ? Math.max(0.5, looks[st].o) : undefined }}>
+>
                 {st}
               </text>
             ))}
@@ -318,7 +318,13 @@ export default function DotMap({ fit }: { fit?: boolean }) {
         createPortal(
           <div className="maptip" style={{ left: hov.x + 16, top: hov.y + 16 }}>
             {STATES[hov.st] ?? NAMES[hov.st] ?? hov.st}
-            <em>{hovRace ? tipText(hovRace.id, picks[hovRace.id], live, t) : `· No ${TAB_LABEL[tab]} race this year — nothing to call`}</em>
+            <em>{hovRace ? tipText(hovRace.id, picks[hovRace.id], live, t) : `· No ${TAB_LABEL[tab]} race this year`}</em>
+            {/* on the night, say plainly whether you got this one */}
+            {live && hovRace && picks[hovRace.id] && statusAt(hovRace.id, t).status === 'called' && (
+              picks[hovRace.id] === RESULTS[hovRace.id].winner
+                ? <span className="mt-v ok"><Icon name="check" size={11} stroke={3} />You got it right</span>
+                : <span className="mt-v miss"><Icon name="x" size={11} stroke={3} />You missed this one</span>
+            )}
           </div>,
           document.body,
         )}
@@ -334,7 +340,7 @@ function tipText(id: string, pick: Side | undefined, live: boolean, t: number) {
     const now = statusAt(id, t);
     if (now.status !== 'called') return now.status === 'polls' ? '· Polls open' : `· ${now.reporting}% in`;
     const w = RESULTS[id].winner;
-    return `· ${race[w]} (${w})` + (pick ? (pick === w ? ' ✓' : ' ✕') : '');
+    return `· ${race[w]} (${w}) won`;
   }
   return pick ? `· ${race[pick]} (${pick}) · click to switch` : '· Click to pick the winner';
 }

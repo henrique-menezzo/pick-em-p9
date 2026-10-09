@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'motion/react';
-import { ALL, TAB_LABEL, TABS, T_MAX, clock, statusAt } from './data/races';
+import { ALL, RESULTS, TAB_LABEL, TABS, T_MAX, clock, statusAt } from './data/races';
 import { AUTO_NAME, CONTINUING, LOCK_AT, isLocked, liveScore, useStore, type AutoSource } from './lib/store';
 import DotMap from './components/DotMap';
 import DotGrid from './components/DotGrid';
@@ -278,11 +278,14 @@ function useBuckets() {
   const list = RACES[tab];
   if (live) {
     const sc = liveScore(picks, t, tab);
-    return { live, a: sc.correct, b: sc.missed, open: list.length - sc.correct - sc.missed };
+    // the misses split by who won the race, the colour the state is drawn in
+    const missed = list.filter((r) => picks[r.id] && statusAt(r.id, t).status === 'called' && picks[r.id] !== RESULTS[r.id].winner);
+    const mR = missed.filter((r) => RESULTS[r.id].winner === 'R').length;
+    return { live, a: sc.correct, b: sc.missed, mR, mD: missed.length - mR, open: list.length - sc.correct - sc.missed };
   }
   const R = list.filter((r) => picks[r.id] === 'R').length;
   const D = list.filter((r) => picks[r.id] === 'D').length;
-  return { live, a: R, b: D, open: list.length - R - D };
+  return { live, a: R, b: D, mR: 0, mD: 0, open: list.length - R - D };
 }
 
 /** Plain progress: how much of the map is picked. The R/D split is in the legend. */
@@ -292,13 +295,13 @@ function Progress() {
 }
 
 export function Legend() {
-  const { live, a, b, open } = useBuckets();
+  const { live, a, b, mR, mD, open } = useBuckets();
   return (
     <div className="legend">
       {live ? (
         <>
           <span><i style={{ background: 'linear-gradient(90deg, var(--R) 50%, var(--D) 50%)' }} />Right <b className="num">{a}</b></span>
-          <span><i className="lg-miss" />Missed <b className="num">{b}</b></span>
+          <span>Missed <i className="lg-miss r" /><b className="num">{mR}</b><i className="lg-miss d" /><b className="num">{mD}</b></span>
           <span><i style={{ background: 'var(--dot-pending)' }} />To call <b className="num">{open}</b></span>
         </>
       ) : (
