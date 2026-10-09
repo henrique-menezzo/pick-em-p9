@@ -274,18 +274,15 @@ function useBuckets() {
   const live = useStore((s) => s.live);
   const t = useStore((s) => s.t);
   const picks = useStore((s) => s.picks);
-  const auto = useStore((s) => s.auto);
   const tab = useStore((s) => s.tab);
   const list = RACES[tab];
   if (live) {
     const sc = liveScore(picks, t, tab);
-    return { live, a: sc.correct, b: sc.missed, af: 0, src: null, open: list.length - sc.correct - sc.missed };
+    return { live, a: sc.correct, b: sc.missed, open: list.length - sc.correct - sc.missed };
   }
-  const R = list.filter((r) => picks[r.id] === 'R' && !auto[r.id]).length;
-  const D = list.filter((r) => picks[r.id] === 'D' && !auto[r.id]).length;
-  const filled = list.filter((r) => picks[r.id] && auto[r.id]);
-  const src = filled.length ? AUTO_NAME[auto[filled[0].id]] : null;
-  return { live, a: R, b: D, af: filled.length, src, open: list.length - R - D - filled.length };
+  const R = list.filter((r) => picks[r.id] === 'R').length;
+  const D = list.filter((r) => picks[r.id] === 'D').length;
+  return { live, a: R, b: D, open: list.length - R - D };
 }
 
 /** Plain progress: how much of the map is picked. The R/D split is in the legend. */
@@ -295,7 +292,7 @@ function Progress() {
 }
 
 export function Legend() {
-  const { live, a, b, af, src, open } = useBuckets();
+  const { live, a, b, open } = useBuckets();
   return (
     <div className="legend">
       {live ? (
@@ -308,7 +305,6 @@ export function Legend() {
         <>
           <span><i style={{ background: 'var(--R)' }} />Republican <b className="num">{a}</b></span>
           <span><i style={{ background: 'var(--D)' }} />Democrat <b className="num">{b}</b></span>
-          {af > 0 && <span><i className="af-sw" />{src} {af === 1 ? 'pick' : 'picks'} <b className="num">{af}</b></span>}
           <span><i style={{ background: 'var(--dot-open)' }} />Open <b className="num">{open}</b></span>
         </>
       )}

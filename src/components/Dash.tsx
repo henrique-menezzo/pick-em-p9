@@ -6,7 +6,7 @@ import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 're
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'motion/react';
 import { ALL, BY_ID, RACES, RESULTS, TAB_LABEL, TABS, type Race, type Tab } from '../data/races';
-import { AUTO_NAME, catSaved, liveScore, useStore } from '../lib/store';
+import { catSaved, liveScore, useStore } from '../lib/store';
 import { useCountdown } from './LockLine';
 import { CandidateRow, Face, Flag, Icon, useAutoWave } from './ui';
 import { CatActions, Foot, LiveVideo, MapBox, MapTabs, MiniMap, Presented, Race as RaceCard } from './Layouts';
@@ -682,7 +682,7 @@ function Board8({ head = 'none', row = 'frac', done = 'check', dot, title = true
                 if (live) { const called = t >= RESULTS[r.id].call; c = !called ? 'wait' : (!pk ? 'open' : pk === RESULTS[r.id].winner ? 'right' : 'miss') + ' w-' + RESULTS[r.id].winner; }
                 // a click works like a click on the map; hovering opens the race in a small card
                 return <button key={r.id} className={'dx-cell ' + c + (!live && pk && auto[r.id] ? ' af' : '') + (r.id === cur ? ' cur' : '') + (pop.at?.id === r.id ? ' pop' : '')}
-                  aria-label={`${TAB_LABEL[k]}, ${r.stateName}, ${pk ? (pk === 'R' ? 'Republican' : 'Democrat') + (auto[r.id] ? `, autofilled from ${AUTO_NAME[auto[r.id]]}` : '') : 'open'}`}
+                  aria-label={`${TAB_LABEL[k]}, ${r.stateName}, ${pk ? (pk === 'R' ? 'Republican' : 'Democrat') : 'open'}`}
                   style={{ ['--i' as string]: i }}
                   onClick={() => { if (live) { setTab(k); select(r.id); } else tap(r.id); }}
                   onPointerEnter={(e) => { if (e.pointerType !== 'mouse') return; pop.open(r.id, e.currentTarget); }}
@@ -1043,7 +1043,6 @@ function SaveMaps() {
  *  stayed means seen, even if the part is emptied and filled again), and never during the tour. */
 function PartDone() {
   const picks = useStore((s) => s.picks);
-  const auto = useStore((s) => s.auto);
   const tour = useStore((s) => s.tour);
   const select = useStore((s) => s.select);
   const setTab = useStore((s) => s.setTab);
@@ -1087,14 +1086,7 @@ function PartDone() {
   const next = open ? [...TABS.slice(i + 1), ...TABS.slice(0, i)].find((k) => done[k] < RACES[k].length) : undefined;
   const n = open ? RACES[open].length : 0;
   const total = TABS.reduce((a, k) => a + RACES[k].length, 0);
-  // how much of the part Autofill filled, and from where
-  const filled = open ? RACES[open].filter((r) => auto[r.id]) : [];
-  const from = filled.length ? AUTO_NAME[auto[filled[0].id]] : '';
-  const head = !open ? '' : filled.length === n
-    ? `All ${n} ${NOUN[open]} races are filled from ${from}.`
-    : filled.length
-      ? `All ${n} ${NOUN[open]} races have a pick, ${filled.length} of them from ${from}.`
-      : `You called all ${n} ${NOUN[open]} races.`;
+  const head = open ? `You called all ${n} ${NOUN[open]} races.` : '';
 
   return createPortal(
     <AnimatePresence>

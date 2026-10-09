@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'motion/react';
 import us from '../data/usmap-hub.json';
 import { BY_ID, RESULTS, STATES, TAB_LABEL, raceIn, statusAt, type Side } from '../data/races';
-import { AUTO_NAME, useStore } from '../lib/store';
+import { useStore } from '../lib/store';
 import { Icon, PARTY, facePhoto, useAutoWave } from './ui';
 
 // ---- geometry ------------------------------------------------------------------------------------
@@ -382,7 +382,6 @@ function anchorTo(svg: SVGSVGElement, st: string, w: number, h: number) {
 // ---- the pick you just made on the map, shown right next to the state -------------------------------
 function PickBadge({ svg, vb, badge, onDone }: { svg: React.RefObject<SVGSVGElement | null>; vb: VB; badge: { id: string; n: number } | null; onDone: () => void }) {
   const pick = useStore((s) => (badge ? s.picks[badge.id] : undefined));
-  const auto = useStore((s) => (badge ? s.auto[badge.id] : undefined));
   const live = useStore((s) => s.live);
   const [pos, setPos] = useState<ReturnType<typeof anchorTo> | null>(null);
   const race = badge ? BY_ID[badge.id] : null;
@@ -415,7 +414,7 @@ function PickBadge({ svg, vb, badge, onDone }: { svg: React.RefObject<SVGSVGElem
           <AnimatePresence mode="popLayout" initial={false}>
             <motion.div
               key={pick ?? 'none'}
-              className={'pb-row ' + (pick ?? '') + (pick && auto ? ' af' : '')}
+              className={'pb-row ' + (pick ?? '')}
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
@@ -426,7 +425,7 @@ function PickBadge({ svg, vb, badge, onDone }: { svg: React.RefObject<SVGSVGElem
                   <span className={'face ' + pick}><img src={facePhoto(pick)} alt="" /></span>
                   <span className="t">
                     <b>{race[pick]}</b>
-                    <small>{race.stateName} · {auto ? `${AUTO_NAME[auto]} pick` : PARTY[pick]}</small>
+                    <small>{race.stateName} · {PARTY[pick]}</small>
                   </span>
                   <span className="ck"><Icon name="check" size={11} stroke={2.8} /></span>
                 </>
