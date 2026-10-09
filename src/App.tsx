@@ -308,7 +308,7 @@ export function Legend() {
         <>
           <span><i style={{ background: 'var(--R)' }} />Republican <b className="num">{a}</b></span>
           <span><i style={{ background: 'var(--D)' }} />Democrat <b className="num">{b}</b></span>
-          {af > 0 && <span><i style={{ background: 'linear-gradient(90deg, var(--R-af) 50%, var(--D-af) 50%)' }} />Autofill, {src} <b className="num">{af}</b></span>}
+          {af > 0 && <span><i style={{ background: 'linear-gradient(90deg, var(--R-af) 50%, var(--D-af) 50%)' }} />{src} {af === 1 ? 'pick' : 'picks'} <b className="num">{af}</b></span>}
           <span><i style={{ background: 'var(--dot-open)' }} />Open <b className="num">{open}</b></span>
         </>
       )}

@@ -102,7 +102,7 @@ export function CandidateRow({ race, side, advance }: { race: Race; side: Side; 
       <Face side={side} />
       <span className="t">
         <span className="n">{name}</span>
-        <span className="p"><span className="cand-party">{PARTY[side]}</span>{af && <span className="af-from"><i className="af-sep">·</i><Icon name="wand" size={12} stroke={2} />Autofill, {af}</span>}</span>
+        <span className="p"><span className="cand-party">{PARTY[side]}</span>{af && <span className="af-from"><i className="af-sep">·</i><Icon name="wand" size={12} stroke={2} />{af} pick</span>}</span>
       </span>
       {on && <span className="ck on"><Icon name="check" size={12} stroke={2.8} /></span>}
     </button>

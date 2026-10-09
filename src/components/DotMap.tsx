@@ -402,7 +402,7 @@ function PickBadge({ svg, vb, badge, onDone }: { svg: React.RefObject<SVGSVGElem
                   <span className={'face ' + pick}><img src={facePhoto(pick)} alt="" /></span>
                   <span className="t">
                     <b>{race[pick]}</b>
-                    <small>{race.stateName} · {auto ? `Autofill, ${AUTO_NAME[auto]}` : PARTY[pick]}</small>
+                    <small>{race.stateName} · {auto ? `${AUTO_NAME[auto]} pick` : PARTY[pick]}</small>
                   </span>
                   <span className="ck"><Icon name="check" size={11} stroke={2.8} /></span>
                 </>
