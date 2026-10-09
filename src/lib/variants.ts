@@ -1,0 +1,31 @@
+// Review-only switches for design variations (nothing here changes the default experience).
+//   ?intro=a|b|c   how the game explains itself   (a: profile line · b: hint on the map · c: page title)
+//   ?en=a|b|c      how Election Night is reached   (a: not before the day · b: quiet preview link · c: from the countdown)
+//   ?mobile=1|2|3  phone layouts                   (1: map + bottom sheet · 2: one question at a time · 3: map first)
+//   ?empty=1       first visit: nothing picked yet
+/** A build for a usability session: one map, one mode, one half of the game, and none of the
+ *  prototype's own controls. Set at build time, not by a query string, so a participant cannot
+ *  wander into the rest of the prototype and nothing on screen hints that the rest exists. */
+export const STUDY = (import.meta.env.VITE_STUDY || '') as '' | 'picks' | 'night';
+
+const Q = new URLSearchParams(location.search);
+export const V = {
+  intro: Q.get('intro') as 'a' | 'b' | 'c' | null,
+  en: Q.get('en') as 'a' | 'b' | 'c' | null,
+  mobile: Q.get('mobile') as '1' | '2' | '3' | null,
+  empty: Q.has('empty'),
+  more: Q.has('more'),
+  title: +(Q.get('title') || 0), // 1..10 — title studies (see components/TitleStudies.tsx) // placeholder blocks where future content under the map will go
+};
+export const PURPOSE = 'Call every race. See how you did on Nov 3.';
+
+/** After a pick, P1 moved you to the next open race. P6 stays put. One switch brings the old
+ *  behaviour back for the unmoderated test: VITE_AUTO_ADVANCE=1 at build time, or ?advance=1. */
+export const AUTO_ADVANCE = import.meta.env.VITE_AUTO_ADVANCE === '1' || Q.get('advance') === '1';
+
+/** P6 layout studies, 1 to 5. ?layout=N picks one; otherwise the last one chosen in the switcher. */
+/** P6: the Figma frame 344:7900 exactly, and places for the title outside its two cards. */
+export const VERSIONS = [
+  { n: 1, name: 'The page' },
+] as const;
+

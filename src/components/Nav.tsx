@@ -1,0 +1,68 @@
+// The Daily Wire site navigation (Figma "Header (Web)"): section links, centred logo, actions, account.
+import { useEffect, useState } from 'react';
+import { AnimatePresence, motion } from 'motion/react';
+import logo from '../data/logo.svg';
+
+/** The wordmark is one colour of artwork, so it is painted rather than drawn: a mask over the
+ *  theme's own text colour. White on the dark page, black on the light one, from one file. */
+export function Wordmark({ className }: { className: string }) {
+  return <span className={'wordmark ' + className} role="img" aria-label="Daily Wire" style={{ ['--logo' as string]: `url(${logo})` }} />;
+}
+import { useStore } from '../lib/store';
+import { STUDY } from '../lib/variants';
+import { Icon } from './ui';
+
+const LINKS = ['News', 'Shows & Movies', 'All Access', 'Sport & State', 'The Midterms'];
+const HERE = 'The Midterms';
+
+export default function Nav() {
+  const user = useStore((s) => s.user);
+  const openAuth = useStore((s) => s.openAuth);
+  const signOut = useStore((s) => s.signOut);
+  const live = useStore((s) => s.live);
+  const setLive = useStore((s) => s.setLive);
+  const setT = useStore((s) => s.setT);
+  const [menu, setMenu] = useState(false);
+  useEffect(() => {
+    if (!menu) return;
+    const off = (e: PointerEvent) => { if (!(e.target as HTMLElement).closest('.nav-acct')) setMenu(false); };
+    window.addEventListener('pointerdown', off);
+    return () => window.removeEventListener('pointerdown', off);
+  }, [menu]);
+
+  return (
+    <header className="nav">
+      <nav className="nav-links">
+        {LINKS.map((l) => (
+          <a key={l} className={l === HERE ? 'here' : ''} href="#">{l}</a>
+        ))}
+      </nav>
+      <Wordmark className="nav-logo" />
+      <div className="nav-right">
+        <a href="#"><Icon name="download" size={20} stroke={1.7} />Download App</a>
+        <a href="#"><Icon name="search" size={20} stroke={1.7} />Search</a>
+        <span className="nav-div" />
+        <div className="nav-acct">
+          <button className={'nav-av' + (user ? ' me' : '')} onClick={() => (user ? setMenu(!menu) : openAuth('play'))} aria-label={user ? 'Account' : 'Sign up'}>
+            {user ? user.initials : <Icon name="user" size={16} stroke={1.8} />}
+          </button>
+          <AnimatePresence>
+            {menu && user && (
+              <motion.div className="who-menu" initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.15 }}>
+                <div className="em">{user.email}</div>
+                {/* A session keeps both halves of the game on one page, so the picks a participant
+                    just made are the ones election night scores. This menu only exists once they
+                    have signed in, which is the moment the session is ready for it — nothing to
+                    stumble into beforehand. It is the way in, not the way back. */}
+                {STUDY === 'picks' && !live && (
+                  <button onClick={() => { setMenu(false); setLive(true); setT(Infinity); }}>Election night</button>
+                )}
+                <button onClick={() => { setMenu(false); signOut(); }}>Sign out</button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
+    </header>
+  );
+}

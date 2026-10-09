@@ -1,0 +1,11 @@
+node_modules
+dist
+*.tsbuildinfo
+.DS_Store
+
+# local files that are not the prototype
+tmp/
+/*.png
+Pick-Em-P9-offline.html
+out-picks/
+out-night/

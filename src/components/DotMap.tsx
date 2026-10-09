@@ -1,0 +1,404 @@
+import { memo, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
+import { AnimatePresence, motion } from 'motion/react';
+import us from '../data/usmap-hub.json';
+import { BY_ID, RESULTS, STATES, TAB_LABEL, raceIn, statusAt, type Side } from '../data/races';
+import { useStore } from '../lib/store';
+import { Icon, PARTY, facePhoto } from './ui';
+
+// ---- geometry ------------------------------------------------------------------------------------
+// The map is the Election Hub's (us-atlas, 975 by 610): one path per state, labels at the centre of
+// each state's box with the hub's four nudges, and no label where a state is too small to hold one.
+const SHAPES = us.states as Record<string, string>;
+const LABELS = us.labels as unknown as Record<string, [number, number]>;
+const BOX = Object.fromEntries(
+  Object.entries(us.box as Record<string, number[]>).map(([st, b]) => [st, { x0: b[0], y0: b[1], x1: b[2], y1: b[3] }]),
+) as Record<string, { x0: number; y0: number; x1: number; y1: number }>;
+const ORDER = Object.keys(SHAPES);
+// where the map sits inside the card, exactly as in the frame
+const FRAME_VB = (us.frame as number[]).join(' ');
+const LABEL_SIZE = us.labelSize as number;
+/** The small states take a smaller label; DE and RI sit just off the coast. */
+const LABEL_SIZES = (us as unknown as { labelSizes?: Record<string, number> }).labelSizes ?? {};
+const sizeOf = (st: string) => LABEL_SIZES[st] ?? LABEL_SIZE;
+// the front of the entrance runs top to bottom: each state waits for the one above it
+const TOP = Math.min(...Object.values(BOX).map((b) => b.y0));
+const BOTTOM = Math.max(...Object.values(BOX).map((b) => b.y1));
+const DELAY: Record<string, number> = {};
+for (const st of ORDER) DELAY[st] = ((BOX[st].y0 - TOP) / (BOTTOM - TOP)) * 620;
+type VB = { x: number; y: number; w: number; h: number };
+const FULL: VB = { x: 0, y: 0, w: 975, h: 610 };
+const NAMES = (us as unknown as { names: Record<string, string> }).names;
+
+const Q2 = new URLSearchParams(location.search);
+/** ?hover=fill|seam — alternatives to the default light layer, for comparison */
+const HOVER = Q2.get('hover') || '';
+/** ?hov=TX,KS — hold a state in its hover state, to look at it */
+const HELD = new Set((Q2.get('hov') || '').split(',').filter(Boolean));
+
+// three colours only, as in the hub's map: Safe R, Safe D and the empty state
+const COLOR = { R: 'var(--R)', D: 'var(--D)', open: 'var(--dot-open)', none: 'var(--dot-open)', pending: 'var(--dot-open)' };
+
+// ---- one state: its shape, and its abbreviation on top -------------------------------------------
+/** The piece under the pointer, drawn again on top of the whole map: three copies of itself
+    stepped down for the extruded side, then the face. The one on the map below darkens, so it
+    reads as the hole the piece came out of. Nothing is moved in place, so the jigsaw stays whole. */
+const WALL = [9, 8, 7, 6, 5, 4, 3, 2, 1];
+/** how far the piece under the pointer rises, and how much it swells doing it */
+export const LIFT_Y = 9, LIFT_K = 1.02;
+/** The colour arriving from under your finger: a disc of it growing inside the state's own
+    outline, so a pick reads as a touch landing rather than a fill quietly swapping. */
+const Splash = memo(function Splash({ st, x, y, c, n }: { st: string; x: number; y: number; c: string; n: number }) {
+  const b = BOX[st];
+  const r = Math.hypot(b.x1 - b.x0, b.y1 - b.y0);
+  const id = `tap-${st}-${n}`;
+  return (
+    <g className="splash" aria-hidden>
+      <clipPath id={id}><path d={SHAPES[st]} /></clipPath>
+      <motion.circle
+        clipPath={`url(#${id})`} cx={x} cy={y} fill={c}
+        initial={{ r: 0, opacity: 0.9 }}
+        animate={{ r, opacity: 0 }}
+        transition={{ r: { duration: 0.52, ease: [0.2, 0.8, 0.2, 1] }, opacity: { duration: 0.52, ease: 'easeIn' } }}
+      />
+    </g>
+  );
+});
+
+/** The hub's lift: the state under the pointer drawn again above the map, raised 9 and grown 2%,
+ *  three courses of its own shape under it for the side, a white wash for the lit face, and the
+ *  source left on the board at 70% brightness as the hole it came out of. */
+const Lift = memo(function Lift({ st, c, light, sel, tapX, tapY, tapN }: { st: string; c: string; light: boolean; sel: boolean; tapX?: number; tapY?: number; tapN?: number }) {
+  const at = LABELS[st];
+  return (
+    <g className="lift-overlay" aria-hidden style={{ ['--c' as string]: c }}>
+      {[3, 2, 1].map((i) => <path key={i} className="lift-side" d={SHAPES[st]} transform={`translate(0 ${i * 1.7})`} />)}
+      <path className="lift-shape" d={SHAPES[st]} />
+      <path className="lift-face" d={SHAPES[st]} />
+      {tapN ? <Splash st={st} x={tapX!} y={tapY!} c={c} n={tapN} /> : null}
+      {sel && <path className="sel-outline" d={SHAPES[st]} />}
+      {at && (
+        <text className={'lb' + (light ? ' light' : '')} x={at[0]} y={at[1]} fontSize={sizeOf(st)} textAnchor="middle" dominantBaseline="central">
+          {st}
+        </text>
+      )}
+    </g>
+  );
+});
+
+const State = memo(function State({ st, cls, c, o, tapX, tapY, tapN }: { st: string; cls: string; c: string; o: number; label: boolean; tapX?: number; tapY?: number; tapN?: number }) {
+  return (
+    <g className={'st ' + cls} data-st={st} style={{ ['--c' as string]: c, ['--d' as string]: DELAY[st] + 'ms', opacity: o }}>
+      <path d={SHAPES[st]} />
+      {tapN ? <Splash st={st} x={tapX!} y={tapY!} c={c} n={tapN} /> : null}
+    </g>
+  );
+});
+
+/** The country alone, with a little air: for layouts where the map has its own box */
+const FIT_VB = '0 0 975 610';
+
+export default function DotMap({ fit }: { fit?: boolean }) {
+  const tab = useStore((s) => s.tab);
+  const picks = useStore((s) => s.picks);
+  const curId = useStore((s) => s.cursor[s.tab]);
+  const live = useStore((s) => s.live);
+  const t = useStore((s) => s.t);
+  const hoverId = useStore((s) => s.hoverId);
+  const pulse = useStore((s) => s.pulse);
+  const tap = useStore((s) => s.tap);
+  const phase = useStore((s) => s.phase);
+  const tourLock = useStore((s) => s.tourLock);
+
+  const svgRef = useRef<SVGSVGElement>(null);
+  const vb = FULL;
+  const [hov, setHov] = useState<{ st: string; x: number; y: number } | null>(null);
+
+  // ---- look of every state ----
+  const hoverRace = hoverId ? BY_ID[hoverId] : null;
+  const curSt = BY_ID[curId]?.state ?? null;
+  // There is always exactly one state under the light, and it is the race the panel on the right is
+  // showing. The pointer only borrows it — a dot in the matrix, a row in "just called", the state
+  // itself — and hands it straight back. So stepping through the order with the panel's arrows
+  // reads the same as running the pointer along the dots: one piece up, everything else stepped
+  // back. While the tour is pointing at a state, that state is the focus and nothing else moves.
+  const focusSt = tourLock !== null
+    ? (tourLock || null)
+    : ((hoverRace && hoverRace.type === tab ? hoverRace.state : null) ?? hov?.st ?? curSt);
+  const showSel = true;
+
+  const looks = useMemo(() => {
+    const out: Record<string, { cls: string; c: string; o: number; label: boolean }> = {};
+    for (const st of ORDER) {
+      const race = raceIn(tab, st);
+      // spotlight: colours step back hard, greys only a little, so the base map never sinks into the card
+      // the hub's map never dims the rest of the country around the state in focus
+      const off = false;
+      const dim = 1;
+      const dimGrey = 1;
+      // while the tour points at a state, that state is the one under the light — held there,
+      // so the step opens with it already lifted instead of waiting for the pointer
+      const hv = hov?.st === st || focusSt === st || HELD.has(st) || tourLock === st ? ' hov' : '';
+      // No race here this chamber: now that this is a handful of states and not a region, it can
+      // carry the design system's disabled colour without the map turning into a field of grey.
+      if (!race) { out[st] = { cls: 'nr' + hv, c: COLOR.none, o: 1, label: false }; continue; }
+      const pick = picks[race.id];
+      const sel = showSel && race.id === curId;
+      if (!live) {
+        const c = pick ? COLOR[pick] : COLOR.open;
+        out[st] = { cls: (pick ? 'pk ' : '') + (sel ? 'sel' : '') + hv, c, o: pick ? dim : dimGrey, label: !!pick };
+        continue;
+      }
+      const now = statusAt(race.id, t);
+      if (now.status === 'called') {
+        const w = RESULTS[race.id].winner;
+        // right = the winner's colour at full strength; missed = the same colour, well faded back
+        const miss = !!pick && pick !== w;
+        out[st] = miss
+          ? { cls: 'pk miss' + (sel ? ' sel' : '') + hv, c: COLOR[w], o: (sel || hv ? 0.45 : 0.22) * (off ? 0.8 : 1), label: false }
+          : { cls: 'pk ' + (sel ? 'sel' : '') + hv, c: COLOR[w], o: dim, label: true };
+      } else {
+        // not called yet: dark grey, breathing while votes are counted
+        out[st] = { cls: (now.status === 'counting' ? 'counting' : '') + (sel ? ' sel' : '') + hv, c: COLOR.pending, o: dimGrey, label: false };
+      }
+    }
+    return out;
+  }, [tab, picks, curId, live, t, focusSt, showSel, hov?.st, tourLock]);
+
+
+  // ---- pop: a ripple of the state's dots when it gets a pick, or gets called on election night ----
+  function ripple(st: string) {
+    const el = svgRef.current?.querySelector(`g[data-st="${st}"] path`) as SVGPathElement | null;
+    el?.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.035)', offset: 0.4 }, { transform: 'scale(1)' }], {
+      duration: 420, easing: 'cubic-bezier(.2,.8,.2,1)',
+    });
+  }
+  const lastPulse = useRef(pulse);
+  useEffect(() => {
+    for (const [id, n] of Object.entries(pulse)) {
+      if (lastPulse.current[id] !== n) { const r = BY_ID[id]; if (r.type === tab) ripple(r.state); }
+    }
+    lastPulse.current = pulse;
+  }, [pulse, tab]);
+  // election night: no pop when a state is called — its colour just eases in (see .map.live in CSS)
+
+  // ---- pointer: hit-test only ----
+  const raf = useRef(0);
+  const [badge, setBadge] = useState<{ id: string; n: number } | null>(null);
+  const [splash, setSplash] = useState<{ st: string; x: number; y: number; n: number } | null>(null);
+
+  // the shapes answer for themselves now: whatever is under the pointer names its own state
+  const stateUnder = (e: { clientX: number; clientY: number }) =>
+    (document.elementFromPoint(e.clientX, e.clientY)?.closest('g[data-st]') as SVGGElement | null)?.dataset.st ?? null;
+  function onMove(e: React.PointerEvent) {
+    if (e.pointerType !== 'mouse') return;
+    // the pointer is on the map itself: any spotlight borrowed from the list/matrix is over
+    if (useStore.getState().hoverId) useStore.getState().setHover(null);
+    const cx = e.clientX, cy = e.clientY;
+    cancelAnimationFrame(raf.current);
+    raf.current = requestAnimationFrame(() => {
+      const st = stateUnder({ clientX: cx, clientY: cy });
+      // during the tour only the lit state answers — but it answers normally, lift and all
+      const lock = useStore.getState().tourLock;
+      if (lock !== null && st !== lock) return setHov(null);
+      setHov((h) => (st ? { st, x: cx, y: cy } : h && !st ? null : h));
+    });
+  }
+  function onLeave() {
+    cancelAnimationFrame(raf.current);
+    setHov(null);
+  }
+  function onUp(e: React.PointerEvent) {
+    const st = stateUnder(e);
+    // during the tour the map answers for the state under the light, and for nothing else
+    const lock = useStore.getState().tourLock;
+    if (lock !== null && st !== lock) return;
+    const race = st && raceIn(tab, st);
+    if (!race) return;
+    tap(race.id);
+    setBadge({ id: race.id, n: Date.now() });
+    // where the touch landed, in the map's own coordinates, for the colour to grow from
+    const svg = svgRef.current;
+    if (svg) {
+      const m = svg.getScreenCTM();
+      if (m) {
+        const pt = new DOMPoint(e.clientX, e.clientY).matrixTransform(m.inverse());
+        setSplash({ st, x: pt.x, y: pt.y, n: Date.now() });
+      }
+    }
+  }
+
+  const hovRace = hov ? raceIn(tab, hov.st) : null;
+  // the piece that is up is the one under the light. HELD is the review flag (?hov=TX)
+  // as in the hub, only what the pointer is on comes up (or what the tour points at); the race the
+  // panel is showing is marked with a white outline instead
+  const pointed = tourLock !== null ? (tourLock || null) : ((hoverRace && hoverRace.type === tab ? hoverRace.state : null) ?? hov?.st ?? null);
+  const liftCandidate = HOVER === 'halo' ? null : (pointed ?? [...HELD][0] ?? null);
+  // a state with no race this chamber never comes off the board — it only explains itself
+  const lifted = liftCandidate && raceIn(tab, liftCandidate) ? liftCandidate : null;
+
+
+  return (
+    <>
+      <div className={'mapbox' + (fit ? ' fit' : '') + (phase === 'enter' ? ' entering' : '')}>
+        <svg
+          ref={svgRef}
+          className={'map' + (live ? ' live' : '') + (HOVER ? ' hv-' + HOVER : '') + (tourLock !== null ? ' lit' : '')}
+          viewBox={fit ? FIT_VB : FRAME_VB}
+          onPointerMove={onMove}
+          onPointerLeave={onLeave}
+          onPointerUp={onUp}
+        >
+          {ORDER.map((st) => (
+            // `soc` = this state has a copy of itself raised above it, so what is left on the board
+            // is the socket it came out of. Only then does it darken — a state that darkens with
+            // nothing above it is just a blotch, which is what it looked like in Light mode.
+            <State key={st} st={st} {...looks[st]} cls={looks[st].cls + (st === lifted ? ' soc' : '')}
+              tapX={splash?.st === st ? splash.x : undefined}
+              tapY={splash?.st === st ? splash.y : undefined}
+              tapN={splash?.st === st && lifted !== st ? splash.n : undefined} />
+          ))}
+          {curSt && curSt !== lifted && raceIn(tab, curSt) && <path className="sel-outline" d={SHAPES[curSt]} />}
+          <g className="labels" aria-hidden>
+            {ORDER.filter((st) => LABELS[st] && st !== lifted).map((st) => (
+              <text key={st} className={'lb' + (looks[st].label ? ' light' : '')} x={LABELS[st][0]} y={LABELS[st][1]} fontSize={sizeOf(st)} textAnchor="middle" dominantBaseline="central"
+                style={{ opacity: looks[st].o < 1 ? Math.max(0.5, looks[st].o) : undefined }}>
+                {st}
+              </text>
+            ))}
+          </g>
+          {lifted && (
+            <Lift key={lifted} st={lifted} c={looks[lifted].c} light={looks[lifted].label} sel={lifted === curSt}
+              tapX={splash?.st === lifted ? splash.x : undefined}
+              tapY={splash?.st === lifted ? splash.y : undefined}
+              tapN={splash?.st === lifted ? splash.n : undefined} />
+          )}
+        </svg>
+      </div>
+
+      {hov && !(badge && BY_ID[badge.id].state === hov.st) &&
+        createPortal(
+          <div className="maptip" style={{ left: hov.x + 16, top: hov.y + 16 }}>
+            {STATES[hov.st] ?? NAMES[hov.st] ?? hov.st}
+            <em>{hovRace ? tipText(hovRace.id, picks[hovRace.id], live, t) : `· No ${TAB_LABEL[tab]} race this year — nothing to call`}</em>
+          </div>,
+          document.body,
+        )}
+
+      <PickBadge svg={svgRef} vb={vb} badge={badge} onDone={() => setBadge(null)} />
+    </>
+  );
+}
+
+function tipText(id: string, pick: Side | undefined, live: boolean, t: number) {
+  const race = BY_ID[id];
+  if (live) {
+    const now = statusAt(id, t);
+    if (now.status !== 'called') return now.status === 'polls' ? '· Polls open' : `· ${now.reporting}% in`;
+    const w = RESULTS[id].winner;
+    return `· ${race[w]} (${w})` + (pick ? (pick === w ? ' ✓' : ' ✕') : '');
+  }
+  return pick ? `· ${race[pick]} (${pick}) · click to switch` : '· Click to pick the winner';
+}
+
+// ---- where a floating card sits next to a state (right of it, or left when there's no room) ----------
+/** A state's own outline, in screen coordinates — for anything that wants to light the state
+    itself rather than box it. The matrix carries the map's placement and scale. */
+/** Every state at once, in the map's own screen transform: the country's outline rather than a box
+ *  around it. The tour uses it to light the whole map without drawing a rectangle over it. */
+export const MAP_SHAPES = ORDER.map((st) => SHAPES[st]);
+
+export function stateShapeOnScreen(st: string): { d: string; m: string; mUp: string } | null {
+  const svg = document.querySelector('svg.map') as SVGSVGElement | null;
+  if (!svg || !SHAPES[st]) return null;
+  const m = svg.getScreenCTM();
+  if (!m) return null;
+  const b = BOX[st];
+  const cx = (b.x0 + b.x1) / 2, cy = (b.y0 + b.y1) / 2;
+  const base = `matrix(${m.a},${m.b},${m.c},${m.d},${m.e},${m.f})`;
+  // the raised piece AND the hole it came out of: together they are exactly the piece and its
+  // wall, with none of the neighbours caught in between
+  return {
+    d: SHAPES[st],
+    m: base,
+    mUp: `${base} translate(0 ${-LIFT_Y}) translate(${cx} ${cy}) scale(${LIFT_K}) translate(${-cx} ${-cy})`,
+  };
+}
+
+
+function anchorTo(svg: SVGSVGElement, st: string, w: number, h: number) {
+  const m = svg.getScreenCTM()!;
+  const b = BOX[st];
+  const tl = new DOMPoint(b.x0 - 6, b.y0 - 6).matrixTransform(m);
+  const br = new DOMPoint(b.x1 + 6, b.y1 + 6).matrixTransform(m);
+  let side: 'l' | 'r' = 'r';
+  let left = br.x + 12;
+  if (left + w > window.innerWidth - 12) { left = tl.x - 12 - w; side = 'l'; }
+  const top = Math.max(12, Math.min(window.innerHeight - h - 12, (tl.y + br.y) / 2 - h / 2));
+  return { left: Math.max(12, left), top, side };
+}
+
+// ---- the pick you just made on the map, shown right next to the state -------------------------------
+function PickBadge({ svg, vb, badge, onDone }: { svg: React.RefObject<SVGSVGElement | null>; vb: VB; badge: { id: string; n: number } | null; onDone: () => void }) {
+  const pick = useStore((s) => (badge ? s.picks[badge.id] : undefined));
+  const live = useStore((s) => s.live);
+  const [pos, setPos] = useState<ReturnType<typeof anchorTo> | null>(null);
+  const race = badge ? BY_ID[badge.id] : null;
+
+  useLayoutEffect(() => {
+    if (race && svg.current) setPos(anchorTo(svg.current, race.state, 230, 56));
+  }, [race?.id, vb, svg]);
+  // stays while you keep clicking, fades a moment after the last click
+  const done = useRef(onDone);
+  done.current = onDone;
+  useEffect(() => {
+    if (!badge) return;
+    const h = setTimeout(() => done.current(), 2400);
+    return () => clearTimeout(h);
+  }, [badge]);
+
+  const show = race && pos && !live;
+  return createPortal(
+    <AnimatePresence>
+      {show && (
+        <motion.div
+          key={race.id}
+          className="pick-badge"
+          initial={{ opacity: 0, scale: 0.92, x: pos.side === 'r' ? -6 : 6 }}
+          animate={{ opacity: 1, scale: 1, x: 0, left: pos.left, top: pos.top }}
+          exit={{ opacity: 0, scale: 0.96, transition: { duration: 0.18 } }}
+          transition={{ type: 'spring', stiffness: 420, damping: 32 }}
+          style={{ left: pos.left, top: pos.top, transformOrigin: pos.side === 'r' ? 'left center' : 'right center' }}
+        >
+          <AnimatePresence mode="popLayout" initial={false}>
+            <motion.div
+              key={pick ?? 'none'}
+              className={'pb-row ' + (pick ?? '')}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ type: 'spring', stiffness: 500, damping: 34 }}
+            >
+              {pick ? (
+                <>
+                  <span className={'face ' + pick}><img src={facePhoto(pick)} alt="" /></span>
+                  <span className="t">
+                    <b>{race[pick]}</b>
+                    <small>{race.stateName} · {PARTY[pick]}</small>
+                  </span>
+                  <span className="ck"><Icon name="check" size={11} stroke={2.8} /></span>
+                </>
+              ) : (
+                <span className="t">
+                  <b>No pick</b>
+                  <small>{race.stateName} · click to pick</small>
+                </span>
+              )}
+            </motion.div>
+          </AnimatePresence>
+        </motion.div>
+      )}
+    </AnimatePresence>,
+    document.body,
+  );
+}
