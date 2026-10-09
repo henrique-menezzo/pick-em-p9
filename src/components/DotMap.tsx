@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'motion/react';
 import us from '../data/usmap-hub.json';
 import { BY_ID, RESULTS, STATES, TAB_LABEL, raceIn, statusAt, type Side } from '../data/races';
-import { useStore } from '../lib/store';
+import { AUTO_NAME, useStore } from '../lib/store';
 import { Icon, PARTY, facePhoto, useAutoWave } from './ui';
 
 // ---- geometry ------------------------------------------------------------------------------------
@@ -73,13 +73,14 @@ const Splash = memo(function Splash({ st, x, y, c, n }: { st: string; x: number;
 /** The hub's lift: the state under the pointer drawn again above the map, raised 9 and grown 2%,
  *  three courses of its own shape under it for the side, a white wash for the lit face, and the
  *  source left on the board at 70% brightness as the hole it came out of. */
-const Lift = memo(function Lift({ st, c, light, sel, af, tapX, tapY, tapN }: { st: string; c: string; light: boolean; sel: boolean; af?: boolean; tapX?: number; tapY?: number; tapN?: number }) {
+const Lift = memo(function Lift({ st, c, light, sel, miss, tapX, tapY, tapN }: { st: string; c: string; light: boolean; sel: boolean; miss?: boolean; tapX?: number; tapY?: number; tapN?: number }) {
   const at = LABELS[st];
   return (
     <g className="lift-overlay" aria-hidden style={{ ['--c' as string]: c }}>
       {[3, 2, 1].map((i) => <path key={i} className="lift-side" d={SHAPES[st]} transform={`translate(0 ${i * 1.7})`} />)}
       <path className="lift-shape" d={SHAPES[st]} />
       <path className="lift-face" d={SHAPES[st]} />
+      {miss && <path className="miss-tex" d={SHAPES[st]} />}
       {tapN ? <Splash st={st} x={tapX!} y={tapY!} c={c} n={tapN} /> : null}
       {sel && <path className="sel-outline" d={SHAPES[st]} />}
       {at && (
@@ -263,6 +264,10 @@ export default function DotMap({ fit }: { fit?: boolean }) {
         >
           <defs>
             {/* the Election Hub's hatch-no-data, as they draw it */}
+            {/* a missed call: lines both ways, so it never reads as the no-race hatch's single diagonal */}
+            <pattern id="hatch-miss" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+              <path d="M0 0V6M0 0H6" stroke="#fafafa" strokeOpacity="0.34" strokeWidth="1.5" fill="none" />
+            </pattern>
             <pattern id="hatch-no-data" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(-45)">
               <line x1="0" y1="0" x2="0" y2="7" stroke="#fafafa" strokeOpacity="0.26" strokeWidth="2.4" />
             </pattern>
@@ -276,6 +281,9 @@ export default function DotMap({ fit }: { fit?: boolean }) {
               tapY={splash?.st === st ? splash.y : undefined}
               tapN={splash?.st === st && lifted !== st ? splash.n : undefined} />
           ))}
+          {/* on the night, a race you missed wears a cross-hatch over its faded colour: the fade alone was
+              read as a win. Its own layer, above the states, so the state's fade does not fade it too */}
+          {live && ORDER.filter((st) => st !== lifted && /(^| )miss( |$)/.test(looks[st].cls)).map((st) => <path key={'mt' + st} className="miss-tex" d={SHAPES[st]} />)}
           {curSt && curSt !== lifted && raceIn(tab, curSt) && <path className="sel-outline" d={SHAPES[curSt]} />}
           <g className="labels" aria-hidden>
             {ORDER.filter((st) => LABELS[st] && st !== lifted).map((st) => (
@@ -296,20 +304,9 @@ export default function DotMap({ fit }: { fit?: boolean }) {
                 </g>
               );
             })}
-            {/* on the night, a race you missed carries an ✕ under its initials: the faded colour alone
-                was read as a win */}
-            {live && ORDER.filter((st) => LABELS[st] && st !== lifted && /(^| )miss( |$)/.test(looks[st].cls)).map((st) => {
-              const k = sizeOf(st) / 11;
-              return (
-                <g key={'x' + st} className="miss-x" transform={`translate(${LABELS[st][0]} ${LABELS[st][1] + sizeOf(st) * 1.25}) scale(${k})`}>
-                  <circle r="6" />
-                  <path d="M-2.4 -2.4L2.4 2.4M2.4 -2.4L-2.4 2.4" />
-                </g>
-              );
-            })}
           </g>
           {lifted && (
-            <Lift key={lifted} st={lifted} c={looks[lifted].c} light={looks[lifted].label} sel={lifted === curSt} af={/(^| )af( |$)/.test(looks[lifted].cls)}
+            <Lift key={lifted} st={lifted} c={looks[lifted].c} light={looks[lifted].label} sel={lifted === curSt} miss={live && /(^| )miss( |$)/.test(looks[lifted].cls)}
               tapX={splash?.st === lifted ? splash.x : undefined}
               tapY={splash?.st === lifted ? splash.y : undefined}
               tapN={splash?.st === lifted ? splash.n : undefined} />
@@ -382,6 +379,7 @@ function anchorTo(svg: SVGSVGElement, st: string, w: number, h: number) {
 // ---- the pick you just made on the map, shown right next to the state -------------------------------
 function PickBadge({ svg, vb, badge, onDone }: { svg: React.RefObject<SVGSVGElement | null>; vb: VB; badge: { id: string; n: number } | null; onDone: () => void }) {
   const pick = useStore((s) => (badge ? s.picks[badge.id] : undefined));
+  const auto = useStore((s) => (badge ? s.auto[badge.id] : undefined));
   const live = useStore((s) => s.live);
   const [pos, setPos] = useState<ReturnType<typeof anchorTo> | null>(null);
   const race = badge ? BY_ID[badge.id] : null;
@@ -425,7 +423,7 @@ function PickBadge({ svg, vb, badge, onDone }: { svg: React.RefObject<SVGSVGElem
                   <span className={'face ' + pick}><img src={facePhoto(pick)} alt="" /></span>
                   <span className="t">
                     <b>{race[pick]}</b>
-                    <small>{race.stateName} · {PARTY[pick]}</small>
+                    <small>{race.stateName} · {auto ? `Picked by ${AUTO_NAME[auto]}` : PARTY[pick]}</small>
                   </span>
                   <span className="ck"><Icon name="check" size={11} stroke={2.8} /></span>
                 </>

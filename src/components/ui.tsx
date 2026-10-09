@@ -1,6 +1,6 @@
 import { RESULTS, statusAt, clock, type Race, type Side } from '../data/races';
 import { useEffect, useRef, useState } from 'react';
-import { useStore } from '../lib/store';
+import { AUTO_NAME, useStore } from '../lib/store';
 
 export const PARTY: Record<Side, string> = { R: 'Republican', D: 'Democrat' };
 
@@ -62,6 +62,7 @@ export function Icon({ name, size = 16, stroke = 1.8, fill }: { name: IconName; 
 /** Figma candidate row (272×58). In election-night mode it shows the count instead of taking a pick. */
 export function CandidateRow({ race, side, advance }: { race: Race; side: Side; advance?: boolean }) {
   const pick = useStore((s) => s.picks[race.id]);
+  const auto = useStore((s) => s.auto[race.id]);
   const live = useStore((s) => s.live);
   const t = useStore((s) => s.t);
   const toggle = useStore((s) => s.toggle);
@@ -97,13 +98,15 @@ export function CandidateRow({ race, side, advance }: { race: Race; side: Side; 
 
   const on = pick === side;
   const off = !!pick && !on;
-  // a pick Autofill made is your pick like any other: where it came from is only told in Autofill's menu
+  // the pick came from Autofill: the candidate it chose says by whom, in place of the party (the face
+  // and the check already carry the party's colour)
+  const af = on && auto ? AUTO_NAME[auto] : null;
   return (
-    <button className={`cand ${side === 'R' ? 'r' : 'd'} ${on ? 'on' : ''} ${off ? 'off' : ''}`} onClick={() => toggle(race.id, side, { advance })}>
+    <button className={`cand ${side === 'R' ? 'r' : 'd'} ${on ? 'on' : ''} ${off ? 'off' : ''}${af ? ' af' : ''}`} onClick={() => toggle(race.id, side, { advance })}>
       <Face side={side} />
       <span className="t">
         <span className="n">{name}</span>
-        <span className="p">{PARTY[side]}</span>
+        <span className="p">{af ? <span className="af-from"><Icon name="wand" size={12} stroke={2} />Picked by {af}</span> : PARTY[side]}</span>
       </span>
       {on && <span className="ck on"><Icon name="check" size={12} stroke={2.8} /></span>}
     </button>

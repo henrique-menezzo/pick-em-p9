@@ -970,3 +970,9 @@ html[data-afl="3"] .map .af-mark, html[data-afl="3"] .dx-cell .af-mark { display
 .map .af-mark path { fill: #fafafa; }
 .dx-cell .af-mark path { fill: #fff; }
 .legend i.af-sw { background: linear-gradient(90deg, var(--R) 50%, var(--D) 50%); }
+
+/* election night: a missed call is cross-hatched on the map, and the legend says so */
+.map path.miss-tex { fill: url(#hatch-miss); stroke: none; pointer-events: none; }
+.legend i.lg-miss { width: 12px; height: 12px; border-radius: 3px; background: repeating-linear-gradient(45deg, rgba(250, 250, 250, .5) 0 1px, transparent 1px 3px), repeating-linear-gradient(-45deg, rgba(250, 250, 250, .5) 0 1px, transparent 1px 3px), color-mix(in srgb, var(--R) 30%, #1a1a1a); }
+/* "Picked by Polymarket" in place of the party on the candidate Autofill chose */
+.cand .af-from { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
