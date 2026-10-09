@@ -951,7 +951,7 @@
 .p9 .dx-mact.dx-tl .tl { flex-wrap: nowrap; }
 /* the show is plain black until there is a stream */
 .p9 .vid { background: #000; animation: none; }
-.p9 .dx-side.night > .dx-card.flat .vid { aspect-ratio: 2.2 / 1; }
+.p9 .dx-side.night > .dx-card.flat .vid { aspect-ratio: 16 / 9; }
 .p9 .dx-board .nb-line { padding-block: 6px; }
 
 /* ---- Autofill: the exact same colour as your own picks. Three looks to compare (data-afl on <html>) ---- */
@@ -1154,3 +1154,15 @@ body:has(.p9p) .tour.phone .tour-card { padding: 24px 24px calc(20px + env(safe-
 /* phone: bigger squares, 12 to a row across the card's width */
 .p9.p9p .p9p-card .dx-board-cells { grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 5px; }
 .p9.p9p .p9p-card .dx-cell { border-radius: 5px; }
+
+/* Share on the night: top right, as Save is while you pick. Desktop: the same 48px white pill; phone: a
+   white pill in the corner beside the name, where the help button sits while you pick */
+.p9-tabs .sh-btn { height: 48px; padding: 0 20px; border-radius: 999px; background: #fafafa; color: #151515; font-size: 14px; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; }
+.p9p-head .sh-btn { flex: none; height: 36px; padding: 0 14px; border-radius: 999px; background: #fafafa; color: #151515; font-size: 14px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
+@media (hover: hover) { .p9-tabs .sh-btn:hover, .p9p-head .sh-btn:hover { background: #fff; } }
+/* the night's column with a 16:9 show: the race and the answer sheet a touch tighter so all of it fits */
+.p9 .dx-side.night { gap: 10px; }
+.p9 .dx-side.night > .dx-card:not(.flat) { padding: 16px 24px; }
+.p9 .dx-side.night .dx-race .cand { min-height: 48px; padding-block: 2px; }
+.p9 .dx-side.night .dx-race .fb-hint { margin-top: 8px; padding: 6px 12px; }
+.p9 .dx-side.night .dx-board { gap: 10px !important; }

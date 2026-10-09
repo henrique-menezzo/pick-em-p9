@@ -161,7 +161,7 @@ function DxMap({ noSave }: { noSave?: boolean }) {
         <p className="dx-mlock num">{sc ? <><i className="sd live-dot" />Live · {sc.called} of {ALL.length} called</> : locked ? 'Picks are locked' : <>Lock in <b>{left}</b></>}</p>
       </header>
       {/* on the night the replay sits where the picking actions were, out of the way of the cards */}
-      <div className={'dx-mact' + (live ? ' dx-tl' : '')}>{live ? <><Foot /><ShareButton /></> : <CatActions noSave={noSave} />}</div>
+      <div className={'dx-mact' + (live ? ' dx-tl' : '')}>{live ? <Foot /> : <CatActions noSave={noSave} />}</div>
       <MapBox />
       <div className="dx-mfoot"><Presented /><Legend /></div>
     </section>
@@ -1165,10 +1165,12 @@ function PartDone() {
 
 function ThePage() {
   const tab = useStore((s) => s.tab);
+  const live = useLive();
   const MapCard6b = () => <div className="dx-card p22-map"><BoardHead head="seg" /></div>;
   return (
     <div className={'v vE r big rows mtw mtw-folder dx dx7 p8 p22 p9 sel-' + TABS.indexOf(tab)}>
-      <div className="p9-tabs"><MapTabs look="folder" /><SaveMaps /></div>
+      {/* top right of the page: Save while you pick, Share on the night */}
+      <div className="p9-tabs"><MapTabs look="folder" />{live ? <ShareButton /> : <SaveMaps />}</div>
       <div className="e-cards tall dx-one"><DxMap noSave /><Side cls="board" before={<MapCard6b />}><Board8 row="frac" /></Side></div>
       <PartDone />
     </div>
@@ -1216,7 +1218,8 @@ export function P9Phone() {
             <h1>The Midterms Pick Em</h1>
             <p className="p9p-lock num">{sc ? <><i className="sd live-dot" />Live · {sc.called} of {ALL.length} called</> : locked ? 'Picks are locked' : <>Lock in <b>{left}</b></>}</p>
           </div>
-          <button className="p9p-help" aria-label="How to play" onClick={() => setTour(0)}><Icon name="help" size={20} stroke={1.5} /></button>
+          {/* the tour is about picking, so on the night the corner holds Share instead */}
+          {live ? <ShareButton /> : <button className="p9p-help" aria-label="How to play" onClick={() => setTour(0)}><Icon name="help" size={20} stroke={1.5} /></button>}
         </div>
 
 
@@ -1235,7 +1238,6 @@ export function P9Phone() {
         {/* the night: the replay, then the show, then the score */}
         {live && <div className="p9p-night"><Foot /></div>}
         {live && <div className="p9p-vid"><LiveVideo bare /></div>}
-        {live && <div className="p9p-share"><ShareButton /></div>}
         <div className="p9p-cards">
           <div className="dx-card p22-map p9p-card"><BoardHead head="seg" /></div>
           <div className="dx-card p9p-card"><Board8 row="frac" /></div>
