@@ -990,3 +990,8 @@ html[data-afl="3"] .map .af-mark, html[data-afl="3"] .dx-cell .af-mark { display
 .sh-prev { align-self: stretch; margin-top: 20px; border-radius: 14px; overflow: hidden; background: #121212; }
 .sh-card { display: block; width: 100%; height: auto; }
 .pd-go:disabled { opacity: .6; cursor: progress; }
+.pd.sh .pd-acts { align-items: center; }
+.sh-paper { margin-inline-end: auto; display: inline-flex; padding: 4px; border-radius: 999px; background: #232323; }
+.sh-paper button { height: 36px; padding: 0 16px; border-radius: 999px; font-size: 14px; font-weight: 600; color: #8f8f8f; transition: background-color .15s, color .15s; }
+.sh-paper button.on { background: #3a3a3a; color: #fafafa; }
+.sh-paper button:focus-visible { outline: 2px solid #fafafa; outline-offset: 2px; }

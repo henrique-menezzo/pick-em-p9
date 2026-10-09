@@ -5,10 +5,14 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'motion/react';
+import '@fontsource/newsreader/500.css';
+import '@fontsource/newsreader/500-italic.css';
 import us from '../data/usmap-hub.json';
-import logo from '../data/logo.svg';
+import logoRaw from '../data/logo.svg?raw';
 import f400 from '@fontsource/libre-franklin/files/libre-franklin-latin-400-normal.woff2?url';
 import f600 from '@fontsource/libre-franklin/files/libre-franklin-latin-600-normal.woff2?url';
+import n500 from '@fontsource/newsreader/files/newsreader-latin-500-normal.woff2?url';
+import n500i from '@fontsource/newsreader/files/newsreader-latin-500-italic.woff2?url';
 import { RACES, RESULTS, TAB_LABEL, T_MAX, statusAt, type Tab } from '../data/races';
 import { useStore } from '../lib/store';
 import { Icon } from './ui';
@@ -17,7 +21,10 @@ const SHAPES = us.states as Record<string, string>;
 const ORDER = Object.keys(SHAPES);
 const [VX, VY, VW, VH] = (us.frame as number[]);
 const NOUN: Record<Tab, string> = { senate: 'Senate', gov: 'governor', house: 'House' };
-const FONT = "'Libre Franklin', Helvetica, Arial, sans-serif";
+const SANS = "'Libre Franklin', Helvetica, Arial, sans-serif";
+const SERIF = "'Newsreader', Georgia, 'Times New Roman', serif";
+// the wordmark in either ink, inline, so the picture carries it without a fetch
+const mark = (ink: string) => 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent((logoRaw as string).replace(/#FAFAFA/gi, ink));
 
 function useShareData(tab: Tab) {
   const picks = useStore((s) => s.picks);
@@ -39,80 +46,77 @@ function useShareData(tab: Tab) {
   return { look, right, missed, open, scored, pr, pm: scored ? 100 - pr : 0, final: t >= T_MAX };
 }
 
-const FILL = { no: '#1b1b1b', open: '#2c2c2c', R: '#fc002c', D: '#0f45db', mR: '#8a1022', mD: '#16307e' } as const;
+type Paper = 'light' | 'dark';
+/** Two papers: a light editorial page, and the site's own dark. */
+const INK: Record<Paper, { bg: string; ink: string; soft: string; rule: string; no: string; open: string; mR: string; mD: string; hatch: string; hatchO: number }> = {
+  light: { bg: '#f3efe6', ink: '#151515', soft: '#6f695e', rule: 'rgba(21,21,21,.16)', no: '#e8e3d8', open: '#d9d2c4', mR: '#f1b3bb', mD: '#b4c3ef', hatch: '#151515', hatchO: 0.42 },
+  dark: { bg: '#121212', ink: '#fafafa', soft: '#8f8f8f', rule: 'rgba(250,250,250,.16)', no: '#1b1b1b', open: '#2c2c2c', mR: '#7a1020', mD: '#142c74', hatch: '#fafafa', hatchO: 0.4 },
+};
 
-/** The image: 1200 × 630, the size every network previews well. */
-function ShareCard({ tab, svgRef }: { tab: Tab; svgRef?: React.Ref<SVGSVGElement> }) {
+/** The image: 1200 × 630, laid out like a page. A masthead line, a headline in a serif, the score as
+ *  two figures, and the map as the picture. */
+function ShareCard({ tab, paper, svgRef }: { tab: Tab; paper: Paper; svgRef?: React.Ref<SVGSVGElement> }) {
   const d = useShareData(tab);
+  const c = INK[paper];
   const label = TAB_LABEL[tab];
-  // the map sits in a 620 × 420 box on the right, centred
-  const k = Math.min(620 / VW, 400 / VH);
-  const mx = 548 + (620 - VW * k) / 2 - VX * k, my = 112 + (400 - VH * k) / 2 - VY * k;
-  const barW = 404, rw = d.scored ? (barW * d.right) / d.scored : 0;
+  const noun = NOUN[tab];
+  const lines = d.final ? [`I called ${d.right} of ${d.scored}`, `${noun} races right.`] : ['So far I’ve called', `${d.right} of ${d.scored} ${noun}`, 'races right.'];
+  // the map fills the right of the page
+  const BX = 596, BY = 128, BW = 532, BH = 372;
+  const k = Math.min(BW / VW, BH / VH);
+  const mx = BX + (BW - VW * k) / 2 - VX * k, my = BY + (BH - VH * k) / 2 - VY * k;
+  const fill = { no: c.no, open: c.open, R: '#fc002c', D: '#0f45db', mR: c.mR, mD: c.mD };
   return (
     <svg ref={svgRef} className="sh-card" viewBox="0 0 1200 630" width="1200" height="630" xmlns="http://www.w3.org/2000/svg" role="img"
-      aria-label={`My ${label} map: ${d.right} right, ${d.missed} missed, ${d.pr}% right`}>
+      aria-label={`My ${label} map: ${d.right} of ${d.scored} right, ${d.pr}% right, ${d.pm}% missed`}>
       <defs>
-        <radialGradient id="sh-r" cx="0" cy="1" r="0.9"><stop offset="0" stopColor="#fc002c" stopOpacity=".2" /><stop offset="1" stopColor="#fc002c" stopOpacity="0" /></radialGradient>
-        <radialGradient id="sh-d" cx="1" cy="0" r="0.9"><stop offset="0" stopColor="#0f45db" stopOpacity=".24" /><stop offset="1" stopColor="#0f45db" stopOpacity="0" /></radialGradient>
-        <pattern id="sh-miss" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-          <path d="M0 0V7M0 0H7" stroke="#fafafa" strokeOpacity=".38" strokeWidth="1.6" fill="none" />
+        <pattern id={'sh-x-' + paper} width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+          <path d="M0 0V6M0 0H6" stroke={c.hatch} strokeOpacity={c.hatchO} strokeWidth="1.2" fill="none" />
         </pattern>
-        <pattern id="sh-miss-bar" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-          <rect width="6" height="6" fill="#3a3a3a" />
-          <path d="M0 0V6M0 0H6" stroke="#fafafa" strokeOpacity=".5" strokeWidth="1.4" fill="none" />
-        </pattern>
-        <clipPath id="sh-bar"><rect x="72" y="372" width={barW} height="12" rx="6" /></clipPath>
       </defs>
-      <rect width="1200" height="630" fill="#121212" />
-      <rect width="1200" height="630" fill="url(#sh-r)" />
-      <rect width="1200" height="630" fill="url(#sh-d)" />
+      <rect width="1200" height="630" fill={c.bg} />
 
-      <image className="sh-logo" href={logo} x="72" y="64" width="160" height="15" />
-      <text x="72" y="146" fill="#8f8f8f" fontFamily={FONT} fontSize="17" fontWeight="600" letterSpacing="2.4">THE MIDTERMS PICK EM</text>
-      <text x="72" y="194" fill="#fafafa" fontFamily={FONT} fontSize="40" fontWeight="600" letterSpacing="-.6">My {label} map</text>
+      {/* masthead */}
+      <g fontFamily={SANS} fontSize="13" fontWeight="600" letterSpacing="2.6" fill={c.ink}>
+        <text x="72" y="66">THE MIDTERMS PICK EM</text>
+        <text x="1128" y="66" textAnchor="end" fill={c.soft}>{label.toUpperCase()} · {d.final ? 'FINAL RESULTS' : 'ELECTION NIGHT'} · NOV. 3, 2026</text>
+      </g>
+      <rect x="72" y="86" width="1056" height="1" fill={c.rule} />
 
-      <text x="68" y="334" fill="#fafafa" fontFamily={FONT} fontWeight="600" letterSpacing="-5">
-        <tspan fontSize="128">{d.pr}</tspan><tspan fontSize="64" dx="2" dy="-48" letterSpacing="0">%</tspan>
+      {/* headline */}
+      <text fontFamily={SERIF} fontSize="52" fontWeight="500" letterSpacing="-1.2" fill={c.ink}>
+        {lines.map((l, i) => <tspan key={i} x="70" y={176 + i * 58}>{l}</tspan>)}
       </text>
-      {/* "right" on the number's baseline, after the raised % (about 80 a digit at this size) */}
-      <text x={72 + 80 * String(d.pr).length + 66} y="334" fill="#8f8f8f" fontFamily={FONT} fontSize="24" fontWeight="400">right</text>
 
-      <g clipPath="url(#sh-bar)">
-        <rect x="72" y="372" width={barW} height="12" fill={d.scored ? 'url(#sh-miss-bar)' : '#2c2c2c'} />
-        <rect x="72" y="372" width={rw} height="12" fill="#fafafa" />
+      {/* the score, as two figures */}
+      <g fontFamily={SERIF} fontWeight="500" letterSpacing="-3">
+        <text x="68" y="470" fontSize="104" fill={c.ink}>{d.pr}<tspan fontSize="52" dx="4" letterSpacing="0">%</tspan></text>
+        <text x="330" y="470" fontSize="104" fill={c.soft}>{d.pm}<tspan fontSize="52" dx="4" letterSpacing="0">%</tspan></text>
+      </g>
+      <rect x="306" y="392" width="1" height="112" fill={c.rule} />
+      <g fontFamily={SANS} fontSize="13" fontWeight="600" letterSpacing="2.2">
+        <text x="72" y="500" fill={c.ink}>RIGHT · {d.right}</text>
+        <text x="334" y="500" fill={c.soft}>MISSED · {d.missed}</text>
       </g>
 
-      <g fontFamily={FONT}>
-        <text x="72" y="452" fill="#fafafa" fontSize="44" fontWeight="600">{d.right}</text>
-        <text x="72" y="484" fill="#8f8f8f" fontSize="18">Right · {d.pr}%</text>
-        <text x="236" y="452" fill="#fafafa" fontSize="44" fontWeight="600">{d.missed}</text>
-        <text x="236" y="484" fill="#8f8f8f" fontSize="18">Missed · {d.pm}%</text>
-        {d.open > 0 && <>
-          <text x="400" y="452" fill="#fafafa" fontSize="44" fontWeight="600">{d.open}</text>
-          <text x="400" y="484" fill="#8f8f8f" fontSize="18">To call</text>
-        </>}
-      </g>
-
-      <text x="72" y="566" fill="#8f8f8f" fontFamily={FONT} fontSize="18">{d.final ? 'Final results' : 'Live results so far'} · Make your picks at dailywire.com</text>
-
+      {/* the map */}
       <g transform={`translate(${mx} ${my}) scale(${k})`}>
-        {ORDER.map((st) => (
-          <path key={st} d={SHAPES[st]} fill={FILL[d.look[st]]} stroke="#121212" strokeWidth={1.4 / k} strokeLinejoin="round" />
-        ))}
-        {ORDER.filter((st) => d.look[st] === 'mR' || d.look[st] === 'mD').map((st) => (
-          <path key={'m' + st} d={SHAPES[st]} fill="url(#sh-miss)" />
-        ))}
+        {ORDER.map((st) => <path key={st} d={SHAPES[st]} fill={fill[d.look[st]]} stroke={c.bg} strokeWidth={1.6 / k} strokeLinejoin="round" />)}
+        {ORDER.filter((st) => d.look[st] === 'mR' || d.look[st] === 'mD').map((st) => <path key={'x' + st} d={SHAPES[st]} fill={`url(#sh-x-${paper})`} />)}
+      </g>
+      <g fontFamily={SANS} fontSize="13" fill={c.soft}>
+        <rect x="604" y="510" width="6" height="12" fill="#fc002c" /><rect x="610" y="510" width="6" height="12" fill="#0f45db" />
+        <text x="626" y="521">Right</text>
+        <rect x="682" y="510" width="12" height="12" fill={c.mR} /><rect x="682" y="510" width="12" height="12" fill={`url(#sh-x-${paper})`} />
+        <text x="702" y="521">Missed</text>
+        <rect x="766" y="510" width="12" height="12" fill={c.open} />
+        <text x="786" y="521">{d.open ? `Not called yet · ${d.open}` : 'No pick'}</text>
       </g>
 
-      <g fontFamily={FONT} fontSize="15" fill="#8f8f8f">
-        <rect x="560" y="548" width="12" height="12" rx="3" fill="#fc002c" /><rect x="566" y="548" width="6" height="12" fill="#0f45db" />
-        <text x="580" y="559">Right</text>
-        <rect x="640" y="548" width="12" height="12" rx="3" fill="url(#sh-miss-bar)" />
-        <text x="660" y="559">Missed</text>
-        <rect x="728" y="548" width="12" height="12" rx="3" fill="#2c2c2c" />
-        <text x="748" y="559">Not called</text>
-      </g>
+      {/* foot */}
+      <rect x="72" y="552" width="1056" height="1" fill={c.rule} />
+      <image href={mark(c.ink)} x="72" y="574" width="139" height="13" />
+      <text x="1128" y="586" textAnchor="end" fontFamily={SERIF} fontStyle="italic" fontSize="20" fill={c.soft}>Make your picks at dailywire.com</text>
     </svg>
   );
 }
@@ -125,17 +129,21 @@ const toB64 = (buf: ArrayBuffer) => {
 };
 const dataUrl = async (url: string, type: string) => 'data:' + type + ';base64,' + toB64(await (await fetch(url)).arrayBuffer());
 
-/** The preview turned into a PNG, at twice the size, with the font and the wordmark inside it. */
+/** The preview turned into a PNG, at twice the size, with its fonts inside it. */
 async function toPng(svg: SVGSVGElement) {
   const clone = svg.cloneNode(true) as SVGSVGElement;
-  clone.querySelector('.sh-logo')?.setAttribute('href', await dataUrl(logo, 'image/svg+xml'));
   const style = document.createElementNS('http://www.w3.org/2000/svg', 'style');
-  style.textContent = `@font-face{font-family:'Libre Franklin';font-weight:400;src:url(${await dataUrl(f400, 'font/woff2')}) format('woff2')}
-@font-face{font-family:'Libre Franklin';font-weight:600;src:url(${await dataUrl(f600, 'font/woff2')}) format('woff2')}`;
+  const face = async (fam: string, w: number, st: string, url: string) => `@font-face{font-family:'${fam}';font-weight:${w};font-style:${st};src:url(${await dataUrl(url, 'font/woff2')}) format('woff2')}`;
+  style.textContent = (await Promise.all([
+    face('Libre Franklin', 400, 'normal', f400), face('Libre Franklin', 600, 'normal', f600),
+    face('Newsreader', 500, 'normal', n500), face('Newsreader', 500, 'italic', n500i),
+  ])).join('\n');
   clone.insertBefore(style, clone.firstChild);
   const src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(new XMLSerializer().serializeToString(clone));
   const img = new Image();
   await new Promise<void>((ok, no) => { img.onload = () => ok(); img.onerror = () => no(new Error('image')); img.src = src; });
+  // let the embedded fonts settle before the picture is taken
+  await new Promise((r) => setTimeout(r, 60));
   const c = document.createElement('canvas');
   c.width = 2400; c.height = 1260;
   c.getContext('2d')!.drawImage(img, 0, 0, 2400, 1260);
@@ -161,6 +169,7 @@ function ShareModal({ tab, onClose }: { tab: Tab | null; onClose: () => void }) 
   const first = useRef<HTMLButtonElement>(null);
   const say = useStore((s) => s.say);
   const [busy, setBusy] = useState(false);
+  const [paper, setPaper] = useState<Paper>('light');
   useEffect(() => {
     if (!tab) return;
     const back = document.activeElement as HTMLElement | null;
@@ -207,8 +216,13 @@ function ShareModal({ tab, onClose }: { tab: Tab | null; onClose: () => void }) 
             <button className="pd-x" aria-label="Close" onClick={onClose}><Icon name="x" size={18} stroke={1.9} /></button>
             <h2 id="sh-title">Share your {NOUN[tab]} map</h2>
             <p>Your calls so far, right and missed, ready to post.</p>
-            <div className="sh-prev"><ShareCard tab={tab} svgRef={svg} /></div>
+            <div className="sh-prev"><ShareCard tab={tab} paper={paper} svgRef={svg} /></div>
             <div className="pd-acts">
+              <div className="sh-paper" role="group" aria-label="Image style">
+                {(['light', 'dark'] as const).map((k) => (
+                  <button key={k} className={paper === k ? 'on' : ''} aria-pressed={paper === k} onClick={() => setPaper(k)}>{k === 'light' ? 'Light' : 'Dark'}</button>
+                ))}
+              </div>
               <button className="pd-quiet" onClick={copy}><Icon name="link" size={16} stroke={2} />Copy link</button>
               <button ref={first} className="pd-go" onClick={download} disabled={busy}><Icon name="download" size={16} stroke={2.2} />{busy ? 'Making the image' : 'Download image'}</button>
             </div>

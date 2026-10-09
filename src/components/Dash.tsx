@@ -1129,10 +1129,11 @@ function PartDone() {
             </div>
             <div className="pd-acts">
               {next && byAuto ? (
-                // Autofill finished it: save (which opens sign-up or log-in when there is no account)
+                // Autofill finished it: Save takes Stay's place (it opens sign-up or log-in when there is no
+                // account), and the next map stays the call to action on the right
                 <>
-                  <button className="pd-quiet" onClick={() => go(next)}>Go to {TAB_LABEL[next]}<Icon name="arrowRight" size={16} stroke={2.2} /></button>
-                  <button ref={first} className="pd-go" onClick={() => { setOpen(null); save.run(); }}>Save</button>
+                  <button className="pd-quiet" onClick={() => { setOpen(null); save.run(); }}>Save</button>
+                  <button ref={first} className="pd-go" onClick={() => go(next)}>Go to {TAB_LABEL[next]}<Icon name="arrowRight" size={16} stroke={2.2} /></button>
                 </>
               ) : next ? (
                 <>
