@@ -1139,7 +1139,8 @@ function PartDone() {
                 // Autofill finished it: Save takes Stay's place (it opens sign-up or log-in when there is no
                 // account), and the next map stays the call to action on the right
                 <>
-                  <button className="pd-quiet" onClick={() => { setOpen(null); save.run(); }}>Save</button>
+                  {/* the card leaves first, then the sign-up comes up: never two sheets at once */}
+                  <button className="pd-quiet" onClick={() => { setOpen(null); setTimeout(save.run, 200); }}>Save</button>
                   <button ref={first} className="pd-go" onClick={() => go(next)}>Go to {TAB_LABEL[next]}<Icon name="arrowRight" size={16} stroke={2.2} /></button>
                 </>
               ) : next ? (
@@ -1150,7 +1151,7 @@ function PartDone() {
               ) : (
                 <>
                   <button className="pd-quiet" onClick={close}>Close</button>
-                  <button ref={first} className="pd-go" onClick={() => { setOpen(null); save.run(); }}>{save.saved ? 'Saved' : 'Save maps'}</button>
+                  <button ref={first} className="pd-go" onClick={() => { setOpen(null); setTimeout(save.run, 200); }}>{save.saved ? 'Saved' : 'Save maps'}</button>
                 </>
               )}
             </div>

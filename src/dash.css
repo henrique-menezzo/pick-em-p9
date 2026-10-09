@@ -1118,14 +1118,25 @@ body:has(.p9p) .tour.phone .tour-card { width: 100vw; border-radius: 24px 24px 0
 /* phone: no "who you picked" badge over the map, the panel already says it */
 body:has(.p9p) .pick-badge { display: none; }
 
-/* phone: the sign-up / log-in sheet is the design system's own (Figma "Last Call Container" 442:11215):
-   #151515, the close at the top right, a centred wordmark and heading, 64px fields with a hairline,
-   a 46px button, square corners */
+.p9p-night { margin-top: 0; }
+.p9p-vid { margin-top: -12px; }
+.p9p-vid .vid { max-height: none; aspect-ratio: 16 / 9; border-radius: 24px; background: #000; animation: none; }
+.p9p-share { margin-top: -12px; }
+.p9p-share .sh-btn { width: 100%; height: 48px; justify-content: center; border-radius: 999px; background: #292929; font-size: 14px; font-weight: 600; }
+.p9p-night .tl { width: 100%; }
+body:has(.p9p) .tour.phone .tour-card { padding: 24px 24px calc(20px + env(safe-area-inset-bottom)); }
+/* ---- the phone's sign-up / log-in: Airbnb's pattern with the DS modal inside (Figma 442:11215) ----
+   One block, nothing else styles it. The backdrop is pinned to the screen and never scrolls; the sheet
+   starts 24px under the top of what is visible and runs to the screen's bottom edge, so the keyboard and
+   Safari's bar always sit over the sheet, never over the page. Its content sits at the top and scrolls
+   inside it when the keyboard leaves less room. */
 @media (max-width: 760px) {
-  body:has(.p9p) .auth { padding: 40px 0 calc(28px + env(safe-area-inset-bottom)); border-radius: 0; background: #151515; }
-  body:has(.p9p) .auth-x { top: 16px; right: 16px; width: 24px; height: 24px; }
+  body:has(.p9p) .auth-back { position: fixed; inset: 0; height: auto; display: block; padding: 0; overflow: hidden; overscroll-behavior: none; background: rgba(0, 0, 0, .62); backdrop-filter: none; }
+  body:has(.p9p) .auth { position: absolute; left: 0; right: 0; top: calc(var(--vvt, 0px) + 24px); bottom: 0; width: auto; height: auto; max-height: none; margin: 0;
+    padding: 48px 0 calc(24px + env(safe-area-inset-bottom)); overflow-y: auto; overscroll-behavior: contain; border-radius: 24px 24px 0 0; background: #151515; box-shadow: none; }
+  body:has(.p9p) .auth-x { top: 20px; right: 20px; left: auto; width: 24px; height: 24px; }
   body:has(.p9p) .auth-main { padding: 0 16px; }
-  body:has(.p9p) .auth-logo { width: 120px; height: 11px; }
+  body:has(.p9p) .auth-logo { width: 120px; height: 11px; margin: 0 auto; }
   body:has(.p9p) .auth-text { margin-top: 24px; text-align: center; }
   body:has(.p9p) .auth-text h2 { font-size: 24px; }
   body:has(.p9p) .auth-text p { margin-top: 8px; color: #8f8f8f; }
@@ -1134,35 +1145,5 @@ body:has(.p9p) .pick-badge { display: none; }
   body:has(.p9p) .field input { font-size: 16px; }
   body:has(.p9p) .auth-foot { margin-top: 24px; gap: 16px; }
   body:has(.p9p) .auth-btn { height: 46px; border-radius: 4px; }
-}
-.p9p-night { margin-top: 0; }
-.p9p-vid { margin-top: -12px; }
-.p9p-vid .vid { max-height: none; aspect-ratio: 16 / 9; border-radius: 24px; background: #000; animation: none; }
-.p9p-share { margin-top: -12px; }
-.p9p-share .sh-btn { width: 100%; height: 48px; justify-content: center; border-radius: 999px; background: #292929; font-size: 14px; font-weight: 600; }
-.p9p-night .tl { width: 100%; }
-body:has(.p9p) .tour.phone .tour-card { padding: 24px 24px calc(20px + env(safe-area-inset-bottom)); }
-/* the sheet sits on the part of the screen the keyboard leaves visible, and scrolls inside itself */
-@media (max-width: 760px) {
-  .auth-back { top: var(--vvt, 0px); bottom: auto; height: var(--vvh, 100dvh); overscroll-behavior: contain; }
-  .auth { max-height: var(--vvh, 92dvh); overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
   body:has(.auth-back) .p9p-panel { visibility: hidden; }
-}
-/* the phone's sign-up: a bottom sheet the height of its content (the DS modal inside), whose foot always
-   sits on the bottom of what is visible, so with the keyboard up it rests right on the keyboard; the dim
-   covers the whole screen behind it */
-@media (max-width: 760px) {
-  body:has(.p9p) .auth-back { top: 0; bottom: 0; height: auto; display: block; padding: 0; background: rgba(0, 0, 0, .62); backdrop-filter: none; }
-  body:has(.p9p) .auth { position: absolute; left: 0; right: 0; bottom: var(--vvb, 0px); width: auto; height: auto; max-height: var(--vvh, 92dvh); margin: 0; overflow-y: auto;
-    padding: 40px 0 calc(24px + env(safe-area-inset-bottom)); border-radius: 16px 16px 0 0; background: #151515; box-shadow: none; }
-  body:has(.p9p) .auth-x { left: auto; right: 16px; top: 16px; width: 24px; height: 24px; }
-  body:has(.p9p) .auth-main { padding: 0 16px; }
-  body:has(.p9p) .auth-logo { margin: 0 auto; }
-  body:has(.p9p) .auth-text { margin-top: 24px; }
-}
-/* as Airbnb does it: a tall sheet that starts just under the top of the screen, round at the top, its
-   content at the top, and running on down behind the keyboard so nothing of the page shows under it */
-@media (max-width: 760px) {
-  body:has(.p9p) .auth { top: calc(var(--vvt, 0px) + 24px); bottom: auto; height: calc(100lvh - 24px); max-height: none; border-radius: 24px 24px 0 0; padding-top: 48px; }
-  body:has(.p9p) .auth-x { top: 20px; right: 20px; }
 }
