@@ -981,3 +981,12 @@ html[data-afl="3"] .map .af-mark, html[data-afl="3"] .dx-cell .af-mark { display
 .legend .lg-miss + b { margin-inline-end: 4px; }
 /* the map's tooltip on the night: right or missed, in words */
 .maptip .mt-v { display: inline-flex; align-items: center; gap: 4px; height: 20px; padding: 0 8px; border-radius: 999px; background: #151515; color: #fafafa; font-size: 12px; font-weight: 600; }
+
+/* election night: Share sits beside the replay, in the map's head */
+.p9 .dx-mact.dx-tl { display: flex; align-items: center; gap: 16px; }
+.p9 .sh-btn { display: inline-flex; align-items: center; gap: 8px; }
+/* the share card: the image as its own preview */
+.pd.sh { width: 720px; }
+.sh-prev { align-self: stretch; margin-top: 20px; border-radius: 14px; overflow: hidden; background: #121212; }
+.sh-card { display: block; width: 100%; height: auto; }
+.pd-go:disabled { opacity: .6; cursor: progress; }

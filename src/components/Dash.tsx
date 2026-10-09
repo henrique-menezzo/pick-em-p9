@@ -11,6 +11,7 @@ import { useCountdown } from './LockLine';
 import { CandidateRow, Face, Flag, Icon, useAutoWave } from './ui';
 import { CatActions, Foot, LiveVideo, MapBox, MapTabs, MiniMap, Presented, Race as RaceCard } from './Layouts';
 import { Legend } from '../App';
+import { ShareButton } from './Share';
 
 const useLive = () => useStore((s) => s.live);
 const NOUN: Record<Tab, string> = { senate: 'Senate', gov: 'governor', house: 'House' };
@@ -155,7 +156,7 @@ function DxMap({ noSave }: { noSave?: boolean }) {
         <p className="dx-mlock num">{sc ? <><i className="sd live-dot" />Live · {sc.called} of {ALL.length} called</> : locked ? 'Picks are locked' : <>Lock in <b>{left}</b></>}</p>
       </header>
       {/* on the night the replay sits where the picking actions were, out of the way of the cards */}
-      <div className={'dx-mact' + (live ? ' dx-tl' : '')}>{live ? <Foot /> : <CatActions noSave={noSave} />}</div>
+      <div className={'dx-mact' + (live ? ' dx-tl' : '')}>{live ? <><Foot /><ShareButton /></> : <CatActions noSave={noSave} />}</div>
       <MapBox />
       <div className="dx-mfoot"><Presented /><Legend /></div>
     </section>
