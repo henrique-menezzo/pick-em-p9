@@ -4,7 +4,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'motion/react';
-import { EASE_IN, EASE_OUT } from '../lib/motion';
+import { EASE_IN, EASE_OUT, SHEET } from '../lib/motion';
 import { ALL } from '../data/races';
 import { useStore } from '../lib/store';
 import { MAP_SHAPES, stateShapeOnScreen } from './DotMap';
@@ -293,7 +293,10 @@ export default function Onboarding({ ready = true }: { ready?: boolean }) {
   const phone = usePhoneTour();
   // on a phone the light sits close to the coastline: less to draw, and less of a halo on a small map
   const air = phone ? 4 : MAP_AIR;
-  const at = spot ? (phone ? dockPhone(spot, size) : place(anchor ?? spot, size, s?.align, s?.dock)) : null;
+  const at = spot && !phone ? place(anchor ?? spot, size, s?.align, s?.dock) : null;
+  // on a phone the card is a sheet held to the bottom edge (or resting on the picks panel, for the step
+  // that points into it): only how far up it sits changes, never a top worked out from a guessed height
+  const lift = spot && phone ? dockPhone(spot) : 0;
   // the light and the card travel on a slow, critically damped spring: they glide to the next thing
   const spring = { type: 'spring' as const, stiffness: 200, damping: 28, mass: 1 };
   const soft = { opacity: { duration: 0.34, ease: EASE_OUT }, filter: { duration: 0.4, ease: EASE_OUT } };
@@ -389,10 +392,11 @@ export default function Onboarding({ ready = true }: { ready?: boolean }) {
             className="tour-card"
             // on a phone the card is a sheet, so it rises from the bottom edge; on the desktop it
             // arrives on the spot out of a blur
-            initial={phone ? { left: at?.left, top: at?.top, opacity: 0, y: 72 } : { left: at?.left, top: at?.top, opacity: 0, y: 12, scale: 0.96, filter: 'blur(8px)' }}
-            animate={phone ? { left: at?.left, top: at?.top, opacity: 1, y: 0 } : { left: at?.left, top: at?.top, opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
-            exit={phone ? { opacity: 0, y: 56, transition: { duration: 0.24, ease: EASE_IN } } : { opacity: 0, y: 8, scale: 0.97, filter: 'blur(4px)', transition: { duration: 0.2, ease: EASE_IN } }}
-            transition={{ ...spring, ...soft }}
+            style={phone ? { left: 0, top: 'auto' } : undefined}
+            initial={phone ? { bottom: lift, y: '100%' } : { left: at?.left, top: at?.top, opacity: 0, y: 12, scale: 0.96, filter: 'blur(8px)' }}
+            animate={phone ? { bottom: lift, y: 0 } : { left: at?.left, top: at?.top, opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
+            exit={phone ? { y: '100%', transition: { duration: 0.28, ease: [0.4, 0, 0.8, 0.2] } } : { opacity: 0, y: 8, scale: 0.97, filter: 'blur(4px)', transition: { duration: 0.2, ease: EASE_IN } }}
+            transition={phone ? SHEET : { ...spring, ...soft }}
           >
             {/* the words cross over from step to step out of a light blur, while the card travels */}
             <AnimatePresence mode="popLayout" initial={false}>
@@ -496,14 +500,15 @@ function usePhoneTour() {
   return m;
 }
 
-function dockPhone(s: Spot, c: { w: number; h: number }) {
+function dockPhone(s: Spot) {
   // a bottom sheet: it stays at the foot of the screen from the first step to the last, where the
   // picks panel lives, which steps aside while the tour is up
   // …except when the step points into the picks panel (Save): the panel is back up, and the sheet
-  // rests right on top of it
-  const panel = document.querySelector('.p9p-panel');
-  if (panel && s.y > innerHeight * 0.6) return { left: 0, top: Math.max(0, panel.getBoundingClientRect().top - c.h) };
-  return { left: 0, top: innerHeight - c.h };
+  // rests right on top of it. Returned as how far up from the bottom edge the sheet sits.
+  // (the panel's own height, not where it is: it may still be sliding back up when this is measured)
+  const panel = document.querySelector<HTMLElement>('.p9p-panel');
+  if (panel && s.y > innerHeight * 0.6) return panel.offsetHeight;
+  return 0;
 }
 
 function useSpot(sel: string | undefined, step: number | null, fit?: 'states'): Spot | null {
