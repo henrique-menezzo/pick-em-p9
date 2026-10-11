@@ -184,3 +184,10 @@ body:has(.p9p) .auth-x { top: 10px; right: 10px; width: 44px; height: 44px; }
 /* where 3–5 sit: the top of the side on the desktop, under the hero on a phone */
 .dx-side.night .dx-card.ns-card { flex: none; }
 .p9p .p9p-nscard { margin: 0 0 20px; }
+
+/* election night's show: bigger or smaller, never hidden. Bigger, it glides out of its card to the
+   middle of the screen over a dim; smaller (the same button, a tap outside, Esc), back into its place */
+.vid-stage { position: fixed; inset: 0; z-index: 110; display: grid; place-items: center; padding: 32px; background: rgba(0, 0, 0, .74); backdrop-filter: blur(6px); }
+.vid-stage .vid.big { width: min(1200px, 100%, calc((100dvh - 64px) * 16 / 9)); max-height: none; aspect-ratio: 16 / 9; border-radius: 24px; background: #000; animation: none; }
+.vid.vid-slot { visibility: hidden; }
+@media (max-width: 760px) { .vid-stage { padding: 12px; } .vid-stage .vid.big { border-radius: 16px; } }

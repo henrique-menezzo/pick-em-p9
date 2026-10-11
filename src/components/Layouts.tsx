@@ -2,7 +2,9 @@
 // three variations of each. Same pieces everywhere: the title, the three parts as tabs, the score
 // with one dot per race, the race, the actions, the map. The map is never under anything.
 import { useEffect, useRef, useState, type KeyboardEvent as RKE, type ReactNode } from 'react';
-import { motion } from 'motion/react';
+import { AnimatePresence, motion } from 'motion/react';
+import { createPortal } from 'react-dom';
+import { backIn } from '../lib/motion';
 import { ALL, RACES, RESULTS, T_MAX, TAB_LABEL, TABS, clock, statusAt, type Tab } from '../data/races';
 import { LOCK_AT, catSaved, isLocked, liveScore, useStore } from '../lib/store';
 import DotMap from './DotMap';
@@ -161,31 +163,57 @@ function LiveVideo({ bare }: { bare?: boolean }) {
   const ref = useRef<HTMLDivElement>(null);
   const [muted, setMuted] = useState(true);
   const [open, setOpen] = useState(true);
-  if (bare && !open) {
+  // the night's show (P9) is never hidden: it only gets bigger, out of its card into the middle of the
+  // screen, and smaller again, the same player gliding between the two places
+  const [big, setBig] = useState(false);
+  useEffect(() => {
+    if (!big) return;
+    const k = (e: KeyboardEvent) => { if (e.key === 'Escape') setBig(false); };
+    window.addEventListener('keydown', k);
+    return () => window.removeEventListener('keydown', k);
+  }, [big]);
+  if (bare) {
+    const player = (
+      <motion.div layoutId="live-show" className={'vid' + (big ? ' big' : '')} transition={{ type: 'spring', stiffness: 220, damping: 30 }}>
+        <span className="vid-live"><i />Live</span>
+        <div className="vid-ctl">
+          <button aria-label={muted ? 'Unmute' : 'Mute'} onClick={() => setMuted(!muted)}><Icon name={muted ? 'mute' : 'volume'} size={16} /></button>
+          <button aria-label={big ? 'Make the video smaller' : 'Make the video bigger'} onClick={() => setBig(!big)}><Icon name={big ? 'collapse' : 'expand'} size={16} /></button>
+        </div>
+      </motion.div>
+    );
     return (
-      <button className="v-video-min" onClick={() => setOpen(true)}>
-        <i className="sd" /><b>Election Night Live</b><span>Watch</span>
-      </button>
+      <div className="v-video bare">
+        {/* while it is big its place in the card is kept, so nothing under it moves */}
+        {big ? <div className="vid vid-slot" aria-hidden /> : player}
+        {createPortal(
+          <AnimatePresence>
+            {big && (
+              <motion.div key="stage" className="vid-stage" {...backIn} onPointerDown={(e) => { if (e.target === e.currentTarget) setBig(false); }}>
+                {player}
+              </motion.div>
+            )}
+          </AnimatePresence>,
+          document.body,
+        )}
+      </div>
     );
   }
   return (
-    <div className={'v-video' + (open ? '' : ' min') + (bare ? ' bare' : '')}>
+    <div className={'v-video' + (open ? '' : ' min')}>
       {open && (
         <div className="vid" ref={ref}>
           <span className="vid-live"><i />Live</span>
           <div className="vid-ctl">
             <button aria-label={muted ? 'Unmute' : 'Mute'} onClick={() => setMuted(!muted)}><Icon name={muted ? 'mute' : 'volume'} size={16} /></button>
             <button aria-label="Full screen" onClick={() => ref.current?.requestFullscreen?.()}><Icon name="expand" size={16} /></button>
-            {bare && <button aria-label="Hide the video" onClick={() => setOpen(false)}><Icon name="minus" size={16} /></button>}
           </div>
         </div>
       )}
-      {!bare && (
-        <div className="vid-meta">
-          <span><b>Election Night Live</b><small>Daily Wire coverage as the races are called</small></span>
-          <button className="vid-tog" onClick={() => setOpen(!open)}>{open ? 'Hide' : 'Watch'}</button>
-        </div>
-      )}
+      <div className="vid-meta">
+        <span><b>Election Night Live</b><small>Daily Wire coverage as the races are called</small></span>
+        <button className="vid-tog" onClick={() => setOpen(!open)}>{open ? 'Hide' : 'Watch'}</button>
+      </div>
     </div>
   );
 }
