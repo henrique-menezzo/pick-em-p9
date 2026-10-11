@@ -98,10 +98,15 @@ export default function Intro({ onDone }: { onDone: () => void }) {
     const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     // the page stays at its top while the opening is up: it is about to land on the hero
+    // (a reload from halfway down the page: a phone's browser can put the old position back after the
+    // page has loaded, so the top is held for as long as the opening is up, not just at the start)
     const hold = (e: Event) => e.preventDefault();
+    const top = () => { if (window.scrollY || window.scrollX) window.scrollTo(0, 0); };
+    top();
     window.addEventListener('wheel', hold, { passive: false });
     window.addEventListener('touchmove', hold, { passive: false });
-    const release = () => { window.removeEventListener('wheel', hold); window.removeEventListener('touchmove', hold); };
+    window.addEventListener('scroll', top);
+    const release = () => { window.removeEventListener('wheel', hold); window.removeEventListener('touchmove', hold); window.removeEventListener('scroll', top); };
 
     // lay the row out once: touching capsules, centred
     let x = 0;
