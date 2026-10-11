@@ -3,6 +3,7 @@
 // circle. Painted on a canvas so the caps stay perfectly round at any height, and so the whole
 // thing costs one draw call per frame.
 import { useEffect, useLayoutEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { motion } from 'motion/react';
 
 /** The branding team's row, measured off their frame: diameters as a share of the biggest, and the
@@ -74,13 +75,15 @@ export default function Intro({ onDone }: { onDone: () => void }) {
     return () => cancelAnimationFrame(raf);
   }, []);
 
-  return (
+  // on the body, not inside the page: the page waits at opacity 0 under it, and would take it along
+  return createPortal(
     <motion.div
       className="intro"
       initial={{ opacity: 1 }}
       exit={{ opacity: 0, scale: 1.08, transition: { duration: 0.28, ease: [0.4, 0, 0.2, 1] } }}
     >
       <canvas ref={cvs} style={{ width: `min(760px, 58vw)`, aspectRatio: `${W} / ${H}` }} aria-hidden />
-    </motion.div>
+    </motion.div>,
+    document.body,
   );
 }
