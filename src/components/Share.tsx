@@ -5,14 +5,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'motion/react';
-import '@fontsource/newsreader/500.css';
-import '@fontsource/newsreader/500-italic.css';
 import us from '../data/usmap-hub.json';
 import logoRaw from '../data/logo.svg?raw';
 import f400 from '@fontsource/libre-franklin/files/libre-franklin-latin-400-normal.woff2?url';
 import f600 from '@fontsource/libre-franklin/files/libre-franklin-latin-600-normal.woff2?url';
-import n500 from '@fontsource/newsreader/files/newsreader-latin-500-normal.woff2?url';
-import n500i from '@fontsource/newsreader/files/newsreader-latin-500-italic.woff2?url';
+import f400i from '@fontsource/libre-franklin/files/libre-franklin-latin-400-italic.woff2?url';
 import { RACES, RESULTS, TAB_LABEL, T_MAX, statusAt, type Tab } from '../data/races';
 import { useStore } from '../lib/store';
 import { Icon } from './ui';
@@ -22,7 +19,6 @@ const ORDER = Object.keys(SHAPES);
 const [VX, VY, VW, VH] = (us.frame as number[]);
 const NOUN: Record<Tab, string> = { senate: 'Senate', gov: 'governor', house: 'House' };
 const SANS = "'Libre Franklin', Helvetica, Arial, sans-serif";
-const SERIF = "'Newsreader', Georgia, 'Times New Roman', serif";
 // the wordmark in either ink, inline, so the picture carries it without a fetch
 const mark = (ink: string) => 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent((logoRaw as string).replace(/#FAFAFA/gi, ink));
 
@@ -84,12 +80,12 @@ function ShareCard({ tab, paper, svgRef }: { tab: Tab; paper: Paper; svgRef?: Re
       <rect x="72" y="86" width="1056" height="1" fill={c.rule} />
 
       {/* headline */}
-      <text fontFamily={SERIF} fontSize="52" fontWeight="500" letterSpacing="-1.2" fill={c.ink}>
+      <text fontFamily={SANS} fontSize="52" fontWeight="600" letterSpacing="-1.8" fill={c.ink}>
         {lines.map((l, i) => <tspan key={i} x="70" y={176 + i * 58}>{l}</tspan>)}
       </text>
 
       {/* the score, as two figures */}
-      <g fontFamily={SERIF} fontWeight="500" letterSpacing="-3">
+      <g fontFamily={SANS} fontWeight="600" letterSpacing="-4.5">
         <text x="68" y="470" fontSize="104" fill={c.ink}>{d.pr}<tspan fontSize="52" dx="4" letterSpacing="0">%</tspan></text>
         <text x="330" y="470" fontSize="104" fill={c.soft}>{d.pm}<tspan fontSize="52" dx="4" letterSpacing="0">%</tspan></text>
       </g>
@@ -116,7 +112,7 @@ function ShareCard({ tab, paper, svgRef }: { tab: Tab; paper: Paper; svgRef?: Re
       {/* foot */}
       <rect x="72" y="552" width="1056" height="1" fill={c.rule} />
       <image href={mark(c.ink)} x="72" y="574" width="139" height="13" />
-      <text x="1128" y="586" textAnchor="end" fontFamily={SERIF} fontStyle="italic" fontSize="20" fill={c.soft}>Make your picks at dailywire.com</text>
+      <text x="1128" y="586" textAnchor="end" fontFamily={SANS} fontStyle="italic" fontSize="18" fill={c.soft}>Make your picks at dailywire.com</text>
     </svg>
   );
 }
@@ -136,7 +132,7 @@ async function toPng(svg: SVGSVGElement) {
   const face = async (fam: string, w: number, st: string, url: string) => `@font-face{font-family:'${fam}';font-weight:${w};font-style:${st};src:url(${await dataUrl(url, 'font/woff2')}) format('woff2')}`;
   style.textContent = (await Promise.all([
     face('Libre Franklin', 400, 'normal', f400), face('Libre Franklin', 600, 'normal', f600),
-    face('Newsreader', 500, 'normal', n500), face('Newsreader', 500, 'italic', n500i),
+    face('Libre Franklin', 400, 'italic', f400i),
   ])).join('\n');
   clone.insertBefore(style, clone.firstChild);
   const src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(new XMLSerializer().serializeToString(clone));

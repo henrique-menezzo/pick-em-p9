@@ -17,6 +17,7 @@ import { ResetButton } from './Common';
 import { usePanelRace } from './Palette';
 import { Wordmark } from './Nav';
 import { ProfileMenu } from '../mobile/Mobile';
+import { Hero } from './Brand';
 
 const useLive = () => useStore((s) => s.live);
 const NOUN: Record<Tab, string> = { senate: 'Senate', gov: 'governor', house: 'House' };
@@ -151,15 +152,13 @@ function DxMap({ noSave }: { noSave?: boolean }) {
   const live = useLive();
   const t = useStore((s) => s.t);
   const picks = useStore((s) => s.picks);
-  const setTour = useStore((s) => s.setTour);
   const { left, locked } = useCountdown();
   const sc = live ? liveScore(picks, t) : null;
   return (
     <section className="e-map dx-map">
-      <header className="dx-mhead">
-        {/* as in the Figma frame (425:13606): the sponsor first, over the name */}
-        <Presented />
-        <div className="dx-mname"><h1>The Midterms Pick Em</h1><button className="dx-help" aria-label="How to play" onClick={() => setTour(0)}><Icon name="help" size={20} stroke={1.44} /></button></div>
+      {/* the hero over the game carries the sponsor and the name (Figma 464:12099): the card keeps only
+          the deadline, at its top left */}
+      <header className="dx-mhead dx-lockhead">
         <p className="dx-mlock num">{sc ? <><i className="sd live-dot" />Live · {sc.called} of {ALL.length} called</> : locked ? 'Picks are locked' : <>Lock in <b>{left}</b></>}</p>
       </header>
       {/* on the night the replay sits where the picking actions were, out of the way of the cards */}
@@ -1165,12 +1164,23 @@ function PartDone() {
   );
 }
 
+/** On a phone there is no card header, so the deadline goes under the hero. */
+function HeroLock() {
+  const live = useLive();
+  const t = useStore((s) => s.t);
+  const picks = useStore((s) => s.picks);
+  const { left, locked } = useCountdown();
+  const sc = live ? liveScore(picks, t) : null;
+  return <p className="h-lock num">{sc ? <><i className="sd live-dot" />Live · {sc.called} of {ALL.length} called</> : locked ? 'Picks are locked' : <>Lock in <b>{left}</b></>}</p>;
+}
+
 function ThePage() {
   const tab = useStore((s) => s.tab);
   const live = useLive();
   const MapCard6b = () => <div className="dx-card p22-map"><BoardHead head="seg" /></div>;
   return (
-    <div className={'v vE r big rows mtw mtw-folder dx dx7 p8 p22 p9 sel-' + TABS.indexOf(tab)}>
+    <div className={'v vE r big rows mtw mtw-folder dx dx7 p8 p22 p9 hero-on sel-' + TABS.indexOf(tab)}>
+      <Hero presented={<Presented />} />
       {/* top right of the page: Save while you pick, Share on the night */}
       <div className="p9-tabs"><MapTabs look="folder" />{live ? <ShareButton /> : <SaveMaps />}</div>
       <div className="e-cards tall dx-one"><DxMap noSave /><Side cls="board" before={<MapCard6b />}><Board8 row="frac" /></Side></div>
@@ -1197,8 +1207,10 @@ export function P9Phone() {
   const sc = live ? liveScore(picks, t) : null;
   const [menu, setMenu] = useState(false);
   const touring = useStore((s) => s.tour !== null);
+  // the opening: out of sight under it, then the page comes in around the wave it hands over
+  const phase = useStore((s) => s.phase);
   return (
-    <div className={'p9 dx p9p' + (live ? ' night' : '') + (touring ? ' touring' : '')}>
+    <div className={'p9 dx p9p hero-on' + (live ? ' night' : '') + (touring ? ' touring' : '') + (phase === 'intro' ? ' pre' : phase === 'enter' ? ' enter' : '')}>
       <header className="p9p-top">
         <button className="p9p-ic" aria-label="Menu"><Icon name="menu" size={22} stroke={1.8} /></button>
         <Wordmark className="p9p-logo" />
@@ -1214,15 +1226,8 @@ export function P9Phone() {
       </header>
 
       <main className="p9p-play">
-        <div className="p9p-head">
-          <div>
-            <Presented />
-            <h1>The Midterms Pick Em</h1>
-            <p className="p9p-lock num">{sc ? <><i className="sd live-dot" />Live · {sc.called} of {ALL.length} called</> : locked ? 'Picks are locked' : <>Lock in <b>{left}</b></>}</p>
-          </div>
-          {/* the tour is about picking, so on the night the corner holds Share instead */}
-          {live ? <ShareButton /> : <button className="p9p-help" aria-label="How to play" onClick={() => setTour(0)}><Icon name="help" size={20} stroke={1.5} /></button>}
-        </div>
+        {/* the hero carries the sponsor, the name and the deadline; on the night, Share under them */}
+        <Hero presented={<Presented />} meta={<><HeroLock />{live && <ShareButton />}</>} />
 
 
         <div className="p9p-tabs" role="tablist" aria-label="Parts of the game">

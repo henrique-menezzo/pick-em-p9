@@ -1,0 +1,55 @@
+/* ======================================================================================================
+   The Midterms' branding on the game (P10's option 42, chosen Oct 11). One column for everything:
+   1376px, the site's nav, the hero and the game start and end on the same two edges. The hero is the
+   designer's Figma frame (464:12099) without its rule: space alone between it and the game.
+   ====================================================================================================== */
+.bw { display: block; }
+.btag { margin: 0; font-size: 14px; line-height: 1.35; color: var(--p9-soft); }
+.btag b { font-weight: 600; color: var(--p9-ink); }
+.vE.big.p9 { max-width: 1408px; }
+.p6.p6.lay1:has(.p9) > .nav.nav { padding-inline: max(32px, calc((100% - 1376px) / 2)); }
+
+/* the hero, measured off the frame: the sponsor, the name (44px) and the line (16px, all of it in ink)
+   24px apart; the wave as tall as the text and centred on it, flush with the column's right edge */
+.hero { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 48px; margin: 53px 0 72px; color: var(--p9-ink); }
+.hero .h-head { display: flex; flex-direction: column; align-items: flex-start; gap: 24px; min-width: 0; }
+.hero .e-pres { font-size: 12px; color: var(--p9-soft); }
+.p9 .hero .e-pres i { color: #6b6b6b; }
+.hero .h-title { position: relative; top: -4px; margin: 0; font-size: 44px; line-height: 32px; font-weight: 600; letter-spacing: -1.2px; white-space: nowrap; color: var(--p9-ink); }
+.hero .h-tag { font-size: 16px; line-height: 19px; }
+.hero .h-tag span { color: var(--p9-ink); }
+.hero .h-w { flex: 0 1 341px; min-width: 0; height: 172px; margin: -27.5px 0; }
+.hero .h-lock { margin: 0; font-size: 14px; color: var(--p9-soft); }
+.hero .h-lock b { font-weight: 600; color: var(--p9-ink); }
+
+/* the map card keeps only the deadline, at its top left on the row of its actions: 20px, the figure in ink */
+.p9 .dx-lockhead { height: 48px; justify-content: center; }
+.p9 .dx-lockhead .dx-mlock { font-size: 20px; }
+.p9 .dx-lockhead .dx-mlock b { margin-left: 5px; font-weight: 600; color: var(--p9-ink); }
+.vE.big.dx.p9.hero-on .e-cards.tall.dx-one > .e-map.dx-map > .v-map { top: 88px; }
+
+/* the phone: one column, everything centred, the wave on top, the deadline under the line (and on the
+   night, Share under it) */
+.p9p .hero { flex-direction: column-reverse; align-items: center; gap: 24px; margin: 16px 0 32px; text-align: center; }
+.p9p .hero .h-head { align-items: center; gap: 16px; }
+.p9p .hero .h-title { top: 0; font-size: 32px; line-height: 1; letter-spacing: -.03em; white-space: normal; text-wrap: balance; }
+.p9p .hero .h-tag { font-size: 15px; line-height: 1.35; text-wrap: balance; }
+.p9p .hero .h-w { flex: none; width: 100%; height: 100px; margin: 0; }
+.p9p .hero .h-lock { margin-top: 4px; }
+.p9p .hero .sh-btn { height: 44px; padding: 0 18px; border-radius: 999px; background: var(--p9-pill); font-size: 14px; font-weight: 600; }
+
+/* the page coming in as the opening hands over its wave (Intro.tsx): the nav, the hero's words, the
+   parts and the game, 80ms apart. The hero only fades, so the spot the wave flies to stays put. */
+@keyframes pe-in { from { opacity: 0; transform: translateY(12px); filter: blur(4px); } to { opacity: 1; transform: none; filter: none; } }
+@keyframes pe-fade { from { opacity: 0; filter: blur(4px); } to { opacity: 1; filter: none; } }
+.p9p.pre { opacity: 0; }
+@media (prefers-reduced-motion: no-preference) {
+  .p6.enter > .nav { animation: pe-in .5s cubic-bezier(.2, 0, 0, 1) both; }
+  .p6.enter .hero { animation: pe-fade .5s cubic-bezier(.2, 0, 0, 1) .08s both; }
+  .p6.enter .p9-tabs { animation: pe-in .5s cubic-bezier(.2, 0, 0, 1) .16s both; }
+  .p6.enter .e-cards { animation: pe-in .55s cubic-bezier(.2, 0, 0, 1) .24s both; }
+  .p9p.enter .p9p-top { animation: pe-in .5s cubic-bezier(.2, 0, 0, 1) both; }
+  .p9p.enter .hero { animation: pe-fade .5s cubic-bezier(.2, 0, 0, 1) .08s both; }
+  .p9p.enter .p9p-tabs, .p9p.enter .p9p-map, .p9p.enter .p9p-cards { animation: pe-in .5s cubic-bezier(.2, 0, 0, 1) .16s both; }
+  .p9p.enter .p9p-panel { animation: pe-in .55s cubic-bezier(.2, 0, 0, 1) .24s both; }
+}

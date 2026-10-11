@@ -1071,7 +1071,21 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 /* the page waits out of sight: without this, adding .enter snaps every element back to its start
    state in full view, which reads as the page reloading itself */
 .app.pre { opacity: 0; }
-.intro { position: fixed; inset: 0; z-index: 200; background: var(--bg); display: grid; place-items: center; }
+.intro { position: fixed; inset: 0; z-index: 200; display: grid; place-items: center; }
+/* the opening's ground is its own layer, so it can clear while its row and line fly to the page */
+.intro-bg { position: absolute; inset: 0; background: var(--bg); transition: opacity .5s cubic-bezier(.2, 0, 0, 1); }
+.intro.leaving { pointer-events: none; }
+.intro.leaving .intro-bg { opacity: 0; }
+.intro-mark { --cw: min(760px, 58vw); position: relative; display: flex; flex-direction: column; align-items: center; }
+.intro-mark canvas { width: var(--cw); display: block; }
+.intro-line { margin: calc(var(--cw) * -0.04) 0 0; width: max-content; max-width: 90vw; transform-origin: 0 0; font-size: 20px; line-height: 1.35; text-align: center; color: var(--p9-soft, #8f8f8f); }
+.intro-line .iw { display: inline-block; margin-right: .26em; }
+.intro-line .iw:last-child { margin-right: 0; }
+.intro-line .iw.b { font-weight: 600; color: var(--p9-ink, #fafafa); }
+.intro-air { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; }
+@media (max-width: 760px) { .intro-mark { --cw: 82vw; } .intro-line { font-size: 15px; white-space: nowrap; } }
+/* while the opening's row and line are in the air, the page's own wait out of sight */
+html.fly canvas.bw { opacity: 0; }
 .intro svg { overflow: visible; }
 /* the loader is the reference loop: a row of circles with a wave running through it. The fade and
    the swing are on different properties, so one never cancels the other. */
