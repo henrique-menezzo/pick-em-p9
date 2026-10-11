@@ -191,3 +191,26 @@ body:has(.p9p) .auth-x { top: 10px; right: 10px; width: 44px; height: 44px; }
 .vid-stage .vid.big { width: min(1200px, 100%, calc((100dvh - 64px) * 16 / 9)); max-height: none; aspect-ratio: 16 / 9; border-radius: 24px; background: #000; animation: none; }
 .vid.vid-slot { visibility: hidden; }
 @media (max-width: 760px) { .vid-stage { padding: 12px; } .vid-stage .vid.big { border-radius: 16px; } }
+
+/* 6 · beside the title of Every race, on its own line: the answer key's totals, no height added */
+.dx-h.ns6-h { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.ns6 { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 400; color: var(--p9-soft); white-space: nowrap; }
+.ns6 b { font-weight: 600; color: var(--p9-ink); }
+.ns6 .ns-mark { width: 18px; height: 18px; }
+.ns6 .ns-mark:not(:first-child) { margin-left: 8px; }
+/* 7 · at the foot of the map, left; the legend keeps the right */
+.p9 .dx-mfoot.ns7-on { justify-content: space-between; align-items: center; }
+.ns7 { margin: 0; display: flex; align-items: center; gap: 8px; font-size: 16px; color: var(--p9-soft); white-space: nowrap; }
+.ns7 b { font-weight: 600; color: var(--p9-ink); }
+.ns7 .ns-mark:not(:first-child) { margin-left: 12px; }
+.ns7 small { margin-left: 12px; font-size: 13px; }
+.p9p-ns7 { display: flex; justify-content: center; margin: 10px 0 4px; }
+.p9p-ns7 .ns7 { font-size: 15px; }
+
+/* the night's square card: room for Winner and Your pick under the name, the share in a column of
+   its own, nothing drawn over anything */
+.sq-pop:has(.pct) { width: 272px; }
+.sq-pop .cand .t { flex: 1; min-width: 0; }
+.sq-pop .cand .n { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sq-pop .cand .p { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
+.sq-pop .cand .pct { flex: none; margin-inline-start: 8px; }

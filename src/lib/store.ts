@@ -144,7 +144,7 @@ export const useStore = create<State>()(
       theme: (new URLSearchParams(location.search).get('theme') as Theme) || 'dark',
       mapKind: (new URLSearchParams(location.search).get('map') === '2' ? 'dots' : 'shape'),
       afLook: 1,
-      scoreLook: Math.min(5, Math.max(0, Number(new URLSearchParams(location.search).get('score')) || 0)),
+      scoreLook: Math.min(7, Math.max(0, Number(new URLSearchParams(location.search).get('score')) || 0)),
       layout: 1,
       setLayout: (layout) => set({ layout, hoverId: null }),
       phase: 'intro',

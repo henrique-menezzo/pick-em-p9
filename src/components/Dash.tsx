@@ -168,7 +168,7 @@ function DxMap({ noSave }: { noSave?: boolean }) {
       {/* on the night the replay sits where the picking actions were, out of the way of the cards */}
       <div className={'dx-mact' + (live ? ' dx-tl' : '')}>{live ? <Foot /> : <CatActions noSave={noSave} />}</div>
       <MapBox />
-      <div className="dx-mfoot"><Legend /></div>
+      <div className={'dx-mfoot' + (live && scoreLook === 7 ? ' ns7-on' : '')}>{live && scoreLook === 7 && <NightScore look={7} />}<Legend /></div>
     </section>
   );
 }
@@ -200,7 +200,7 @@ function Side({ children, cls = '', noRace, partOnly, before, after, bare }: { c
   if (live && !noRace) {
     return (
       <aside className="e-panel dx-side night">
-        {scoreLook >= 3 && <div className="dx-card ns-card"><NightScore look={scoreLook} /></div>}
+        {scoreLook >= 3 && scoreLook <= 5 && <div className="dx-card ns-card"><NightScore look={scoreLook} /></div>}
         <div className="dx-card flat"><LiveVideo bare /></div>
         <div className="dx-card"><RaceCard className="inner e-nightrace dx-race" /></div>
         {/* the squares again, now as the answer sheet: a check where you were right, an ✕ where not */}
@@ -684,10 +684,13 @@ function Board8({ head = 'none', row = 'frac', done = 'check', dot, title = true
   const parts = TABS.map((k) => usePart(k));
   const pop = useCellPop();
   const wave = useAutoWave();
+  const scoreLook = useStore((s) => s.scoreLook);
   return (
     <section className={'dx-board p8-board row-' + row + (dot ? ' dots' : '') + (wave ? ' wave' : '')} aria-label="Every race">
       <AnimatePresence>{pop.at && <CellPop key="pop" {...pop.at} onEnter={pop.stay} onLeave={pop.leave} onClose={pop.close} />}</AnimatePresence>
-      {title && head === 'none' && <h2 className="dx-h">Every race</h2>}
+      {title && head === 'none' && (live && scoreLook === 6
+        ? <h2 className="dx-h ns6-h"><span>Every race</span><NightScore look={6} /></h2>
+        : <h2 className="dx-h">Every race</h2>)}
       <BoardHead head={head} />
       {parts.map((p) => {
         const k = p.k;
@@ -1256,6 +1259,12 @@ function NightScore({ look }: { look: number }) {
       <tfoot><tr><th scope="row">Total</th><td className="num">{n.correct}</td><td className="num">{n.missed}</td><td className="num">{n.out}</td></tr></tfoot>
     </table>
   );
+  if (look === 6) return (
+    <span className="ns ns6 num" aria-label={said}><ScoreMark ok /><b>{n.correct}</b> right<ScoreMark ok={false} /><b>{n.missed}</b> missed</span>
+  );
+  if (look === 7) return (
+    <p className="ns ns7 num" aria-label={said}><ScoreMark ok /><b>{n.correct}</b> right<ScoreMark ok={false} /><b>{n.missed}</b> missed<small>{n.called} of {n.total} called</small></p>
+  );
   const share = n.correct + n.missed ? Math.round((n.correct / (n.correct + n.missed)) * 100) : 0;
   return (
     <div className="ns ns5" role="group" aria-label={`${share}% right. ${said}`}>
@@ -1335,7 +1344,7 @@ export function P9Phone() {
       <main className="p9p-play">
         {/* the hero carries the sponsor, the name and the deadline; on the night, Share under them */}
         <Hero presented={<Presented />} meta={<>{live && scoreLook === 1 ? <NightScore look={1} /> : <HeroLock />}{live && <ShareButton />}</>} />
-        {live && scoreLook >= 3 && <div className="dx-card p9p-card p9p-nscard"><NightScore look={scoreLook} /></div>}
+        {live && scoreLook >= 3 && scoreLook <= 5 && <div className="dx-card p9p-card p9p-nscard"><NightScore look={scoreLook} /></div>}
 
 
         <div className="p9p-tabs" role="tablist" aria-label="Parts of the game">
@@ -1350,6 +1359,7 @@ export function P9Phone() {
         {live && scoreLook === 2 && <div className="p9p-ns"><NightScore look={2} /></div>}
         <div className="p9p-map"><MapBox /></div>
         <Legend />
+        {live && scoreLook === 7 && <div className="p9p-ns7"><NightScore look={7} /></div>}
 
         {/* the night: the replay, then the show, then the score */}
         {live && <div className="p9p-night"><Foot /></div>}

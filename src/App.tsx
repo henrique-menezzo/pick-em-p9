@@ -409,7 +409,7 @@ function MapSwitch() {
  *  the choice sits on <html> so the cards drawn outside the page follow it too. */
 const AF_LOOKS = ['Nothing on the map, the source in words only', 'A check on your own picks', 'A spark on Autofill\'s picks'];
 /** Election night's overall score, five ways to show it (and 0, as it was), for review. */
-const SCORE_LOOKS = ['In the hero: right and missed as big figures', 'On the map\'s top line', 'A bar of all 110 races', 'A box score, map by map', 'A ring: the share you got right'];
+const SCORE_LOOKS = ['In the hero: right and missed as big figures', 'On the map\'s top line', 'A bar of all 110 races', 'A box score, map by map', 'A ring: the share you got right', 'Beside the title of Every race', 'At the foot of the map, left of the legend'];
 function ScoreSwitch() {
   const n = useStore((s) => s.scoreLook);
   const set = useStore((s) => s.setScoreLook);
