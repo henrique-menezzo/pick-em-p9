@@ -1105,7 +1105,7 @@ body:has(.p9p) .tour.phone .tour-card { width: 100vw; border-radius: 24px 24px 0
 .p9p-night .sh-btn { flex: none; height: 44px; padding: 0 16px; border-radius: 999px; background: var(--p9-pill); display: inline-flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; }
 .p9p.night { padding-bottom: 280px; }
 /* phone: a quieter edge round what the tour lights, the header's hairline as on the desktop, Save centred */
-.tour.phone .tour-edge { opacity: .14; }
+.tour.phone { --tour-edge: .14; }
 .p9p-top { box-shadow: 0 1px 0 var(--p9-line); }
 .p9p-bar .p9-save { justify-content: center; text-align: center; }
 /* phone: no "who you picked" badge over the map, the panel already says it */
@@ -1161,10 +1161,10 @@ body:has(.p9p) .tour.phone .tour-card { padding: 24px 24px calc(20px + env(safe-
 .p9 .dx-side.night .dx-board { gap: 10px !important; }
 /* the tour's Save step on a phone: the picks panel comes back up under the tour's sheet */
 html:is([data-tour-step="save"], [data-tour-step="panel"]) .p9p.touring .p9p-panel { transform: none; opacity: 1; pointer-events: auto; }
-/* stepping down for the tour it eases off rather than dropping: the tour's sheet comes up in its place
-   once it is mostly gone. Coming back up it keeps the quick settle above */
+/* stepping down for the tour it eases off rather than dropping, and the tour's sheet comes up in its place
+   as it goes. Coming back up it keeps the quick settle above */
 @media (prefers-reduced-motion: no-preference) {
-  .p9p.touring .p9p-panel { transition: transform .62s cubic-bezier(.5, 0, .2, 1); }
+  .p9p.touring .p9p-panel { transition: transform .45s cubic-bezier(.4, 0, .2, 1); }
   html:is([data-tour-step="save"], [data-tour-step="panel"]) .p9p.touring .p9p-panel { transition: transform .55s cubic-bezier(.32, .72, 0, 1); }
 }
 /* phone: squares big enough to hit with a thumb, 9 to a row (about 30px each) */

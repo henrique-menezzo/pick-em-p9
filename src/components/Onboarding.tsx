@@ -260,7 +260,7 @@ export default function Onboarding({ ready = true }: { ready?: boolean }) {
   // the hole takes the shape of the state, whichever map is drawing it: an outline for the shapes,
   // the state's own dots fattened until they merge for the grid
   const mapKind = useStore((x) => x.mapKind);
-  const [shape, setShape] = useState<{ d: string; m: string; mUp: string } | null>(null);
+  const [shape, setShape] = useState<{ d: string; m: DOMMatrix; mUp: DOMMatrix } | null>(null);
   const [dots, setDots] = useState<{ cx: number; cy: number; r: number }[] | null>(null);
   useLayoutEffect(() => {
     if (!st) { setShape(null); setDots(null); return; }
@@ -314,93 +314,14 @@ export default function Onboarding({ ready = true }: { ready?: boolean }) {
   // the light and the card travel on a slow, critically damped spring: they glide to the next thing
   const spring = { type: 'spring' as const, stiffness: 200, damping: 28, mass: 1 };
   const soft = { opacity: { duration: 0.34, ease: EASE_OUT }, filter: { duration: 0.4, ease: EASE_OUT } };
-  const RISE = { type: 'spring' as const, stiffness: 140, damping: 23.7, mass: 1 }; // damping ratio 1, ~0.8s
 
   return createPortal(
     <AnimatePresence>
       {s && spot && (
-        <motion.div className={'tour' + (phone ? ' phone' : '')} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, transition: { duration: 0.26, ease: EASE_IN } }} transition={{ duration: phone ? 0.8 : 0.42, ease: EASE_OUT }}>
+        <motion.div className={'tour' + (phone ? ' phone' : '')} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, transition: { duration: 0.26, ease: EASE_IN } }} transition={{ duration: phone ? 0.5 : 0.42, ease: EASE_OUT }}>
           {/* one spotlight for the whole tour: it opens onto the map and then travels and resizes
-              from step to step, instead of blinking out and back in. The dim is its own shadow, so
-              there is nothing to keep in sync and nothing to clip per frame. */}
-          <svg className="tour-dim" aria-hidden>
-            <defs>
-              <mask id="tour-hole">
-                <rect x="0" y="0" width="100%" height="100%" fill="#fff" />
-                {/* the box travels and resizes between steps… */}
-                <motion.rect
-                  rx={spot.r}
-                  fill="#000"
-                  initial={{ x: spot.x + spot.w * 0.12, y: spot.y + spot.h * 0.12, width: spot.w * 0.76, height: spot.h * 0.76, opacity: 0 }}
-                  animate={{ x: spot.x, y: spot.y, width: spot.w, height: spot.h, opacity: cut ? 0 : 1 }}
-                  transition={spring}
-                />
-                {/* …and hands over to the state's own outline when the step is about a state */}
-                {shape && (
-                  <motion.g fill="#000" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.22 }}>
-                    <path d={shape.d} transform={shape.m} />
-                    <path d={shape.d} transform={shape.mUp} />
-                  </motion.g>
-                )}
-                {dots && (
-                  <motion.g fill="#000" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.22 }}>
-                    {dots.map((d, i) => <circle key={i} cx={d.cx} cy={d.cy} r={d.r} />)}
-                  </motion.g>
-                )}
-                {/* a plain group, not a motion one: inside a <mask> nothing is laid out, and the
-                    opacity motion writes on mount never animates away — the hole stays shut */}
-                {all && mapCut && (
-                  <>
-                    {/* the country with air around it: every shape stroked MAP_AIR wide on each side, so
-                        the light does not sit right on the coastline */}
-                    <g fill="#000" stroke="#000" strokeWidth={air * 2} strokeLinejoin="round" strokeLinecap="round" transform={mapCut.m}>
-                      {mapKind === 'dots'
-                        ? MAP_DOTS.map((d, i) => <circle key={i} cx={d.x} cy={d.y} r={d.r} vectorEffect="non-scaling-stroke" />)
-                        : MAP_SHAPES.map((d, i) => <path key={i} d={d} vectorEffect="non-scaling-stroke" />)}
-                    </g>
-                    {/* and give back the strip the panel covers: white paints the dim on again */}
-                    {mapCut.over && (
-                      <rect fill="#fff" x={mapCut.over.x} y={mapCut.over.y} width={mapCut.over.w} height={mapCut.over.h} rx={mapCut.over.r} />
-                    )}
-                  </>
-                )}
-              </mask>
-            </defs>
-            {/* the whole page steps back and only what the step points at is left lit. No transform
-                on this rect, ever: a transform on a masked element drags the mask's contents with
-                it, and the hole ends up that far from the thing it is meant to be cut around */}
-            <rect x="0" y="0" width="100%" height="100%" style={{ fill: 'var(--tour-dim)' }} mask="url(#tour-hole)" />
-            {/* a faint white edge around what is lit, so the eye finds it. The same shapes, stroked and
-                put through the same mask: only the half of the line that falls on the dim shows, so the
-                seams between states inside the hole never draw and overlaps never add up (the group
-                carries the opacity, not each line) */}
-            <g className="tour-edge" fill="none" stroke="#fff" strokeWidth={3} strokeLinejoin="round" mask="url(#tour-hole)">
-              <motion.rect
-                rx={spot.r}
-                initial={{ x: spot.x + spot.w * 0.12, y: spot.y + spot.h * 0.12, width: spot.w * 0.76, height: spot.h * 0.76, opacity: 0 }}
-                animate={{ x: spot.x, y: spot.y, width: spot.w, height: spot.h, opacity: cut ? 0 : 1 }}
-                transition={spring}
-              />
-              {shape && (
-                <motion.g initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.22 }}>
-                  <path d={shape.d} transform={shape.m} vectorEffect="non-scaling-stroke" />
-                  <path d={shape.d} transform={shape.mUp} vectorEffect="non-scaling-stroke" />
-                </motion.g>
-              )}
-              {dots && (
-                <motion.g initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.22 }}>
-                  {dots.map((d, i) => <circle key={i} cx={d.cx} cy={d.cy} r={d.r} />)}
-                </motion.g>
-              )}
-              {all && mapCut && (
-                <g transform={mapCut.m} strokeWidth={air * 2 + 3}>
-                  {mapKind === 'dots'
-                    ? MAP_DOTS.map((d, i) => <circle key={i} cx={d.x} cy={d.y} r={d.r} vectorEffect="non-scaling-stroke" />)
-                    : MAP_SHAPES.map((d, i) => <path key={i} d={d} vectorEffect="non-scaling-stroke" />)}
-                </g>
-              )}
-            </g>
-          </svg>
+              from step to step, instead of blinking out and back in */}
+          <TourDim spot={spot} cut={cut} shape={shape} dots={dots} country={all ? mapCut : null} kind={mapKind} air={air} />
           {/* and one card, which travels with it */}
           <motion.div
             ref={card}
@@ -411,9 +332,8 @@ export default function Onboarding({ ready = true }: { ready?: boolean }) {
             initial={phone ? { bottom: lift, y: '100%' } : { left: at?.left, top: at?.top, opacity: 0, y: 12, scale: 0.96, filter: 'blur(8px)' }}
             animate={phone ? { bottom: lift, y: 0 } : { left: at?.left, top: at?.top, opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
             exit={phone ? { y: '100%', transition: { duration: 0.28, ease: [0.4, 0, 0.8, 0.2] } } : { opacity: 0, y: 8, scale: 0.97, filter: 'blur(4px)', transition: { duration: 0.2, ease: EASE_IN } }}
-            // on a phone the sheet waits for the picks panel to step down first, then rises on a softer
-            // spring than the later moves, so the two never cross in a hurry
-            transition={phone ? { y: { ...RISE, delay: 0.38 }, bottom: SHEET } : { ...spring, ...soft }}
+            // on a phone the sheet lets the picks panel start down first, so the two never cross
+            transition={phone ? { y: { ...SHEET, delay: 0.18 }, bottom: SHEET } : { ...spring, ...soft }}
           >
             {/* the words cross over from step to step out of a light blur, while the card travels */}
             <AnimatePresence mode="popLayout" initial={false}>
@@ -450,6 +370,7 @@ export default function Onboarding({ ready = true }: { ready?: boolean }) {
 }
 
 type Spot = { x: number; y: number; w: number; h: number; r: number };
+type Box = Spot;
 const PAD = 6; // how far the lit area reaches past the element it points at
 /** Measures the element this step points at, after paint, and keeps up with resizes and scrolling. */
 /** The union of every state the map has drawn, in screen coordinates. Works for either map: one
@@ -467,6 +388,213 @@ function statesBox() {
   return x1 > x0 ? { left: x0, top: y0, width: x1 - x0, height: y1 - y0 } : null;
 }
 
+/** What the tour lights, and how. */
+type Lit = {
+  spot: Spot;
+  /** the light has taken a shape (a state, its dots, the whole country): the box steps aside */
+  cut: boolean;
+  shape: { d: string; m: DOMMatrix; mUp: DOMMatrix } | null;
+  dots: { cx: number; cy: number; r: number }[] | null;
+  country: { m: DOMMatrix; over: Box | null } | null;
+  kind: 'shape' | 'dots';
+  air: number;
+};
+
+// the country's outline, once per kind, in the map's own units
+const OUTLINE: Partial<Record<'shape' | 'dots', Path2D>> = {};
+function outline(kind: 'shape' | 'dots') {
+  let p = OUTLINE[kind];
+  if (!p) {
+    p = new Path2D();
+    if (kind === 'dots') for (const d of MAP_DOTS) { p.moveTo(d.x + d.r, d.y); p.arc(d.x, d.y, d.r, 0, Math.PI * 2); }
+    else for (const d of MAP_SHAPES) p.addPath(new Path2D(d));
+    OUTLINE[kind] = p;
+  }
+  return p;
+}
+const PATHS = new Map<string, Path2D>();
+const pathOf = (d: string) => { let p = PATHS.get(d); if (!p) PATHS.set(d, (p = new Path2D(d))); return p; };
+/** screen pixels per map unit */
+const scaleOf = (m: DOMMatrix) => Math.sqrt(Math.abs(m.a * m.d - m.b * m.c)) || 1;
+
+/**
+ * The dim over the page with the light cut out of it, drawn on a canvas. It used to be an SVG mask,
+ * and Safari redraws a mask from scratch on every frame anything under it moves: with the whole
+ * country in it that was a third of a second a frame on an iPhone, so the tour's opening froze.
+ * A canvas draws the same picture in a millisecond or two.
+ *
+ * Two passes: the faint white edge goes on over the dim first, then the light is cut out of both,
+ * so only the outer half of the edge is left, on the dim. The box travels between steps on the same
+ * slow spring as before; a state's outline fades in over it.
+ */
+function TourDim(props: Lit) {
+  const ref = useRef<HTMLCanvasElement>(null);
+  const lit = useRef(props);
+  lit.current = props;
+  const wake = useRef(() => {});
+  useEffect(() => {
+    const cv = ref.current!;
+    const g = cv.getContext('2d')!;
+    const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let dpr = 1, raf = 0, last = 0, shapeAt = -1, dotsAt = -1;
+    // the box: where each side is and how fast it is going, and o, how lit it is. It opens from a
+    // little inside the first thing it lights, unlit, as it did
+    const s0 = lit.current.spot;
+    const ch = {
+      x: { p: s0.x + s0.w * 0.12, v: 0 }, y: { p: s0.y + s0.h * 0.12, v: 0 },
+      w: { p: s0.w * 0.76, v: 0 }, h: { p: s0.h * 0.76, v: 0 }, o: { p: 0, v: 0 },
+    };
+    const K = 200, C = 28; // the spring the light has always travelled on (damping ratio 1)
+    const frame = (now: number) => {
+      raf = 0;
+      const L = lit.current;
+      const dt = last ? Math.min(0.064, (now - last) / 1000) : 1 / 60;
+      last = now;
+      const to = { x: L.spot.x, y: L.spot.y, w: L.spot.w, h: L.spot.h, o: L.cut ? 0 : 1 };
+      let moving = false;
+      for (const k of ['x', 'y', 'w', 'h', 'o'] as const) {
+        const c = ch[k];
+        if (still) { c.p = to[k]; c.v = 0; continue; }
+        for (let t = 0; t < dt; t += 1 / 240) {
+          const h = Math.min(1 / 240, dt - t);
+          c.v += (K * (to[k] - c.p) - C * c.v) * h;
+          c.p += c.v * h;
+        }
+        const near = k === 'o' ? 0.002 : 0.05;
+        if (Math.abs(to[k] - c.p) < near && Math.abs(c.v) < near) { c.p = to[k]; c.v = 0; } else moving = true;
+      }
+      // a state's outline (or its dots) fades in when it first appears, in 0.22s
+      shapeAt = L.shape ? (shapeAt < 0 ? now : shapeAt) : -1;
+      dotsAt = L.dots ? (dotsAt < 0 ? now : dotsAt) : -1;
+      const fade = (at: number) => (at < 0 ? 0 : still ? 1 : Math.min(1, (now - at) / 220));
+      const fs = fade(shapeAt), fd = fade(dotsAt);
+      if ((shapeAt >= 0 && fs < 1) || (dotsAt >= 0 && fd < 1)) moving = true;
+      paint(L, fs, fd);
+      if (moving) raf = requestAnimationFrame(frame);
+      else last = 0;
+    };
+    const paint = (L: Lit, fs: number, fd: number) => {
+      const W = cv.width / dpr, H = cv.height / dpr;
+      const css = getComputedStyle(cv);
+      const dim = css.getPropertyValue('--tour-dim').trim() || 'rgba(5, 5, 5, .6)';
+      const edge = parseFloat(css.getPropertyValue('--tour-edge')) || 0.25;
+      const screen = new DOMMatrix([dpr, 0, 0, dpr, 0, 0]);
+      g.setTransform(1, 0, 0, 1, 0, 0);
+      g.globalCompositeOperation = 'source-over';
+      g.globalAlpha = 1;
+      g.clearRect(0, 0, cv.width, cv.height);
+      g.setTransform(screen);
+      g.fillStyle = dim;
+      g.fillRect(0, 0, W, H);
+      g.lineJoin = 'round';
+      g.lineCap = 'round';
+      g.strokeStyle = '#fff';
+      g.fillStyle = '#000';
+      const b = { x: ch.x.p, y: ch.y.p, w: Math.max(0, ch.w.p), h: Math.max(0, ch.h.p) };
+      const o = Math.min(1, Math.max(0, ch.o.p));
+      // pass 0 strokes the edges onto the dim; pass 1 cuts the light out of both
+      for (const cut of [false, true]) {
+        g.globalCompositeOperation = cut ? 'destination-out' : 'source-over';
+        const alpha = (a: number) => (g.globalAlpha = cut ? a : a * edge);
+        if (o > 0.002) {
+          alpha(o);
+          g.setTransform(screen);
+          g.beginPath();
+          g.roundRect(b.x, b.y, b.w, b.h, Math.min(L.spot.r, b.w / 2, b.h / 2));
+          if (cut) g.fill(); else { g.lineWidth = 3; g.stroke(); }
+        }
+        if (L.shape && fs > 0) {
+          alpha(fs);
+          for (const m of [L.shape.m, L.shape.mUp]) {
+            g.setTransform(screen.multiply(m));
+            if (cut) g.fill(pathOf(L.shape.d)); else { g.lineWidth = 3 / scaleOf(m); g.stroke(pathOf(L.shape.d)); }
+          }
+        }
+        if (L.dots && fd > 0) {
+          alpha(fd);
+          g.setTransform(screen);
+          g.beginPath();
+          for (const d of L.dots) { g.moveTo(d.cx + d.r, d.cy); g.arc(d.cx, d.cy, d.r, 0, Math.PI * 2); }
+          if (cut) g.fill(); else { g.lineWidth = 3; g.stroke(); }
+        }
+        if (L.country) {
+          alpha(1);
+          const sp = sprite(L.kind, L.country.m, L.air);
+          if (sp) {
+            // the page scrolling only moves the country: the picture made once is put down again
+            g.setTransform(1, 0, 0, 1, 0, 0);
+            g.drawImage(cut ? sp.hole : sp.edge, Math.round((L.country.m.e + sp.ox) * dpr), Math.round((L.country.m.f + sp.oy) * dpr));
+          } else {
+            const m = L.country.m, k = scaleOf(m), p = outline(L.kind);
+            g.setTransform(screen.multiply(m));
+            if (cut) { g.fill(p); g.lineWidth = (L.air * 2) / k; g.stroke(p); } else { g.lineWidth = (L.air * 2 + 3) / k; g.stroke(p); }
+          }
+        }
+      }
+      // and the strip the desktop's panel covers goes back to plain dim: it is in front of the map,
+      // not part of what the step points at
+      const v = L.country?.over;
+      if (v) {
+        g.setTransform(screen);
+        g.globalAlpha = 1;
+        g.beginPath();
+        g.roundRect(v.x, v.y, v.w, v.h, v.r);
+        g.globalCompositeOperation = 'destination-out';
+        g.fill();
+        g.globalCompositeOperation = 'source-over';
+        g.fillStyle = dim;
+        g.fill();
+      }
+    };
+    // The country with air around it (every shape stroked that wide on each side, so the light does
+    // not sit right on the coastline), and its edge, each drawn once into a picture of its own. The
+    // country is fifty-odd outlines: stroking them all again on every frame of a scroll cost Safari
+    // a frame each time. Only a new size (or a turned map, which never happens) draws them again.
+    let made: { key: string; hole: HTMLCanvasElement; edge: HTMLCanvasElement; ox: number; oy: number } | null = null;
+    const sprite = (kind: 'shape' | 'dots', m: DOMMatrix, air: number) => {
+      if (m.b || m.c) return null;
+      const key = [kind, m.a, m.d, air, dpr].join();
+      if (made?.key === key) return made;
+      const svg = document.querySelector(kind === 'dots' ? 'svg.map.dots' : 'svg.map') as SVGSVGElement | null;
+      const vb = svg?.viewBox.baseVal;
+      if (!vb || !vb.width) return null;
+      // the map's own box on screen, relative to where the map is put, with room for the air and edge
+      const pad = air + 4;
+      const ox = vb.x * m.a - pad, oy = vb.y * m.d - pad;
+      const w = Math.ceil((vb.width * m.a + pad * 2) * dpr), h = Math.ceil((vb.height * m.d + pad * 2) * dpr);
+      const p = outline(kind), k = scaleOf(m);
+      const draw = (wide: number, fill: boolean) => {
+        const c = document.createElement('canvas');
+        c.width = w; c.height = h;
+        const x = c.getContext('2d')!;
+        x.setTransform(dpr * m.a, 0, 0, dpr * m.d, -ox * dpr, -oy * dpr);
+        x.lineJoin = 'round'; x.lineCap = 'round';
+        x.fillStyle = x.strokeStyle = '#fff';
+        if (fill) x.fill(p);
+        x.lineWidth = wide / k;
+        x.stroke(p);
+        return c;
+      };
+      made = { key, hole: draw(air * 2, true), edge: draw(air * 2 + 3, false), ox, oy };
+      return made;
+    };
+    const go = () => { if (!raf) raf = requestAnimationFrame(frame); };
+    const size = () => {
+      dpr = Math.min(2, devicePixelRatio || 1);
+      cv.width = Math.round(innerWidth * dpr);
+      cv.height = Math.round(innerHeight * dpr);
+      go();
+    };
+    wake.current = go;
+    size();
+    addEventListener('resize', size);
+    return () => { cancelAnimationFrame(raf); removeEventListener('resize', size); wake.current = () => {}; };
+  }, []);
+  // every render brings new targets (the page scrolled, the step changed): draw them
+  useEffect(() => { wake.current(); });
+  return <canvas ref={ref} className="tour-dim" aria-hidden />;
+}
+
 /** What a map-wide step needs, read every frame: the map's own screen matrix — it sits inside a
  *  scaled wrapper and the step may scroll it — and the panel that floats on top of it. The map
  *  runs under that panel, and lighting the country through it would say the panel is part of what
@@ -475,7 +603,7 @@ function statesBox() {
 const MAP_AIR = 16;
 
 function useMapCut(on: boolean, kind: 'shape' | 'dots') {
-  const [cut, setCut] = useState<{ m: string; over: { x: number; y: number; w: number; h: number; r: number } | null } | null>(null);
+  const [cut, setCut] = useState<{ m: DOMMatrix; key: string; over: Box | null } | null>(null);
   useEffect(() => {
     if (!on) { setCut(null); return; }
     let raf = 0;
@@ -483,15 +611,15 @@ function useMapCut(on: boolean, kind: 'shape' | 'dots') {
       const svg = document.querySelector(kind === 'dots' ? 'svg.map.dots' : 'svg.map') as SVGSVGElement | null;
       const c = svg?.getScreenCTM();
       if (c) {
-        const m = `matrix(${c.a},${c.b},${c.c},${c.d},${c.e},${c.f})`;
+        const key = [c.a, c.b, c.c, c.d, c.e, c.f].join(',');
         const el = document.querySelector('.pal-anchor > *');
-        let over: { x: number; y: number; w: number; h: number; r: number } | null = null;
+        let over: Box | null = null;
         if (el) {
           const b = el.getBoundingClientRect();
           const br = parseFloat(getComputedStyle(el).borderTopLeftRadius) || 0;
           over = { x: b.left, y: b.top, w: b.width, h: b.height, r: Math.min(br, Math.min(b.width, b.height) / 2) };
         }
-        setCut((old) => (old && old.m === m && JSON.stringify(old.over) === JSON.stringify(over) ? old : { m, over }));
+        setCut((old) => (old && old.key === key && JSON.stringify(old.over) === JSON.stringify(over) ? old : { m: new DOMMatrix([c.a, c.b, c.c, c.d, c.e, c.f]), key, over }));
       }
       raf = requestAnimationFrame(read);
     };
@@ -551,7 +679,7 @@ function useSpot(sel: string | undefined, step: number | null, fit?: 'states'): 
           // centred in that gap when it fits, its top just under the header when it does not
           const y = b.height <= hi - lo ? lo + (hi - lo - b.height) / 2 : lo;
           // eased, and slower when the tour is opening: the page drifts to the map while it dims
-          glide(scrollY + b.top - y, step === 0 ? 1100 : 750, true);
+          glide(scrollY + b.top - y, step === 0 ? 850 : 700, true);
         }
       } else if (el && !onPhone) {
         const b = el.getBoundingClientRect();

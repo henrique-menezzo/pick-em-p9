@@ -357,20 +357,20 @@ function tipText(id: string, pick: Side | undefined, live: boolean, t: number) {
  *  around it. The tour uses it to light the whole map without drawing a rectangle over it. */
 export const MAP_SHAPES = ORDER.map((st) => SHAPES[st]);
 
-export function stateShapeOnScreen(st: string): { d: string; m: string; mUp: string } | null {
+export function stateShapeOnScreen(st: string): { d: string; m: DOMMatrix; mUp: DOMMatrix } | null {
   const svg = document.querySelector('svg.map') as SVGSVGElement | null;
   if (!svg || !SHAPES[st]) return null;
   const m = svg.getScreenCTM();
   if (!m) return null;
   const b = BOX[st];
   const cx = (b.x0 + b.x1) / 2, cy = (b.y0 + b.y1) / 2;
-  const base = `matrix(${m.a},${m.b},${m.c},${m.d},${m.e},${m.f})`;
+  const base = new DOMMatrix([m.a, m.b, m.c, m.d, m.e, m.f]);
   // the raised piece AND the hole it came out of: together they are exactly the piece and its
   // wall, with none of the neighbours caught in between
   return {
     d: SHAPES[st],
     m: base,
-    mUp: `${base} translate(0 ${-LIFT_Y}) translate(${cx} ${cy}) scale(${LIFT_K}) translate(${-cx} ${-cy})`,
+    mUp: base.translate(0, -LIFT_Y).translate(cx, cy).scale(LIFT_K).translate(-cx, -cy),
   };
 }
 

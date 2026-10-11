@@ -2466,8 +2466,8 @@ html.fly canvas.bw { opacity: 0; }
   .zz.fz > .v-map { top: 100px; bottom: 90px; }
   .fz-pres { bottom: 24px; }
 }
-/* the edge around what the tour lights: white at a quarter, on the group so overlapping lines never add up */
-.tour-edge { opacity: .25; }
+/* the edge around what the tour lights: white at a quarter (Onboarding draws it) */
+.tour { --tour-edge: .25; }
 /* a state with no race this chamber: the hub's no-data grey (#8f8f8f) under its hatch, label in white */
 :root { --map-nodata: #8f8f8f; }
 .map .st path.hatch { fill: url(#hatch-no-data); stroke: none; pointer-events: none; transition: none; }
