@@ -101,3 +101,24 @@
 body:has(.p9p) .tour.phone .tour-card { transition: left .55s cubic-bezier(.32, .72, 0, 1), width .55s cubic-bezier(.32, .72, 0, 1), border-radius .55s cubic-bezier(.32, .72, 0, 1), padding .55s cubic-bezier(.32, .72, 0, 1), box-shadow .55s ease; }
 body:has(.p9p) .tour.phone .tour-card.callout { width: calc(100vw - 32px); border-radius: 22px; padding: 20px 20px 18px; box-shadow: 0 18px 44px rgba(0, 0, 0, .55); }
 :root[data-theme='light'] body:has(.p9p) .tour.phone .tour-card.callout { box-shadow: 0 18px 44px rgba(10, 9, 9, .16); }
+
+/* the mobile audit (Oct 11) */
+/* toasts ("Link copied", "Image saved") show over the dialogs they come from */
+.toast { z-index: 160; }
+/* the sign-up's dim on a layer of its own (AuthModal.tsx), so the sheet rises solid over it */
+.auth-back { background: none !important; backdrop-filter: none !important; }
+.auth-dim { position: absolute; inset: 0; background: rgba(0, 0, 0, .62); backdrop-filter: blur(6px); }
+body:has(.p9p) .auth-dim { backdrop-filter: none; }
+.auth { z-index: 1; }
+/* thumb-sized targets on the phone: the panel's arrows and the sign-up's close (the icons stay as drawn) */
+.p9p-nav button { width: 44px; height: 44px; }
+.p9p-nav { margin-inline-end: -6px; }
+body:has(.p9p) .auth-x { top: 10px; right: 10px; width: 44px; height: 44px; }
+/* short phones (an iPhone SE): a tighter hero, so the map starts above the picks panel */
+@media (max-width: 760px) and (max-height: 720px) {
+  .p9p .hero { gap: 14px; margin: 8px 0 20px; }
+  .p9p .hero .h-head { gap: 10px; }
+  .p9p .hero .h-w { height: 68px; }
+  .p9p .hero .h-title { font-size: 28px; }
+  .p9p .hero .h-tag { font-size: 14px; }
+}

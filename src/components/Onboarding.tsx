@@ -85,9 +85,10 @@ const STEPS: Step[] = [
     },
   },
   {
+    key: 'panel', // on a phone the picks panel comes back up for this step, like Save
     title: 'Or pick from the panel',
     body: 'The panel shows both candidates for the selected race. The arrows take you to the next one.',
-    aim: '.pal, .m-sheet',
+    aim: '.pal, .m-sheet, .p9p-cands',
     align: 'end',
     ask: 'Pick a candidate in the panel',
     wait: (done) => onClickOf('.pal .cand, .p9p-cands .cand', done),
@@ -158,7 +159,12 @@ export default function Onboarding({ ready = true }: { ready?: boolean }) {
       before.current = { picks: st.picks, auto: st.auto, cursor: st.cursor, tab: st.tab, savedAt: st.savedAt };
       if (st.tab !== 'senate') st.setTab('senate');
     }
-    if (step === null && before.current) { useStore.setState(before.current); before.current = null; }
+    if (step === null && before.current) {
+      useStore.setState(before.current);
+      before.current = null;
+      // on a phone the last steps leave the page at its foot: the reader comes back to the map
+      if (matchMedia('(max-width: 760px)').matches) window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   }, [step]);
 
   const s = step === null ? null : STEPS[step];
@@ -291,12 +297,14 @@ export default function Onboarding({ ready = true }: { ready?: boolean }) {
   }, [step, s, !!spot]);
 
   const phone = usePhoneTour();
+  // a phone has no pointer to hover or click with: the words say tap
+  const say = (t?: string) => (phone && t ? t.replace(/\bClick\b/g, 'Tap').replace(/\bclick\b/g, 'tap').replace(/\bHover\b/g, 'Tap') : t);
   // on a phone the light sits close to the coastline: less to draw, and less of a halo on a small map
   const air = phone ? 4 : MAP_AIR;
   const at = spot && !phone ? place(anchor ?? spot, size, s?.align, s?.dock) : null;
   // on a phone the card is a sheet held to the bottom edge (or resting on the picks panel, for the step
   // that points into it): only how far up it sits changes, never a top worked out from a guessed height
-  const dock = spot && phone && s?.key === 'save' ? dockPhone() : 0;
+  const dock = spot && phone && (s?.key === 'save' || s?.key === 'panel') ? dockPhone() : 0;
   // …and when it rests on the panel it is no longer a second sheet on top of the first: it lifts off
   // the edge into a floating card, a little above the panel, pointing at the button it is about
   const callout = phone && dock > 0;
@@ -409,14 +417,14 @@ export default function Onboarding({ ready = true }: { ready?: boolean }) {
                 exit={{ opacity: 0, filter: 'blur(4px)', transition: { duration: 0.12, ease: EASE_IN } }}
                 transition={{ duration: 0.34, ease: EASE_OUT }}>
                 <div className="tour-step">Step {(step ?? 0) + 1} of {STEPS.length}</div>
-                <h3>{s.title}</h3>
-                <p>{s.body}</p>
+                <h3>{say(s.title)}</h3>
+                <p>{say(s.body)}</p>
               </motion.div>
             </AnimatePresence>
             {/* doing it moves you on, but Next is always there for anyone who just wants to read */}
             {s.ask && (
               <div className={'tour-ask' + (ok ? ' ok' : '')}>
-                {ok ? <><Icon name="check" size={13} stroke={2.6} /> Nice</> : <><span className="pulse" /> {s.ask}</>}
+                {ok ? <><Icon name="check" size={13} stroke={2.6} /> Nice</> : <><span className="pulse" /> {say(s.ask)}</>}
               </div>
             )}
             <div className="tour-foot">
@@ -527,7 +535,19 @@ function useSpot(sel: string | undefined, step: number | null, fit?: 'states'): 
     if (brought.current !== key) {
       brought.current = key;
       const el = document.querySelector(sel);
-      if (el) {
+      const onPhone = matchMedia('(max-width: 760px)').matches;
+      if (el && onPhone && !el.closest('.p9p-panel')) {
+        // on a phone what a step points at has to sit between the sticky header and the tour's sheet
+        const head = document.querySelector('.p9p-top')?.getBoundingClientRect().bottom ?? 64;
+        const sheet = document.querySelector<HTMLElement>('.tour-card')?.offsetHeight ?? 220;
+        const lo = head + 12, hi = innerHeight - sheet - 12;
+        const b = el.getBoundingClientRect();
+        if (b.top < lo || b.bottom > hi) {
+          // centred in that gap when it fits, its top just under the header when it does not
+          const y = b.height <= hi - lo ? lo + (hi - lo - b.height) / 2 : lo;
+          scrollTo({ top: Math.max(0, scrollY + b.top - y), behavior: 'smooth' });
+        }
+      } else if (el && !onPhone) {
         const b = el.getBoundingClientRect();
         if (b.top < 64 || b.bottom > innerHeight - 24) {
           // instantly, not smoothly: the card is placed from a measurement taken right after this,

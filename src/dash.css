@@ -979,7 +979,7 @@ html[data-afl="3"] .map .af-mark, html[data-afl="3"] .dx-cell .af-mark { display
 .p9 .dx-mact.dx-tl { display: flex; align-items: center; gap: 16px; }
 .p9 .sh-btn { display: inline-flex; align-items: center; gap: 8px; }
 /* the share card: the image as its own preview */
-.pd.sh { width: 720px; }
+.pd.sh { width: min(720px, 100%); }
 .sh-prev { align-self: stretch; margin-top: 20px; border-radius: 14px; overflow: hidden; background: var(--p9-page); }
 .sh-card { display: block; width: 100%; height: auto; }
 .pd-go:disabled { opacity: .6; cursor: progress; }
@@ -1138,7 +1138,7 @@ body:has(.p9p) .tour.phone .tour-card { padding: 24px 24px calc(20px + env(safe-
   body:has(.p9p) .field input { font-size: 16px; }
   body:has(.p9p) .auth-foot { margin-top: 24px; gap: 16px; }
   body:has(.p9p) .auth-btn { height: 46px; border-radius: 4px; }
-  body:has(.auth-back) .p9p-panel { visibility: hidden; }
+  body:has(.auth-back) .p9p-panel { transform: translateY(110%); } /* steps aside under the sign-up sheet, on its own curve, instead of blinking out */
 }
 
 /* phone: a finger on the map scrolls the page (the desktop's touch-action: none kept it from moving
@@ -1160,7 +1160,7 @@ body:has(.p9p) .tour.phone .tour-card { padding: 24px 24px calc(20px + env(safe-
 .p9 .dx-side.night .dx-race .fb-hint { margin-top: 8px; padding: 6px 12px; }
 .p9 .dx-side.night .dx-board { gap: 10px !important; }
 /* the tour's Save step on a phone: the picks panel comes back up under the tour's sheet */
-html[data-tour-step="save"] .p9p.touring .p9p-panel { transform: none; opacity: 1; pointer-events: auto; }
+html:is([data-tour-step="save"], [data-tour-step="panel"]) .p9p.touring .p9p-panel { transform: none; opacity: 1; pointer-events: auto; }
 /* phone: squares big enough to hit with a thumb, 9 to a row (about 30px each) */
 .p9.p9p .p9p-card .dx-board-cells { grid-template-columns: repeat(9, minmax(0, 1fr)); gap: 6px; }
 .p9.p9p .p9p-card .dx-cell { border-radius: 6px; }

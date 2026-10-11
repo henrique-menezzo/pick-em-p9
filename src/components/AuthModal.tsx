@@ -61,9 +61,12 @@ export default function AuthModal() {
           key="back"
           ref={back}
           className="auth-back"
-          {...backIn}
+          // the dim fades on a layer of its own: fading this whole layer made the sheet see-through
+          // while it rose, so it read as a fade in place instead of a sheet coming up
+          exit={{ opacity: 0.999, transition: { duration: 0.32 } }}
           onPointerDown={(e) => { if (e.target === e.currentTarget) close(); }}
         >
+          <motion.div className="auth-dim" {...backIn} onPointerDown={close} />
           <motion.div
             className="auth"
             role="dialog"

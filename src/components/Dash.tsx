@@ -5,7 +5,7 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'motion/react';
-import { backIn, dialogIn } from '../lib/motion';
+import { backIn, dialogIn, popIn } from '../lib/motion';
 import { ALL, BY_ID, RACES, RESULTS, TAB_LABEL, TABS, type Race, type Tab } from '../data/races';
 import { catSaved, liveScore, useStore } from '../lib/store';
 import { useCountdown } from './LockLine';
@@ -681,7 +681,7 @@ function Board8({ head = 'none', row = 'frac', done = 'check', dot, title = true
   const wave = useAutoWave();
   return (
     <section className={'dx-board p8-board row-' + row + (dot ? ' dots' : '') + (wave ? ' wave' : '')} aria-label="Every race">
-      {pop.at && <CellPop {...pop.at} onEnter={pop.stay} onLeave={pop.leave} />}
+      <AnimatePresence>{pop.at && <CellPop key="pop" {...pop.at} onEnter={pop.stay} onLeave={pop.leave} onClose={pop.close} />}</AnimatePresence>
       {title && head === 'none' && <h2 className="dx-h">Every race</h2>}
       <BoardHead head={head} />
       {parts.map((p) => {
@@ -716,7 +716,10 @@ function Board8({ head = 'none', row = 'frac', done = 'check', dot, title = true
                 return <button key={r.id} className={'dx-cell ' + c + (!live && pk && auto[r.id] ? ' af' : '') + (r.id === cur ? ' cur' : '') + (pop.at?.id === r.id ? ' pop' : '')}
                   aria-label={`${TAB_LABEL[k]}, ${r.stateName}, ${pk ? (pk === 'R' ? 'Republican' : 'Democrat') : 'open'}`}
                   style={{ ['--i' as string]: i }}
-                  onClick={() => { if (live) { setTab(k); select(r.id); } else tap(r.id); }}
+                  onPointerDown={(e) => { pop.kind.current = e.pointerType; }}
+                  // a mouse picks with a click (the card opens on hover); a finger has no hover, so a
+                  // tap opens the card with both candidates instead of picking blind
+                  onClick={(e) => { if (live) { setTab(k); select(r.id); } else if (pop.kind.current !== 'mouse') { if (pop.at?.id === r.id) pop.close(); else { select(r.id); pop.open(r.id, e.currentTarget, true); } } else tap(r.id); }}
                   onPointerEnter={(e) => { if (e.pointerType !== 'mouse') return; pop.open(r.id, e.currentTarget); }}
                   onPointerLeave={(e) => { if (e.pointerType !== 'mouse') return; pop.leave(); }}>
                   {!live && pk && (auto[r.id]
@@ -738,25 +741,36 @@ function Board8({ head = 'none', row = 'frac', done = 'check', dot, title = true
 /** Hovering a square: which square, and where it sits on screen. It stays open while the pointer
  *  crosses the gap into the card, so the card can be used. */
 function useCellPop() {
-  const [at, setAt] = useState<{ id: string; x: number; top: number; bottom: number } | null>(null);
+  const [at, setAt] = useState<{ id: string; x: number; top: number; bottom: number; touch?: boolean } | null>(null);
   const timer = useRef(0);
-  const open = (id: string, el: HTMLElement) => {
+  const kind = useRef('mouse'); // what the last press on a square was made with
+  const open = (id: string, el: HTMLElement, touch = false) => {
     clearTimeout(timer.current);
     const b = el.getBoundingClientRect();
-    setAt({ id, x: b.left + b.width / 2, top: b.top, bottom: b.bottom });
+    setAt({ id, x: b.left + b.width / 2, top: b.top, bottom: b.bottom, touch });
   };
-  const leave = () => { clearTimeout(timer.current); timer.current = window.setTimeout(() => setAt(null), 180); };
+  // a card opened by a tap stays until the next tap elsewhere; one opened by hover goes with the pointer
+  const leave = () => { if (at?.touch) return; clearTimeout(timer.current); timer.current = window.setTimeout(() => setAt(null), 180); };
   const stay = () => clearTimeout(timer.current);
+  const close = () => { clearTimeout(timer.current); setAt(null); };
   useEffect(() => () => clearTimeout(timer.current), []);
-  return { at, open, leave, stay };
+  return { at, open, leave, stay, close, kind };
 }
 
 /** The race behind a square, small: the state, and both candidates to pick from right there. Drawn
  *  on the page, not inside the board, so the board's scroll can never cut it. */
-function CellPop({ id, x, top, bottom, onEnter, onLeave }: { id: string; x: number; top: number; bottom: number; onEnter: () => void; onLeave: () => void }) {
+function CellPop({ id, x, top, bottom, touch, onEnter, onLeave, onClose }: { id: string; x: number; top: number; bottom: number; touch?: boolean; onEnter: () => void; onLeave: () => void; onClose: () => void }) {
   const race = BY_ID[id];
   const select = useStore((s) => s.select);
   const ref = useRef<HTMLDivElement>(null);
+  // opened by a tap: a tap anywhere else closes it (another square opens its own), and so does a pick,
+  // a beat after it, so the colour change is seen
+  useEffect(() => {
+    if (!touch) return;
+    const away = (e: PointerEvent) => { const t = e.target as HTMLElement; if (!ref.current?.contains(t) && !t.closest?.('.dx-cell')) onClose(); };
+    document.addEventListener('pointerdown', away, true);
+    return () => document.removeEventListener('pointerdown', away, true);
+  }, [touch, onClose]);
   const [pos, setPos] = useState<{ left: number; top: number } | null>(null);
   useLayoutEffect(() => {
     const el = ref.current;
@@ -769,12 +783,14 @@ function CellPop({ id, x, top, bottom, onEnter, onLeave }: { id: string; x: numb
     });
   }, [id, x, top, bottom]);
   return createPortal(
-    <div ref={ref} className="sq-pop" role="group" aria-label={`${race.stateName}, ${TAB_LABEL[race.type]}`}
+    <motion.div ref={ref} className="sq-pop" role="group" aria-label={`${race.stateName}, ${TAB_LABEL[race.type]}`}
       style={pos ? { left: pos.left, top: pos.top } : { left: 0, top: 0, visibility: 'hidden' }}
-      onPointerEnter={onEnter} onPointerLeave={onLeave} onClickCapture={() => select(id)}>
+      {...popIn}
+      onPointerEnter={onEnter} onPointerLeave={onLeave}
+      onClickCapture={(e) => { select(id); if (touch && (e.target as HTMLElement).closest('.cand')) setTimeout(onClose, 420); }}>
       <div className="sq-pop-h"><Flag st={race.state} sm /><b>{race.stateName}</b><small>{TAB_LABEL[race.type]}</small></div>
       <div className="sq-pop-c"><CandidateRow race={race} side="R" /><CandidateRow race={race} side="D" /></div>
-    </div>,
+    </motion.div>,
     document.body,
   );
 }

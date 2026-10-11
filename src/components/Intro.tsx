@@ -9,6 +9,7 @@ import { useEffect, useLayoutEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { motion } from 'motion/react';
 import { REST, intro } from './Brand';
+import { useStore } from '../lib/store';
 
 /** The branding team's row, measured off their frame: diameters as a share of the biggest, and the
     colour each one carries. They touch, so the row's length is just the sum of them. */
@@ -107,6 +108,9 @@ export default function Intro({ onDone }: { onDone: () => void }) {
     window.addEventListener('touchmove', hold, { passive: false });
     window.addEventListener('scroll', top);
     const release = () => { window.removeEventListener('wheel', hold); window.removeEventListener('touchmove', hold); window.removeEventListener('scroll', top); };
+    // skipped (?intro=0, a tour link): the opening is only on its way out, so it lets go of the page now
+    let flying = false;
+    const unsub = useStore.subscribe((st) => { if (st.phase !== 'intro' && !flying) release(); });
 
     // lay the row out once: touching capsules, centred
     let x = 0;
@@ -120,7 +124,7 @@ export default function Intro({ onDone }: { onDone: () => void }) {
     // there and back on a sine, so a bar leaves as gently as it arrives
     const swell = (p: number) => (p <= 0 || p >= 1 ? 0 : Math.sin(p * Math.PI) ** 2);
 
-    let raf = 0, flying = false;
+    let raf = 0;
     const t0 = performance.now();
     const frame = (now: number) => {
       const t = now - t0;
@@ -235,7 +239,7 @@ export default function Intro({ onDone }: { onDone: () => void }) {
       finish.current();
     }, INTRO_MS);
 
-    return () => { cancelAnimationFrame(raf); clearTimeout(done); release(); document.documentElement.classList.remove('fly'); };
+    return () => { cancelAnimationFrame(raf); clearTimeout(done); release(); unsub(); document.documentElement.classList.remove('fly'); };
   }, []);
 
   // on the body, not inside the page: the page waits at opacity 0 under it, and would take it along
