@@ -128,6 +128,20 @@ export function liveLine(race: Race, t: number, pick?: Side) {
 }
 
 /** True for a moment after Autofill fills, swaps or clears, long enough for its sweep to cross. */
+/** True for `ms` after `v` changes (never on the first render): long enough for a sweep to run. */
+export function useChangeFlag<T>(v: T, ms = 900) {
+  const last = useRef(v);
+  const [on, setOn] = useState(false);
+  useEffect(() => {
+    if (v === last.current) return;
+    last.current = v;
+    setOn(true);
+    const h = setTimeout(() => setOn(false), ms);
+    return () => clearTimeout(h);
+  }, [v, ms]);
+  return on;
+}
+
 export function useAutoWave(ms = 1500) {
   const run = useStore((s) => s.autoRun);
   const first = useRef(run);

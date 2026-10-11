@@ -5,6 +5,7 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'motion/react';
+import { backIn, dialogIn } from '../lib/motion';
 import { ALL, BY_ID, RACES, RESULTS, TAB_LABEL, TABS, type Race, type Tab } from '../data/races';
 import { catSaved, liveScore, useStore } from '../lib/store';
 import { useCountdown } from './LockLine';
@@ -597,8 +598,32 @@ type Head = 'none' | 'big' | 'ring' | 'stats' | 'seg';
 type RowNum = 'frac' | 'pct' | 'bar' | 'col';
 type BO = { head?: Head; row?: RowNum; done?: 'check' | 'collapse'; dot?: boolean; title?: boolean };
 
+/** A number that counts its way to a new value (ease-out, 450ms) instead of jumping to it. */
+function useTween(v: number, ms = 450) {
+  const [x, setX] = useState(v);
+  const from = useRef(v);
+  useEffect(() => {
+    const a = from.current;
+    if (a === v) return;
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) { from.current = v; setX(v); return; }
+    const t0 = performance.now();
+    let raf = 0;
+    const step = (now: number) => {
+      const p = Math.min(1, (now - t0) / ms);
+      const val = a + (v - a) * (1 - (1 - p) ** 3);
+      from.current = val;
+      setX(val);
+      if (p < 1) raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [v, ms]);
+  return x;
+}
+
 function Pct({ v, n, cls = '' }: { v: number; n: number; cls?: string }) {
-  return <span className={'p8-pct num ' + cls}>{pct(v, n)}<small>%</small></span>;
+  const shown = useTween(pct(v, n));
+  return <span className={'p8-pct num ' + cls}>{Math.round(shown)}<small>%</small></span>;
 }
 
 /** The whole map in one number, over the board. */
@@ -1106,12 +1131,10 @@ function PartDone() {
   return createPortal(
     <AnimatePresence>
       {open && (
-        <motion.div key="pd" className="pd-back" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}
+        <motion.div key="pd" className="pd-back" {...backIn}
           onPointerDown={(e) => { if (e.target === e.currentTarget) close(); }}>
           <motion.div className="pd" role="dialog" aria-modal="true" aria-labelledby="pd-title" aria-describedby="pd-text"
-            initial={{ opacity: 0, y: 16, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 10, scale: 0.98, transition: { duration: 0.15 } }}
-            transition={{ type: 'spring', stiffness: 380, damping: 32 }}>
+            {...dialogIn}>
             <button className="pd-x" aria-label="Close" onClick={close}><Icon name="x" size={18} stroke={1.9} /></button>
             <span className="pd-badge" aria-hidden><Icon name="check" size={20} stroke={2.8} /></span>
             <h2 id="pd-title">{next ? `${TAB_LABEL[open]} complete` : 'Every race is picked'}</h2>

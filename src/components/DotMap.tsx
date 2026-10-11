@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from 'motion/react';
 import us from '../data/usmap-hub.json';
 import { BY_ID, RESULTS, STATES, TAB_LABEL, raceIn, statusAt, type Side } from '../data/races';
 import { AUTO_NAME, useStore } from '../lib/store';
-import { Icon, PARTY, facePhoto, useAutoWave } from './ui';
+import { Icon, PARTY, facePhoto, useAutoWave, useChangeFlag } from './ui';
 
 // ---- geometry ------------------------------------------------------------------------------------
 // The map is the Election Hub's (us-atlas, 975 by 610): one path per state, labels at the centre of
@@ -122,6 +122,8 @@ export default function DotMap({ fit }: { fit?: boolean }) {
 
   const svgRef = useRef<SVGSVGElement>(null);
   const wave = useAutoWave();
+  // switching parts repaints the country in a quick sweep from west to east instead of all at once
+  const sweep = useChangeFlag(tab, 900);
   const vb = FULL;
   const [hov, setHov] = useState<{ st: string; x: number; y: number } | null>(null);
 
@@ -256,7 +258,7 @@ export default function DotMap({ fit }: { fit?: boolean }) {
       <div className={'mapbox' + (fit ? ' fit' : '') + (phase === 'enter' ? ' entering' : '')}>
         <svg
           ref={svgRef}
-          className={'map' + (live ? ' live' : '') + (HOVER ? ' hv-' + HOVER : '') + (tourLock !== null ? ' lit' : '') + (wave ? ' wave' : '')}
+          className={'map' + (live ? ' live' : '') + (HOVER ? ' hv-' + HOVER : '') + (tourLock !== null ? ' lit' : '') + (wave ? ' wave' : '') + (sweep ? ' sweep' : '')}
           viewBox={fit ? FIT_VB : FRAME_VB}
           onPointerMove={onMove}
           onPointerLeave={onLeave}

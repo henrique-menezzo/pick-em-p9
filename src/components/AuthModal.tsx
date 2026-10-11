@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Wordmark } from './Nav';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'motion/react';
+import { backIn, dialogIn, sheetIn } from '../lib/motion';
 import { useStore } from '../lib/store';
 import { Icon, asset } from './ui';
 
@@ -60,10 +61,7 @@ export default function AuthModal() {
           key="back"
           ref={back}
           className="auth-back"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.2 }}
+          {...backIn}
           onPointerDown={(e) => { if (e.target === e.currentTarget) close(); }}
         >
           <motion.div
@@ -71,10 +69,7 @@ export default function AuthModal() {
             role="dialog"
             aria-modal="true"
             aria-labelledby="auth-title"
-            initial={sheet ? { y: '100%' } : { opacity: 0, y: 16, scale: 0.98 }}
-            animate={sheet ? { y: 0 } : { opacity: 1, y: 0, scale: 1 }}
-            exit={sheet ? { y: '100%', transition: { duration: 0.22, ease: [0.4, 0, 1, 1] } } : { opacity: 0, y: 10, scale: 0.98, transition: { duration: 0.15 } }}
-            transition={sheet ? { type: 'spring', stiffness: 320, damping: 34 } : { type: 'spring', stiffness: 380, damping: 32 }}
+            {...(sheet ? sheetIn : dialogIn)}
           >
             <button className="auth-x" aria-label="Close" onClick={close}><Icon name="x" size={20} stroke={1.8} /></button>
             <AuthForm key={auth.mode} auth={auth} />

@@ -5,6 +5,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'motion/react';
+import { backIn, dialogIn } from '../lib/motion';
 import us from '../data/usmap-hub.json';
 import logoRaw from '../data/logo.svg?raw';
 import f400 from '@fontsource/libre-franklin/files/libre-franklin-latin-400-normal.woff2?url';
@@ -203,12 +204,10 @@ function ShareModal({ tab, onClose }: { tab: Tab | null; onClose: () => void }) 
   return createPortal(
     <AnimatePresence>
       {tab && (
-        <motion.div key="sh" className="pd-back" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}
+        <motion.div key="sh" className="pd-back" {...backIn}
           onPointerDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
           <motion.div className="pd sh" role="dialog" aria-modal="true" aria-labelledby="sh-title"
-            initial={{ opacity: 0, y: 16, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 10, scale: 0.98, transition: { duration: 0.15 } }}
-            transition={{ type: 'spring', stiffness: 380, damping: 32 }}>
+            {...dialogIn}>
             <button className="pd-x" aria-label="Close" onClick={onClose}><Icon name="x" size={18} stroke={1.9} /></button>
             <h2 id="sh-title">Share your {NOUN[tab]} map</h2>
             <p>Your calls so far, right and missed, ready to post.</p>

@@ -4,6 +4,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'motion/react';
+import { EASE_IN, EASE_OUT } from '../lib/motion';
 import { ALL } from '../data/races';
 import { useStore } from '../lib/store';
 import { MAP_SHAPES, stateShapeOnScreen } from './DotMap';
@@ -141,7 +142,8 @@ export default function Onboarding({ ready = true }: { ready?: boolean }) {
   // an empty map meant it never ran. Only a finished (or skipped) tour, or election night, stops it.
   useEffect(() => {
     if (!ready || tourDone || step !== null || live) return;
-    const h = setTimeout(() => useStore.getState().setTour(0), 420);
+    // a beat after the page has come in, so the opening is seen before anything is asked of the reader
+    const h = setTimeout(() => useStore.getState().setTour(0), 600);
     return () => clearTimeout(h);
   }, [ready, tourDone, step, live]);
 
@@ -292,12 +294,14 @@ export default function Onboarding({ ready = true }: { ready?: boolean }) {
   // on a phone the light sits close to the coastline: less to draw, and less of a halo on a small map
   const air = phone ? 4 : MAP_AIR;
   const at = spot ? (phone ? dockPhone(spot, size) : place(anchor ?? spot, size, s?.align, s?.dock)) : null;
-  const spring = { type: 'spring' as const, stiffness: 260, damping: 32, mass: 0.9 };
+  // the light and the card travel on a slow, critically damped spring: they glide to the next thing
+  const spring = { type: 'spring' as const, stiffness: 200, damping: 28, mass: 1 };
+  const soft = { opacity: { duration: 0.34, ease: EASE_OUT }, filter: { duration: 0.4, ease: EASE_OUT } };
 
   return createPortal(
     <AnimatePresence>
       {s && spot && (
-        <motion.div className={'tour' + (phone ? ' phone' : '')} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={phone ? { opacity: 0, transition: { duration: 0 } } : { opacity: 0 }} transition={{ duration: phone ? 0.16 : 0.22 }}>
+        <motion.div className={'tour' + (phone ? ' phone' : '')} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, transition: { duration: 0.26, ease: EASE_IN } }} transition={{ duration: 0.42, ease: EASE_OUT }}>
           {/* one spotlight for the whole tour: it opens onto the map and then travels and resizes
               from step to step, instead of blinking out and back in. The dim is its own shadow, so
               there is nothing to keep in sync and nothing to clip per frame. */}
@@ -383,16 +387,24 @@ export default function Onboarding({ ready = true }: { ready?: boolean }) {
           <motion.div
             ref={card}
             className="tour-card"
-            initial={{ left: at?.left, top: at?.top, opacity: 0, scale: 0.96 }}
-            animate={{ left: at?.left, top: at?.top, opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.97, transition: { duration: 0.18 } }}
-            transition={spring}
+            // on a phone the card is a sheet, so it rises from the bottom edge; on the desktop it
+            // arrives on the spot out of a blur
+            initial={phone ? { left: at?.left, top: at?.top, opacity: 0, y: 72 } : { left: at?.left, top: at?.top, opacity: 0, y: 12, scale: 0.96, filter: 'blur(8px)' }}
+            animate={phone ? { left: at?.left, top: at?.top, opacity: 1, y: 0 } : { left: at?.left, top: at?.top, opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
+            exit={phone ? { opacity: 0, y: 56, transition: { duration: 0.24, ease: EASE_IN } } : { opacity: 0, y: 8, scale: 0.97, filter: 'blur(4px)', transition: { duration: 0.2, ease: EASE_IN } }}
+            transition={{ ...spring, ...soft }}
           >
-            {/* the words change on the spot: the card is already travelling, and fading them out
-                and back in left it empty for a beat */}
-            <div className="tour-step">Step {(step ?? 0) + 1} of {STEPS.length}</div>
-            <h3>{s.title}</h3>
-            <p>{s.body}</p>
+            {/* the words cross over from step to step out of a light blur, while the card travels */}
+            <AnimatePresence mode="popLayout" initial={false}>
+              <motion.div key={step} className="tour-words"
+                initial={{ opacity: 0, filter: 'blur(6px)' }} animate={{ opacity: 1, filter: 'blur(0px)' }}
+                exit={{ opacity: 0, filter: 'blur(4px)', transition: { duration: 0.12, ease: EASE_IN } }}
+                transition={{ duration: 0.34, ease: EASE_OUT }}>
+                <div className="tour-step">Step {(step ?? 0) + 1} of {STEPS.length}</div>
+                <h3>{s.title}</h3>
+                <p>{s.body}</p>
+              </motion.div>
+            </AnimatePresence>
             {/* doing it moves you on, but Next is always there for anyone who just wants to read */}
             {s.ask && (
               <div className={'tour-ask' + (ok ? ' ok' : '')}>

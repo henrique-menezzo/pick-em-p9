@@ -1,10 +1,10 @@
 // The opening. A row of capsules — circles at rest — with a wave running through them, the way the
 // reference loop behaves: each one stretches into a bar as the wave passes and settles back into a
-// circle. Painted on a canvas so the caps stay perfectly round at any height, and so the whole
-// thing costs one draw call per frame.
-// P10: the brand's line surfaces under the row word by word, out of a blur. When the opening ends the
-// line dissolves where it is, and each capsule of the row flies to a capsule of the wave on the page,
-// taking its size and colour, while the page comes in around it.
+// circle, while the brand's line surfaces under the row word by word, out of a blur. Painted on a
+// canvas so the caps stay perfectly round at any height.
+// When it ends, the row calms down, the line dissolves where it is, and the row flies into the page:
+// each capsule on a gentle arc, one after another, leaving a short trail, taking the size and colour
+// of the capsule of the page's wave it lands on. The page only comes in around it once it has landed.
 import { useEffect, useLayoutEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { motion } from 'motion/react';
@@ -23,14 +23,19 @@ const UNIT = 150;                                   // the biggest circle is 150
 const W = WAVE.reduce((s, d) => s + d.r * UNIT, 0); // the row at its natural size
 const H = UNIT * 3.6;                               // headroom for the tallest bar
 
+// the loading, in ms (as it was)
 const FADE = 300;   // each capsule fades in
 const RISE = 520;   // the wave takes this long to pass through one of them
 const STEP = 30;    // and this long to move to the next
 const AGAIN = 1100; // and comes round again this often while the line is read
 export const INTRO_MS = 1750;
 const CALM = 360;   // before it leaves, the row's swell dies down, so it sets off from rest
-const FLY = 1300;   // the hand-over to the page
-const SPREAD = 240; // the capsules leave one after another, left to right, like the wave itself
+// the hand-over
+const FLY = 1000;      // from the middle of the screen into the page
+const SPREAD = 220;    // the capsules leave one after another, left to right, like the wave itself
+const ARC = 0.16;      // each path bows by this share of its length
+const TRAIL: [number, number][] = [[18, 0.16], [36, 0.08], [54, 0.04]]; // ghosts: how far behind, how strong
+
 /** A CSS cubic-bezier as a function: x (time) to y (progress). */
 const bezier = (x1: number, y1: number, x2: number, y2: number) => (x: number) => {
   let t = x;
@@ -44,11 +49,12 @@ const bezier = (x1: number, y1: number, x2: number, y2: number) => (x: number) =
 };
 // a slow lift-off and a long, soft landing
 const EASE = bezier(0.5, 0, 0.1, 1);
+const clamp = (x: number) => Math.min(1, Math.max(0, x));
 
 type Cap = { cx: number; cy: number; w: number; h: number; c: string };
-/** The line, word by word: each one surfaces out of a blur a beat after the one before. */
+/** The line, word by word: [word, in bold]. */
 const WORDS: [string, boolean][] = [...'The nation speaks.'.split(' ').map((w): [string, boolean] => [w, true]), ...'Can you predict their voices?'.split(' ').map((w): [string, boolean] => [w, false])];
-const rgb = (c: string) => [1, 3, 5].map((i) => parseInt(c.slice(i, i + 2), 16));
+const rgb = (c: string) => (c.startsWith('rgb') ? c.slice(4, -1).split(',').map(Number) : [1, 3, 5].map((i) => parseInt(c.slice(i, i + 2), 16)));
 const mix = (a: string, b: string, t: number) => { const A = rgb(a), B = rgb(b); return `rgb(${A.map((v, i) => Math.round(v + (B[i] - v) * t)).join(',')})`; };
 const seen = (r: DOMRect) => r.width > 2 && r.height > 2 && r.bottom > 0 && r.top < innerHeight && r.right > 0 && r.left < innerWidth;
 
@@ -91,6 +97,12 @@ export default function Intro({ onDone }: { onDone: () => void }) {
     const mid = (WAVE.length - 1) / 2;
     const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+    // the page stays at its top while the opening is up: it is about to land on the hero
+    const hold = (e: Event) => e.preventDefault();
+    window.addEventListener('wheel', hold, { passive: false });
+    window.addEventListener('touchmove', hold, { passive: false });
+    const release = () => { window.removeEventListener('wheel', hold); window.removeEventListener('touchmove', hold); };
+
     // lay the row out once: touching capsules, centred
     let x = 0;
     const bars = WAVE.map((d, i) => {
@@ -109,11 +121,11 @@ export default function Intro({ onDone }: { onDone: () => void }) {
       const t = now - t0;
       g.clearRect(0, 0, el.width, el.height);
       for (const b of bars) {
-        const a = still ? 1 : Math.min(1, Math.max(0, (t - b.in) / FADE));
+        const a = still ? 1 : clamp((t - b.in) / FADE);
         if (a <= 0) continue;
         const since = t - b.up;
         // how much of the swell is left: all of it, until the row calms down before it leaves
-        const calm = 1 - EASE(Math.min(1, Math.max(0, (t - (INTRO_MS - CALM)) / CALM)));
+        const calm = 1 - EASE(clamp((t - (INTRO_MS - CALM)) / CALM));
         b.h = still ? b.w : b.w * (1 + (b.amp - 1) * calm * swell(since < 0 ? 0 : (since % AGAIN) / RISE));
         g.globalAlpha = a;
         g.fillStyle = b.c;
@@ -127,11 +139,14 @@ export default function Intro({ onDone }: { onDone: () => void }) {
 
     // the hand-over
     const done = setTimeout(() => {
+      // the page is put back at its top before the row looks for where to land
+      window.scrollTo(0, 0);
       const to = landing();
       const lineEl = line.current, sky = air.current, box = root.current;
       if (still || !to.length || !sky || !box) {
-        // nothing to land on (the options without a hero) or reduced motion: the opening just fades
-        box?.animate([{ opacity: 1, transform: 'none' }, { opacity: 0, transform: still ? 'none' : 'scale(1.04)' }], { duration: 280, easing: 'cubic-bezier(.4,0,.2,1)', fill: 'forwards' });
+        // nothing to land on, or reduced motion: the opening just fades
+        box?.animate([{ opacity: 1, transform: 'none' }, { opacity: 0, transform: still ? 'none' : 'scale(1.04)' }], { duration: 320, easing: 'cubic-bezier(.4,0,.2,1)', fill: 'forwards' });
+        release();
         finish.current();
         return;
       }
@@ -143,8 +158,20 @@ export default function Intro({ onDone }: { onDone: () => void }) {
       // each landing spot takes the opening's capsule at the same place along the row; capsules
       // nobody takes shrink away where they are
       const used = new Set<number>();
-      const pairs = to.map((b, j) => { const i = Math.round((j * (from.length - 1)) / Math.max(1, to.length - 1)); used.add(i); return { a: from[i], b, d: (j / Math.max(1, to.length - 1)) * SPREAD }; });
-      from.forEach((a, i) => { if (!used.has(i)) pairs.push({ a, b: { ...a, w: 0, h: 0 }, d: 0 }); });
+      const T = to.length;
+      const pairs = to.map((b, j) => {
+        const i = Math.round((j * (from.length - 1)) / Math.max(1, T - 1));
+        used.add(i);
+        const a = from[i];
+        // the arc: bowed off the straight line, a little more for the later ones; when the trip is
+        // mostly up (a phone), the left half bows left and the right half right, like a fountain
+        const dx = b.cx - a.cx, dy = b.cy - a.cy, len = Math.hypot(dx, dy) || 1;
+        let nx = dy / len, ny = -dx / len;
+        if (Math.abs(dx) < Math.abs(dy) * 0.5 && j > (T - 1) / 2) { nx = -nx; ny = -ny; }
+        const bow = ARC * len * (0.85 + (0.3 * j) / Math.max(1, T - 1));
+        return { a, b, d: (j / Math.max(1, T - 1)) * SPREAD, ctl: { x: (a.cx + b.cx) / 2 + nx * bow, y: (a.cy + b.cy) / 2 + ny * bow } };
+      });
+      from.forEach((a, i) => { if (!used.has(i)) pairs.push({ a, b: { ...a, w: 0, h: 0 }, d: 0, ctl: { x: a.cx, y: a.cy } }); });
 
       const dpr2 = Math.min(2, window.devicePixelRatio || 1);
       sky.width = innerWidth * dpr2;
@@ -153,34 +180,57 @@ export default function Intro({ onDone }: { onDone: () => void }) {
       q.scale(dpr2, dpr2);
       el.style.opacity = '0';
       document.documentElement.classList.add('fly');
+      // the page's wave stays at rest until the row has landed in it, then a ripple runs through it
       intro.hold = performance.now() + FLY;
       box.classList.add('leaving');
 
       // the line stays where it is and dissolves back into the blur it came out of
-      lineEl?.animate([{ opacity: 1, filter: 'blur(0px)' }, { opacity: 0, filter: 'blur(10px)' }], { duration: 380, easing: 'cubic-bezier(.4,0,1,1)', fill: 'forwards' });
+      lineEl?.animate([{ opacity: 1, filter: 'blur(0px)', transform: 'scale(1)' }, { opacity: 0, filter: 'blur(10px)', transform: 'scale(.98)' }], { duration: 420, easing: 'cubic-bezier(.4,0,1,1)', fill: 'forwards' });
 
+      // one capsule at progress e: along its arc, its size and colour on their way to the landing's
+      const at = (pr: (typeof pairs)[number], e: number) => {
+        const u = 1 - e;
+        return {
+          x: u * u * pr.a.cx + 2 * u * e * pr.ctl.x + e * e * pr.b.cx,
+          y: u * u * pr.a.cy + 2 * u * e * pr.ctl.y + e * e * pr.b.cy,
+          w: pr.a.w + (pr.b.w - pr.a.w) * e,
+          h: pr.a.h + (pr.b.h - pr.a.h) * e,
+        };
+      };
+      const paint = (x: number, y: number, w: number, h: number) => {
+        if (w < 0.5 || h < 0.5) return;
+        q.beginPath();
+        q.roundRect(x - w / 2, y - h / 2, w, h, Math.min(w, h) / 2);
+        q.fill();
+      };
       const s0 = performance.now();
       const fly = (now: number) => {
         const t = now - s0;
         q.clearRect(0, 0, innerWidth, innerHeight);
-        for (const { a, b, d } of pairs) {
-          const e = EASE(Math.min(1, Math.max(0, (t - d) / (FLY - SPREAD))));
-          const w = a.w + (b.w - a.w) * e, h = a.h + (b.h - a.h) * e;
-          if (w < 0.5 || h < 0.5) continue;
-          const cx = a.cx + (b.cx - a.cx) * e, cy2 = a.cy + (b.cy - a.cy) * e;
-          q.fillStyle = mix(a.c, b.c, e);
-          q.beginPath();
-          q.roundRect(cx - w / 2, cy2 - h / 2, w, h, Math.min(w, h) / 2);
-          q.fill();
+        for (const pr of pairs) {
+          const prog = (lag: number) => EASE(clamp((t - lag - pr.d) / (FLY - SPREAD)));
+          const e = prog(0);
+          q.fillStyle = mix(pr.a.c, pr.b.c, e);
+          // the trail first, under the capsule: where it was a moment ago, fainter the further back
+          for (const [lag, k2] of TRAIL) {
+            const e2 = prog(lag);
+            if (e - e2 < 0.004) continue;
+            const c = at(pr, e2);
+            q.globalAlpha = k2;
+            paint(c.x, c.y, c.w, c.h);
+          }
+          q.globalAlpha = 1;
+          const c = at(pr, e);
+          paint(c.x, c.y, c.w, c.h);
         }
         if (t < FLY) requestAnimationFrame(fly);
-        else { document.documentElement.classList.remove('fly'); sky.style.opacity = '0'; }
+        else { document.documentElement.classList.remove('fly'); sky.style.opacity = '0'; release(); }
       };
       requestAnimationFrame(fly);
       finish.current();
     }, INTRO_MS);
 
-    return () => { cancelAnimationFrame(raf); clearTimeout(done); document.documentElement.classList.remove('fly'); };
+    return () => { cancelAnimationFrame(raf); clearTimeout(done); release(); document.documentElement.classList.remove('fly'); };
   }, []);
 
   // on the body, not inside the page: the page waits at opacity 0 under it, and would take it along

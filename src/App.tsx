@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'motion/react';
+import { popIn } from './lib/motion';
 import { ALL, RESULTS, TAB_LABEL, TABS, T_MAX, clock, statusAt } from './data/races';
 import { AUTO_NAME, CONTINUING, LOCK_AT, isLocked, liveScore, useStore, type AutoSource } from './lib/store';
 import DotMap from './components/DotMap';
@@ -39,6 +40,10 @@ const LEGACY = Q.has('legacy');
 if (Q.get('layout')) useStore.getState().setLayout(Math.min(VERSIONS.length, Math.max(1, Number(Q.get('layout')) || 1)));
 const OLD_PHONE = Q.get('mobile') === 'old';
 const SKIP_INTRO = Q.get('intro') === '0' || Q.has('tour') || Q.has('board');
+// a reload starts at the top, always: the opening flies its wave into the hero, and a page the
+// browser had put back halfway down left it nothing to land on, so it all just appeared
+if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+window.scrollTo(0, 0);
 // A usability build fixes everything the session is not testing: one map, dark, and one half of
 // the game. The floating switches go with it — a participant should not be able to find the other
 // half of the prototype, or even see that it is there.
@@ -111,7 +116,7 @@ export default function App() {
   useEffect(() => { if (SKIP_INTRO) setPhase('live'); }, [setPhase]);
   useEffect(() => {
     if (phase !== 'enter') return;
-    const h = setTimeout(() => setPhase('live'), 2400); // long enough for the page's entrance to finish
+    const h = setTimeout(() => setPhase('live'), 1700); // the wave lands and the page comes in around it (brand.css)
     return () => clearTimeout(h);
   }, [phase, setPhase]);
   if (V.mobile || isPhone) return (
@@ -568,7 +573,7 @@ export function AutofillButton() {
       </Tip>
       <AnimatePresence>
         {open && (
-          <motion.div className="autofill-menu" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 6 }} transition={{ duration: 0.15 }}>
+          <motion.div className="autofill-menu" {...popIn}>
             <p className="af-scope">
               {using
                 ? <>{filled.length} {TAB_LABEL[tab]} {filled.length === 1 ? 'race is' : 'races are'} filled from {AUTO_NAME[using]}. Pick the other source to swap them. Your own picks always stay.</>

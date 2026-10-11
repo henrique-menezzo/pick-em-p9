@@ -51,13 +51,18 @@ export function Wave({ className = '', period = 4200, anchor = 0.5 }: { classNam
     const mid = el.height / 2;
     REST.set(el, { bars, vertical: false, mid });
     const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
-    // amp: how much of the swell shows, 0 while the opening still holds the waves at rest
-    const draw = (t: number, amp: number) => {
+    const hmax = Math.max(...bars.map((b) => b.h));
+    // amp: how much of the swell shows, 0 while the opening still holds the waves at rest.
+    // since: how long ago the opening's row landed here; for a moment after, one ripple runs through
+    // the wave from left to right, the landing felt, before the slow swell takes over
+    const draw = (t: number, amp: number, since = -1) => {
       g.clearRect(0, 0, el.width, el.height);
       for (const b of bars) {
         const ph = amp * Math.sin(2 * Math.PI * (t / period - b.f));
-        const w = b.round ? b.w * (1 + 0.06 * ph) : b.w;
-        const h = b.round ? b.h * (1 + 0.06 * ph) : Math.max(w, b.h * (1 + 0.16 * ph));
+        // (the short capsules jump the most; the tallest stays inside the room its box keeps for it)
+        const rip = since >= 0 && since < 1600 ? 0.42 * (1 - 0.65 * (b.h / hmax)) * Math.exp(-(((since - 60 - b.f * 560) / 130) ** 2)) : 0;
+        const w = b.round ? b.w * (1 + 0.06 * ph + 0.35 * rip) : b.w;
+        const h = b.round ? b.h * (1 + 0.06 * ph + 0.35 * rip) : Math.max(w, b.h * (1 + 0.16 * ph + rip));
         const r = Math.min(w, h) / 2;
         g.fillStyle = b.c;
         g.beginPath();
@@ -68,7 +73,7 @@ export function Wave({ className = '', period = 4200, anchor = 0.5 }: { classNam
     if (still) { draw(0, 0); return; }
     let raf = 0;
     const t0 = performance.now();
-    const frame = (now: number) => { draw(now - t0, Math.min(1, Math.max(0, (now - intro.hold) / 900))); raf = requestAnimationFrame(frame); };
+    const frame = (now: number) => { draw(now - t0, Math.min(1, Math.max(0, (now - intro.hold - 500) / 1100)), intro.hold ? now - intro.hold : -1); raf = requestAnimationFrame(frame); };
     raf = requestAnimationFrame(frame);
     return () => cancelAnimationFrame(raf);
   }, [size, period, anchor]);

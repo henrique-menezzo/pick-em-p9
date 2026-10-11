@@ -38,30 +38,46 @@
 .p9p .hero .h-lock { margin-top: 4px; }
 .p9p .hero .sh-btn { height: 44px; padding: 0 18px; border-radius: 999px; background: var(--p9-pill); font-size: 14px; font-weight: 600; }
 
-/* the page coming in as the opening hands over its wave (Intro.tsx): everything comes out of a blur, in
-   turn. The nav first, then Presented by, the name word by word, the line word by word, the parts, the
-   card and the side's cards one after another. The hero itself never moves, so the spot the wave flies
-   to stays where it was measured. */
+/* the page coming in once the opening's wave has landed (Intro.tsx): the wave gets the empty page to
+   itself first, then everything comes out of a blur, in turn, measured from --land (the landing):
+   the nav, Presented by, the name word by word, the line word by word, the parts and the card; the
+   states light up from west to east, the side's cards one after another. The hero itself never moves,
+   so the spot the wave flies to stays where it was measured. App.tsx holds the tour until this ends. */
 @keyframes pe-blur { from { opacity: 0; filter: blur(12px); } to { opacity: 1; filter: blur(0); } }
 @keyframes pe-rise { from { opacity: 0; filter: blur(10px); transform: translateY(10px); } to { opacity: 1; filter: blur(0); transform: none; } }
+@keyframes pe-word { from { opacity: 0; filter: blur(10px); transform: translateY(.3em); } to { opacity: 1; filter: blur(0); transform: none; } }
+@keyframes pe-drop { from { opacity: 0; filter: blur(8px); transform: translateY(-8px); } to { opacity: 1; filter: blur(0); transform: none; } }
+@keyframes st-sweep { from { opacity: 0; transform: scale(.94); } to { opacity: 1; transform: none; } }
 .hero .hw { display: inline-block; }
 .p9p.pre { opacity: 0; }
 @media (prefers-reduced-motion: no-preference) {
-  .p9 { --pe: cubic-bezier(.2, .7, .2, 1); }
-  :is(.p6.enter > .nav, .p9p.enter .p9p-top) { animation: pe-rise .9s cubic-bezier(.2, .7, .2, 1) both; }
-  :is(.p6, .p9p).enter .hero .e-pres { animation: pe-blur .9s var(--pe) .15s both; }
-  :is(.p6, .p9p).enter .hero .h-title .hw { animation: pe-blur 1s var(--pe) calc(.25s + var(--i) * .08s) both; }
-  :is(.p6, .p9p).enter .hero .h-tag .hw { animation: pe-blur .9s var(--pe) calc(.5s + var(--i) * .045s) both; }
-  :is(.p6, .p9p).enter .hero .h-lock { animation: pe-blur .9s var(--pe) .8s both; }
-  .p6.enter .p9-tabs { animation: pe-rise .9s var(--pe) .45s both; }
-  .p6.enter .e-cards { animation: pe-rise 1s var(--pe) .55s both; }
-  .p6.enter .dx-side .dx-card { animation: pe-blur .9s var(--pe) .75s both; }
-  .p6.enter .dx-side .dx-card:nth-child(2) { animation-delay: .85s; }
-  .p6.enter .dx-side .dx-card:nth-child(3) { animation-delay: .95s; }
-  .p9p.enter .p9p-tabs { animation: pe-rise .9s var(--pe) .7s both; }
-  .p9p.enter .p9p-map, .p9p.enter .p9p-play > .legend, .p9p.enter .p9p-cards { animation: pe-rise 1s var(--pe) .8s both; }
-  /* the race panel comes up before the cards it covers, so nothing shows through it on the way in */
-  .p9p.enter .p9p-panel { animation: pe-rise .9s var(--pe) .45s both; }
+  .p9, .p6:has(.p9) { --pe: cubic-bezier(.2, .7, .2, 1); --land: .45s; }
+  :is(.p6.enter > .nav, .p9p.enter .p9p-top) { animation: pe-drop .7s var(--pe) calc(var(--land) - .1s) both; }
+  :is(.p6, .p9p).enter .hero .e-pres { animation: pe-blur .7s var(--pe) var(--land) both; }
+  :is(.p6, .p9p).enter .hero .h-title .hw { animation: pe-word .8s var(--pe) calc(var(--land) + .05s + var(--i) * .06s) both; }
+  :is(.p6, .p9p).enter .hero .h-tag .hw { animation: pe-blur .7s var(--pe) calc(var(--land) + .22s + var(--i) * .035s) both; }
+  :is(.p6, .p9p).enter .hero .h-lock { animation: pe-blur .7s var(--pe) calc(var(--land) + .4s) both; }
+  .p6.enter .p9-tabs { animation: pe-rise .7s var(--pe) calc(var(--land) + .15s) both; }
+  .p6.enter .e-cards { animation: pe-rise .8s var(--pe) calc(var(--land) + .2s) both; }
+  .p6.enter .dx-side .dx-card { animation: pe-blur .7s var(--pe) calc(var(--land) + .3s) both; }
+  .p6.enter .dx-side .dx-card:nth-child(2) { animation-delay: calc(var(--land) + .36s); }
+  .p6.enter .dx-side .dx-card:nth-child(3) { animation-delay: calc(var(--land) + .42s); }
+  /* the states light up from west to east, the way the wave ran */
+  :is(.p6, .p9p).enter .mapbox.entering .map:not(.dots) .st { animation: st-sweep .55s var(--pe) calc(var(--land) + .25s + var(--w) * .5) both; }
+  .p9p.enter .p9p-panel { animation: pe-rise .7s var(--pe) calc(var(--land) + .1s) both; }
+  .p9p.enter .p9p-tabs { animation: pe-rise .7s var(--pe) calc(var(--land) + .18s) both; }
+  .p9p.enter .p9p-map, .p9p.enter .p9p-play > .legend, .p9p.enter .p9p-cards { animation: pe-rise .8s var(--pe) calc(var(--land) + .22s) both; }
+}
+
+/* dialogs and sheets: the box arrives (lib/motion.ts) and what is in it follows, a beat apart */
+@keyframes m-in { from { opacity: 0; filter: blur(6px); transform: translateY(8px); } to { opacity: 1; filter: blur(0); transform: none; } }
+@media (prefers-reduced-motion: no-preference) {
+  .pd > :not(.pd-x), .auth-main > * { animation: m-in .55s cubic-bezier(.2, .7, .2, 1) both; }
+  .pd > :nth-child(2), .auth-main > :nth-child(1) { animation-delay: .08s; }
+  .pd > :nth-child(3), .auth-main > :nth-child(2) { animation-delay: .13s; }
+  .pd > :nth-child(4), .auth-main > :nth-child(3) { animation-delay: .18s; }
+  .pd > :nth-child(5), .auth-main > :nth-child(4) { animation-delay: .23s; }
+  .pd > :nth-child(n + 6), .auth-main > :nth-child(n + 5) { animation-delay: .28s; }
 }
 
 /* Save (Share on the night) acts on all three maps, so it sits on the card, not on a part: in a tab of its
@@ -70,3 +86,11 @@
 .p9-savetab { position: relative; flex: none; display: flex; align-items: center; height: 64px; padding: 0 8px; border-radius: 20px 20px 0 0; background: var(--card); }
 .p9-savetab::before { content: ''; position: absolute; bottom: 0; left: -20px; width: 20px; height: 20px; pointer-events: none; background: radial-gradient(circle at 0 0, transparent 19.5px, var(--card) 20px); }
 .vE.big.p9 .e-cards.dx-one { border-start-end-radius: 0; }
+
+/* switching parts: the country repaints in a quick sweep from west to east */
+@keyframes st-fade { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: no-preference) {
+  .map.sweep .st path { transition: fill .3s ease calc(var(--w) * .5), stroke-width .18s ease; }
+  .map.sweep .st .lb { transition: fill .25s ease calc(var(--w) * .5); }
+  .map.sweep .st .hatch { animation: st-fade .3s ease calc(var(--w) * .5) both; }
+}
