@@ -1181,8 +1181,9 @@ function ThePage() {
   return (
     <div className={'v vE r big rows mtw mtw-folder dx dx7 p8 p22 p9 hero-on sel-' + TABS.indexOf(tab)}>
       <Hero presented={<Presented />} />
-      {/* top right of the page: Save while you pick, Share on the night */}
-      <div className="p9-tabs"><MapTabs look="folder" />{live ? <ShareButton /> : <SaveMaps />}</div>
+      {/* Save (Share on the night) acts on every map at once, so it sits on the card itself, in a tab of
+          its own at the card's top right, not on any one part; Autofill and the refresh stay inside */}
+      <div className="p9-tabs"><MapTabs look="folder" /><div className="p9-savetab">{live ? <ShareButton /> : <SaveMaps />}</div></div>
       <div className="e-cards tall dx-one"><DxMap noSave /><Side cls="board" before={<MapCard6b />}><Board8 row="frac" /></Side></div>
       <PartDone />
     </div>

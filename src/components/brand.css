@@ -53,3 +53,10 @@
   .p9p.enter .p9p-tabs, .p9p.enter .p9p-map, .p9p.enter .p9p-cards { animation: pe-in .5s cubic-bezier(.2, 0, 0, 1) .16s both; }
   .p9p.enter .p9p-panel { animation: pe-in .55s cubic-bezier(.2, 0, 0, 1) .24s both; }
 }
+
+/* Save (Share on the night) acts on all three maps, so it sits on the card, not on a part: in a tab of its
+   own at the card's top right, joined to the card the way the open part's tab is */
+.vE.big.p9 .p9-tabs { align-items: flex-end; }
+.p9-savetab { position: relative; flex: none; display: flex; align-items: center; height: 64px; padding: 0 8px; border-radius: 20px 20px 0 0; background: var(--card); }
+.p9-savetab::before { content: ''; position: absolute; bottom: 0; left: -20px; width: 20px; height: 20px; pointer-events: none; background: radial-gradient(circle at 0 0, transparent 19.5px, var(--card) 20px); }
+.vE.big.p9 .e-cards.dx-one { border-start-end-radius: 0; }
