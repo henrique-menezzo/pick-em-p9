@@ -698,8 +698,9 @@
 @media (max-height: 880px) {
   .vE.big.dx.p9 .e-cards.tall.dx-one > .e-map.dx-map > .v-map { top: 92px; bottom: 58px; }
 }
-/* leave the prototype's switch its own strip under the card on laptops */
-.vE.big.p9 .e-cards.tall { height: min(940px, calc(100dvh - 184px), max(700px, calc(100dvh - 200px))); }
+/* leave the prototype's switch its own strip under the card on laptops; on tall windows the card stops at
+   760px, past which the map (as wide as its column allows) would only leave empty space under it */
+.vE.big.p9 .e-cards.tall { height: min(760px, calc(100dvh - 184px), max(700px, calc(100dvh - 200px))); }
 @media (max-height: 880px) { :root:has(.p9) .viewswitch { bottom: 3px; transform: translateX(-50%) scale(.74); } }
 /* bigger windows: the right column and its squares stay as at 1440 (the page stops at 1376, so a wider
    column only takes room from the map) */
@@ -990,7 +991,7 @@ html[data-afl="3"] .map .af-mark, html[data-afl="3"] .dx-cell .af-mark { display
 
 /* smaller laptop windows: the card never goes under the 700 of the 1440 × 900 frame, so all three boards
    stay in view; the page scrolls a little instead. Everything inside keeps the 900 sizes too. */
-.vE.big.p9 .e-cards.tall { height: max(700px, min(940px, calc(100dvh - 184px), max(700px, calc(100dvh - 200px)))); }
+.vE.big.p9 .e-cards.tall { height: max(700px, min(760px, calc(100dvh - 184px), max(700px, calc(100dvh - 200px)))); }
 @media (max-height: 899px) {
   .p9 .dx-board-cells { grid-template-columns: repeat(auto-fill, 14px); gap: 3px; }
   .p9 .dx-board { gap: 16px !important; }
