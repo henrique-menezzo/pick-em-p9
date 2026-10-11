@@ -296,7 +296,11 @@ export default function Onboarding({ ready = true }: { ready?: boolean }) {
   const at = spot && !phone ? place(anchor ?? spot, size, s?.align, s?.dock) : null;
   // on a phone the card is a sheet held to the bottom edge (or resting on the picks panel, for the step
   // that points into it): only how far up it sits changes, never a top worked out from a guessed height
-  const lift = spot && phone ? dockPhone(spot) : 0;
+  const dock = spot && phone && s?.key === 'save' ? dockPhone() : 0;
+  // …and when it rests on the panel it is no longer a second sheet on top of the first: it lifts off
+  // the edge into a floating card, a little above the panel, pointing at the button it is about
+  const callout = phone && dock > 0;
+  const lift = callout ? dock + 12 : 0;
   // the light and the card travel on a slow, critically damped spring: they glide to the next thing
   const spring = { type: 'spring' as const, stiffness: 200, damping: 28, mass: 1 };
   const soft = { opacity: { duration: 0.34, ease: EASE_OUT }, filter: { duration: 0.4, ease: EASE_OUT } };
@@ -389,10 +393,10 @@ export default function Onboarding({ ready = true }: { ready?: boolean }) {
           {/* and one card, which travels with it */}
           <motion.div
             ref={card}
-            className="tour-card"
+            className={'tour-card' + (callout ? ' callout' : '')}
             // on a phone the card is a sheet, so it rises from the bottom edge; on the desktop it
             // arrives on the spot out of a blur
-            style={phone ? { left: 0, top: 'auto' } : undefined}
+            style={phone ? { left: callout ? 16 : 0, top: 'auto' } : undefined}
             initial={phone ? { bottom: lift, y: '100%' } : { left: at?.left, top: at?.top, opacity: 0, y: 12, scale: 0.96, filter: 'blur(8px)' }}
             animate={phone ? { bottom: lift, y: 0 } : { left: at?.left, top: at?.top, opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
             exit={phone ? { y: '100%', transition: { duration: 0.28, ease: [0.4, 0, 0.8, 0.2] } } : { opacity: 0, y: 8, scale: 0.97, filter: 'blur(4px)', transition: { duration: 0.2, ease: EASE_IN } }}
@@ -500,15 +504,13 @@ function usePhoneTour() {
   return m;
 }
 
-function dockPhone(s: Spot) {
+function dockPhone() {
   // a bottom sheet: it stays at the foot of the screen from the first step to the last, where the
-  // picks panel lives, which steps aside while the tour is up
-  // …except when the step points into the picks panel (Save): the panel is back up, and the sheet
-  // rests right on top of it. Returned as how far up from the bottom edge the sheet sits.
-  // (the panel's own height, not where it is: it may still be sliding back up when this is measured)
+  // picks panel lives, which steps aside while the tour is up. Only the Save step brings the panel
+  // back up (its Save is the thing to press): then the sheet sits that much higher. The panel's own
+  // height, not where it is: it may still be sliding back up when this is measured.
   const panel = document.querySelector<HTMLElement>('.p9p-panel');
-  if (panel && s.y > innerHeight * 0.6) return panel.offsetHeight;
-  return 0;
+  return panel ? panel.offsetHeight : 0;
 }
 
 function useSpot(sel: string | undefined, step: number | null, fit?: 'states'): Spot | null {

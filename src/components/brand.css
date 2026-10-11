@@ -94,3 +94,10 @@
   .map.sweep .st .lb { transition: fill .25s ease calc(var(--w) * .5); }
   .map.sweep .st .hatch { animation: st-fade .3s ease calc(var(--w) * .5) both; }
 }
+
+/* the phone tour's last step (Save): the panel comes back up, and the tour's sheet lifts off the bottom
+   edge into a floating card resting a little above it, so it never reads as one sheet on another.
+   It changes shape on the way, along the same curve the panel rises on */
+body:has(.p9p) .tour.phone .tour-card { transition: left .55s cubic-bezier(.32, .72, 0, 1), width .55s cubic-bezier(.32, .72, 0, 1), border-radius .55s cubic-bezier(.32, .72, 0, 1), padding .55s cubic-bezier(.32, .72, 0, 1), box-shadow .55s ease; }
+body:has(.p9p) .tour.phone .tour-card.callout { width: calc(100vw - 32px); border-radius: 22px; padding: 20px 20px 18px; box-shadow: 0 18px 44px rgba(0, 0, 0, .55); }
+:root[data-theme='light'] body:has(.p9p) .tour.phone .tour-card.callout { box-shadow: 0 18px 44px rgba(10, 9, 9, .16); }
