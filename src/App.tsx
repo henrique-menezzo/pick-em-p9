@@ -111,7 +111,7 @@ export default function App() {
   useEffect(() => { if (SKIP_INTRO) setPhase('live'); }, [setPhase]);
   useEffect(() => {
     if (phase !== 'enter') return;
-    const h = setTimeout(() => setPhase('live'), 1400);
+    const h = setTimeout(() => setPhase('live'), 2400); // long enough for the page's entrance to finish
     return () => clearTimeout(h);
   }, [phase, setPhase]);
   if (V.mobile || isPhone) return (

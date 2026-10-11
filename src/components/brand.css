@@ -38,20 +38,30 @@
 .p9p .hero .h-lock { margin-top: 4px; }
 .p9p .hero .sh-btn { height: 44px; padding: 0 18px; border-radius: 999px; background: var(--p9-pill); font-size: 14px; font-weight: 600; }
 
-/* the page coming in as the opening hands over its wave (Intro.tsx): the nav, the hero's words, the
-   parts and the game, 80ms apart. The hero only fades, so the spot the wave flies to stays put. */
-@keyframes pe-in { from { opacity: 0; transform: translateY(12px); filter: blur(4px); } to { opacity: 1; transform: none; filter: none; } }
-@keyframes pe-fade { from { opacity: 0; filter: blur(4px); } to { opacity: 1; filter: none; } }
+/* the page coming in as the opening hands over its wave (Intro.tsx): everything comes out of a blur, in
+   turn. The nav first, then Presented by, the name word by word, the line word by word, the parts, the
+   card and the side's cards one after another. The hero itself never moves, so the spot the wave flies
+   to stays where it was measured. */
+@keyframes pe-blur { from { opacity: 0; filter: blur(12px); } to { opacity: 1; filter: blur(0); } }
+@keyframes pe-rise { from { opacity: 0; filter: blur(10px); transform: translateY(10px); } to { opacity: 1; filter: blur(0); transform: none; } }
+.hero .hw { display: inline-block; }
 .p9p.pre { opacity: 0; }
 @media (prefers-reduced-motion: no-preference) {
-  .p6.enter > .nav { animation: pe-in .5s cubic-bezier(.2, 0, 0, 1) both; }
-  .p6.enter .hero { animation: pe-fade .5s cubic-bezier(.2, 0, 0, 1) .08s both; }
-  .p6.enter .p9-tabs { animation: pe-in .5s cubic-bezier(.2, 0, 0, 1) .16s both; }
-  .p6.enter .e-cards { animation: pe-in .55s cubic-bezier(.2, 0, 0, 1) .24s both; }
-  .p9p.enter .p9p-top { animation: pe-in .5s cubic-bezier(.2, 0, 0, 1) both; }
-  .p9p.enter .hero { animation: pe-fade .5s cubic-bezier(.2, 0, 0, 1) .08s both; }
-  .p9p.enter .p9p-tabs, .p9p.enter .p9p-map, .p9p.enter .p9p-cards { animation: pe-in .5s cubic-bezier(.2, 0, 0, 1) .16s both; }
-  .p9p.enter .p9p-panel { animation: pe-in .55s cubic-bezier(.2, 0, 0, 1) .24s both; }
+  .p9 { --pe: cubic-bezier(.2, .7, .2, 1); }
+  :is(.p6.enter > .nav, .p9p.enter .p9p-top) { animation: pe-rise .9s cubic-bezier(.2, .7, .2, 1) both; }
+  :is(.p6, .p9p).enter .hero .e-pres { animation: pe-blur .9s var(--pe) .15s both; }
+  :is(.p6, .p9p).enter .hero .h-title .hw { animation: pe-blur 1s var(--pe) calc(.25s + var(--i) * .08s) both; }
+  :is(.p6, .p9p).enter .hero .h-tag .hw { animation: pe-blur .9s var(--pe) calc(.5s + var(--i) * .045s) both; }
+  :is(.p6, .p9p).enter .hero .h-lock { animation: pe-blur .9s var(--pe) .8s both; }
+  .p6.enter .p9-tabs { animation: pe-rise .9s var(--pe) .45s both; }
+  .p6.enter .e-cards { animation: pe-rise 1s var(--pe) .55s both; }
+  .p6.enter .dx-side .dx-card { animation: pe-blur .9s var(--pe) .75s both; }
+  .p6.enter .dx-side .dx-card:nth-child(2) { animation-delay: .85s; }
+  .p6.enter .dx-side .dx-card:nth-child(3) { animation-delay: .95s; }
+  .p9p.enter .p9p-tabs { animation: pe-rise .9s var(--pe) .7s both; }
+  .p9p.enter .p9p-map, .p9p.enter .p9p-play > .legend, .p9p.enter .p9p-cards { animation: pe-rise 1s var(--pe) .8s both; }
+  /* the race panel comes up before the cards it covers, so nothing shows through it on the way in */
+  .p9p.enter .p9p-panel { animation: pe-rise .9s var(--pe) .45s both; }
 }
 
 /* Save (Share on the night) acts on all three maps, so it sits on the card, not on a part: in a tab of its

@@ -87,10 +87,18 @@ export function Tagline({ className = '', split }: { className?: string; split?:
 /** The hero over the game: the sponsor, the name and the line on the left, the wave on the right (on a
  *  phone, the wave on top and everything centred). `meta`: the deadline, on the phone, where the map
  *  has no card to carry it. */
+/** Words as their own boxes, numbered, so the page's entrance can bring each one out of the blur in turn. */
+const words = (text: string, from = 0) => text.split(' ').flatMap((w, i) => [i ? ' ' : null, <span key={i} className="hw" style={{ ['--i' as string]: from + i }}>{w}</span>]);
+
 export function Hero({ presented, meta }: { presented: React.ReactNode; meta?: React.ReactNode }) {
   return (
     <section className="hero">
-      <div className="h-head">{presented}<h2 className="h-title">The Midterms Pick Em</h2><Tagline className="h-tag" />{meta}</div>
+      <div className="h-head">
+        {presented}
+        <h2 className="h-title">{words('The Midterms Pick Em')}</h2>
+        <p className="btag h-tag"><b>{words('The nation speaks.')}</b> <span>{words('Can you predict their voices?', 3)}</span></p>
+        {meta}
+      </div>
       <Wave className="h-w" />
     </section>
   );

@@ -1073,7 +1073,7 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .app.pre { opacity: 0; }
 .intro { position: fixed; inset: 0; z-index: 200; display: grid; place-items: center; }
 /* the opening's ground is its own layer, so it can clear while its row and line fly to the page */
-.intro-bg { position: absolute; inset: 0; background: var(--bg); transition: opacity .5s cubic-bezier(.2, 0, 0, 1); }
+.intro-bg { position: absolute; inset: 0; background: var(--bg); transition: opacity .9s cubic-bezier(.4, 0, .2, 1); }
 .intro.leaving { pointer-events: none; }
 .intro.leaving .intro-bg { opacity: 0; }
 .intro-mark { --cw: min(760px, 58vw); position: relative; display: flex; flex-direction: column; align-items: center; }

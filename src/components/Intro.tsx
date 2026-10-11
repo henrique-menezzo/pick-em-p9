@@ -28,9 +28,22 @@ const RISE = 520;   // the wave takes this long to pass through one of them
 const STEP = 30;    // and this long to move to the next
 const AGAIN = 1100; // and comes round again this often while the line is read
 export const INTRO_MS = 1750;
-const FLY = 1000;   // the hand-over to the page
-// in and out gently, so the row lifts off and settles rather than snapping across
-const EASE = (x: number) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
+const CALM = 360;   // before it leaves, the row's swell dies down, so it sets off from rest
+const FLY = 1300;   // the hand-over to the page
+const SPREAD = 240; // the capsules leave one after another, left to right, like the wave itself
+/** A CSS cubic-bezier as a function: x (time) to y (progress). */
+const bezier = (x1: number, y1: number, x2: number, y2: number) => (x: number) => {
+  let t = x;
+  for (let i = 0; i < 8; i++) {
+    const f = 3 * x1 * t * (1 - t) ** 2 + 3 * x2 * t * t * (1 - t) + t ** 3 - x;
+    const d = 3 * x1 * (1 - t) ** 2 + 6 * (x2 - x1) * t * (1 - t) + 3 * (1 - x2) * t * t;
+    if (Math.abs(f) < 1e-5 || Math.abs(d) < 1e-6) break;
+    t = Math.min(1, Math.max(0, t - f / d));
+  }
+  return 3 * y1 * t * (1 - t) ** 2 + 3 * y2 * t * t * (1 - t) + t ** 3;
+};
+// a slow lift-off and a long, soft landing
+const EASE = bezier(0.5, 0, 0.1, 1);
 
 type Cap = { cx: number; cy: number; w: number; h: number; c: string };
 /** The line, word by word: each one surfaces out of a blur a beat after the one before. */
@@ -99,7 +112,9 @@ export default function Intro({ onDone }: { onDone: () => void }) {
         const a = still ? 1 : Math.min(1, Math.max(0, (t - b.in) / FADE));
         if (a <= 0) continue;
         const since = t - b.up;
-        b.h = still ? b.w : b.w * (1 + (b.amp - 1) * swell(since < 0 ? 0 : (since % AGAIN) / RISE));
+        // how much of the swell is left: all of it, until the row calms down before it leaves
+        const calm = 1 - EASE(Math.min(1, Math.max(0, (t - (INTRO_MS - CALM)) / CALM)));
+        b.h = still ? b.w : b.w * (1 + (b.amp - 1) * calm * swell(since < 0 ? 0 : (since % AGAIN) / RISE));
         g.globalAlpha = a;
         g.fillStyle = b.c;
         g.beginPath();
@@ -128,7 +143,7 @@ export default function Intro({ onDone }: { onDone: () => void }) {
       // each landing spot takes the opening's capsule at the same place along the row; capsules
       // nobody takes shrink away where they are
       const used = new Set<number>();
-      const pairs = to.map((b, j) => { const i = Math.round((j * (from.length - 1)) / Math.max(1, to.length - 1)); used.add(i); return { a: from[i], b, d: (j / Math.max(1, to.length - 1)) * 120 }; });
+      const pairs = to.map((b, j) => { const i = Math.round((j * (from.length - 1)) / Math.max(1, to.length - 1)); used.add(i); return { a: from[i], b, d: (j / Math.max(1, to.length - 1)) * SPREAD }; });
       from.forEach((a, i) => { if (!used.has(i)) pairs.push({ a, b: { ...a, w: 0, h: 0 }, d: 0 }); });
 
       const dpr2 = Math.min(2, window.devicePixelRatio || 1);
@@ -149,7 +164,7 @@ export default function Intro({ onDone }: { onDone: () => void }) {
         const t = now - s0;
         q.clearRect(0, 0, innerWidth, innerHeight);
         for (const { a, b, d } of pairs) {
-          const e = EASE(Math.min(1, Math.max(0, (t - d) / (FLY - 120))));
+          const e = EASE(Math.min(1, Math.max(0, (t - d) / (FLY - SPREAD))));
           const w = a.w + (b.w - a.w) * e, h = a.h + (b.h - a.h) * e;
           if (w < 0.5 || h < 0.5) continue;
           const cx = a.cx + (b.cx - a.cx) * e, cy2 = a.cy + (b.cy - a.cy) * e;
