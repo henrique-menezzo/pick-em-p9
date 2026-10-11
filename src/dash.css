@@ -1161,6 +1161,12 @@ body:has(.p9p) .tour.phone .tour-card { padding: 24px 24px calc(20px + env(safe-
 .p9 .dx-side.night .dx-board { gap: 10px !important; }
 /* the tour's Save step on a phone: the picks panel comes back up under the tour's sheet */
 html:is([data-tour-step="save"], [data-tour-step="panel"]) .p9p.touring .p9p-panel { transform: none; opacity: 1; pointer-events: auto; }
+/* stepping down for the tour it eases off rather than dropping: the tour's sheet comes up in its place
+   once it is mostly gone. Coming back up it keeps the quick settle above */
+@media (prefers-reduced-motion: no-preference) {
+  .p9p.touring .p9p-panel { transition: transform .62s cubic-bezier(.5, 0, .2, 1); }
+  html:is([data-tour-step="save"], [data-tour-step="panel"]) .p9p.touring .p9p-panel { transition: transform .55s cubic-bezier(.32, .72, 0, 1); }
+}
 /* phone: squares big enough to hit with a thumb, 9 to a row (about 30px each) */
 .p9.p9p .p9p-card .dx-board-cells { grid-template-columns: repeat(9, minmax(0, 1fr)); gap: 6px; }
 .p9.p9p .p9p-card .dx-cell { border-radius: 6px; }

@@ -51,3 +51,44 @@ export const popIn: Moves = {
   exit: { opacity: 0, scale: 0.97, filter: 'blur(3px)', transition: { duration: 0.14, ease: EASE_IN } },
   transition: { ...POP, opacity: { duration: 0.2, ease: EASE_OUT }, filter: { duration: 0.24, ease: EASE_OUT } },
 };
+
+/** A CSS cubic-bezier as a function: x (time) to y (progress). */
+export const bezier = (x1: number, y1: number, x2: number, y2: number) => (x: number) => {
+  let t = x;
+  for (let i = 0; i < 8; i++) {
+    const f = 3 * x1 * t * (1 - t) ** 2 + 3 * x2 * t * t * (1 - t) + t ** 3 - x;
+    const d = 3 * x1 * (1 - t) ** 2 + 6 * (x2 - x1) * t * (1 - t) + 3 * (1 - x2) * t * t;
+    if (Math.abs(f) < 1e-5 || Math.abs(d) < 1e-6) break;
+    t = Math.min(1, Math.max(0, t - f / d));
+  }
+  return 3 * y1 * t * (1 - t) ** 2 + 3 * y2 * t * t * (1 - t) + t ** 3;
+};
+
+// a slow start and a long settle: the page eases off, travels, and comes to rest
+const GLIDE = bezier(0.45, 0, 0.15, 1);
+let gliding = 0;
+/** The page's own scroll, eased. A native smooth scroll is short and quick, and on a phone it jerks
+ *  the whole screen at once. A new glide takes over from one in flight, and so does the reader's
+ *  own finger, unless the page is being held (the tour owns the scroll while it is up). Under reduced
+ *  motion it simply goes there. */
+export function glide(top: number, ms = 900, held = false) {
+  cancelAnimationFrame(gliding);
+  const from = scrollY;
+  const to = Math.max(0, Math.min(top, document.documentElement.scrollHeight - innerHeight));
+  if (Math.abs(to - from) < 1) return;
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) { scrollTo(0, to); return; }
+  const off = () => { removeEventListener('touchstart', stop); removeEventListener('wheel', stop); };
+  const stop = () => { cancelAnimationFrame(gliding); off(); };
+  if (!held) {
+    addEventListener('touchstart', stop, { passive: true });
+    addEventListener('wheel', stop, { passive: true });
+  }
+  const t0 = performance.now();
+  const frame = (now: number) => {
+    const p = Math.min(1, (now - t0) / ms);
+    scrollTo(0, from + (to - from) * GLIDE(p));
+    if (p < 1) gliding = requestAnimationFrame(frame);
+    else off();
+  };
+  gliding = requestAnimationFrame(frame);
+}

@@ -10,6 +10,7 @@ import { createPortal } from 'react-dom';
 import { motion } from 'motion/react';
 import { REST, intro } from './Brand';
 import { useStore } from '../lib/store';
+import { bezier } from '../lib/motion';
 
 /** The branding team's row, measured off their frame: diameters as a share of the biggest, and the
     colour each one carries. They touch, so the row's length is just the sum of them. */
@@ -37,17 +38,6 @@ const SPREAD = 220;    // the capsules leave one after another, left to right, l
 const ARC = 0.16;      // each path bows by this share of its length
 const TRAIL: [number, number][] = [[18, 0.16], [36, 0.08], [54, 0.04]]; // ghosts: how far behind, how strong
 
-/** A CSS cubic-bezier as a function: x (time) to y (progress). */
-const bezier = (x1: number, y1: number, x2: number, y2: number) => (x: number) => {
-  let t = x;
-  for (let i = 0; i < 8; i++) {
-    const f = 3 * x1 * t * (1 - t) ** 2 + 3 * x2 * t * t * (1 - t) + t ** 3 - x;
-    const d = 3 * x1 * (1 - t) ** 2 + 6 * (x2 - x1) * t * (1 - t) + 3 * (1 - x2) * t * t;
-    if (Math.abs(f) < 1e-5 || Math.abs(d) < 1e-6) break;
-    t = Math.min(1, Math.max(0, t - f / d));
-  }
-  return 3 * y1 * t * (1 - t) ** 2 + 3 * y2 * t * t * (1 - t) + t ** 3;
-};
 // a slow lift-off and a long, soft landing
 const EASE = bezier(0.5, 0, 0.1, 1);
 const clamp = (x: number) => Math.min(1, Math.max(0, x));

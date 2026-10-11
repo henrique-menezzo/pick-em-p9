@@ -4,7 +4,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'motion/react';
-import { EASE_IN, EASE_OUT, SHEET } from '../lib/motion';
+import { EASE_IN, EASE_OUT, SHEET, glide } from '../lib/motion';
 import { ALL } from '../data/races';
 import { useStore } from '../lib/store';
 import { MAP_SHAPES, stateShapeOnScreen } from './DotMap';
@@ -143,8 +143,10 @@ export default function Onboarding({ ready = true }: { ready?: boolean }) {
   // an empty map meant it never ran. Only a finished (or skipped) tour, or election night, stops it.
   useEffect(() => {
     if (!ready || tourDone || step !== null || live) return;
-    // a beat after the page has come in, so the opening is seen before anything is asked of the reader
-    const h = setTimeout(() => useStore.getState().setTour(0), 600);
+    // a beat after the page has come in, so the opening is seen before anything is asked of the reader.
+    // Shorter on a phone, whose entrance settles sooner: a long still beat there read as a stall, and
+    // the tour then broke into it
+    const h = setTimeout(() => useStore.getState().setTour(0), matchMedia('(max-width: 760px)').matches ? 250 : 600);
     return () => clearTimeout(h);
   }, [ready, tourDone, step, live]);
 
@@ -163,7 +165,7 @@ export default function Onboarding({ ready = true }: { ready?: boolean }) {
       useStore.setState(before.current);
       before.current = null;
       // on a phone the last steps leave the page at its foot: the reader comes back to the map
-      if (matchMedia('(max-width: 760px)').matches) window.scrollTo({ top: 0, behavior: 'smooth' });
+      if (matchMedia('(max-width: 760px)').matches) glide(0, 900);
     }
   }, [step]);
 
@@ -312,11 +314,12 @@ export default function Onboarding({ ready = true }: { ready?: boolean }) {
   // the light and the card travel on a slow, critically damped spring: they glide to the next thing
   const spring = { type: 'spring' as const, stiffness: 200, damping: 28, mass: 1 };
   const soft = { opacity: { duration: 0.34, ease: EASE_OUT }, filter: { duration: 0.4, ease: EASE_OUT } };
+  const RISE = { type: 'spring' as const, stiffness: 140, damping: 23.7, mass: 1 }; // damping ratio 1, ~0.8s
 
   return createPortal(
     <AnimatePresence>
       {s && spot && (
-        <motion.div className={'tour' + (phone ? ' phone' : '')} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, transition: { duration: 0.26, ease: EASE_IN } }} transition={{ duration: 0.42, ease: EASE_OUT }}>
+        <motion.div className={'tour' + (phone ? ' phone' : '')} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, transition: { duration: 0.26, ease: EASE_IN } }} transition={{ duration: phone ? 0.8 : 0.42, ease: EASE_OUT }}>
           {/* one spotlight for the whole tour: it opens onto the map and then travels and resizes
               from step to step, instead of blinking out and back in. The dim is its own shadow, so
               there is nothing to keep in sync and nothing to clip per frame. */}
@@ -408,7 +411,9 @@ export default function Onboarding({ ready = true }: { ready?: boolean }) {
             initial={phone ? { bottom: lift, y: '100%' } : { left: at?.left, top: at?.top, opacity: 0, y: 12, scale: 0.96, filter: 'blur(8px)' }}
             animate={phone ? { bottom: lift, y: 0 } : { left: at?.left, top: at?.top, opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
             exit={phone ? { y: '100%', transition: { duration: 0.28, ease: [0.4, 0, 0.8, 0.2] } } : { opacity: 0, y: 8, scale: 0.97, filter: 'blur(4px)', transition: { duration: 0.2, ease: EASE_IN } }}
-            transition={phone ? SHEET : { ...spring, ...soft }}
+            // on a phone the sheet waits for the picks panel to step down first, then rises on a softer
+            // spring than the later moves, so the two never cross in a hurry
+            transition={phone ? { y: { ...RISE, delay: 0.38 }, bottom: SHEET } : { ...spring, ...soft }}
           >
             {/* the words cross over from step to step out of a light blur, while the card travels */}
             <AnimatePresence mode="popLayout" initial={false}>
@@ -545,7 +550,8 @@ function useSpot(sel: string | undefined, step: number | null, fit?: 'states'): 
         if (b.top < lo || b.bottom > hi) {
           // centred in that gap when it fits, its top just under the header when it does not
           const y = b.height <= hi - lo ? lo + (hi - lo - b.height) / 2 : lo;
-          scrollTo({ top: Math.max(0, scrollY + b.top - y), behavior: 'smooth' });
+          // eased, and slower when the tour is opening: the page drifts to the map while it dims
+          glide(scrollY + b.top - y, step === 0 ? 1100 : 750, true);
         }
       } else if (el && !onPhone) {
         const b = el.getBoundingClientRect();
