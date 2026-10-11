@@ -122,3 +122,65 @@ body:has(.p9p) .auth-x { top: 10px; right: 10px; width: 44px; height: 44px; }
   .p9p .hero .h-title { font-size: 28px; }
   .p9p .hero .h-tag { font-size: 14px; }
 }
+
+/* ======================================================================================================
+   Election night: the overall score, right and missed across all three maps, five ways (?score=1–5,
+   the review switch). The marks are the answer key's: a check on ink for right, an ✕ for missed.
+   ====================================================================================================== */
+.ns-mark { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; flex: none; }
+.ns-mark.ok { background: var(--p9-inv-bg); color: var(--p9-inv-ink); }
+.ns-mark.no { background: var(--p9-pill); color: var(--p9-ink); }
+/* 1 · in the hero, as big figures */
+.ns1 { display: flex; align-items: center; flex-wrap: wrap; gap: 12px 28px; }
+.ns1 .ns-fig { display: inline-flex; align-items: center; gap: 10px; }
+.ns1 .ns-fig b { font-size: 40px; line-height: 1; font-weight: 600; letter-spacing: -.03em; color: var(--p9-ink); }
+.ns1 .ns-fig small { font-size: 16px; color: var(--p9-soft); }
+.ns1 .ns-mark { width: 28px; height: 28px; }
+.ns1 .ns-out { font-size: 14px; color: var(--p9-soft); }
+.hero .ns1 { margin-top: 8px; }
+.p9p .hero .ns1 { justify-content: center; gap: 10px 22px; margin-top: 4px; }
+.p9p .ns1 .ns-fig b { font-size: 32px; }
+.p9p .ns1 .ns-out { flex-basis: 100%; text-align: center; }
+/* 2 · on the map's top line, where "Live · 95 of 110 called" was */
+.ns2 { margin: 0; display: flex; align-items: center; gap: 8px; font-size: 20px; color: var(--p9-soft); white-space: nowrap; }
+.ns2 b { font-weight: 600; color: var(--p9-ink); }
+.ns2 .ns-mark:not(:first-child) { margin-left: 14px; }
+.ns2 small { margin-left: 14px; font-size: 14px; }
+.p9p-ns { display: flex; justify-content: center; margin: 4px 0 12px; }
+.p9p-ns .ns2 { font-size: 17px; }
+.p9p-ns .ns2 small { margin-left: 10px; font-size: 13px; }
+/* 3 · a bar of every race: right, missed, not picked, still out */
+.ns3 { display: flex; flex-direction: column; gap: 12px; }
+.ns3-top { display: flex; align-items: baseline; justify-content: space-between; font-size: 13px; color: var(--p9-soft); }
+.ns3-top b { font-size: 18px; font-weight: 600; color: var(--p9-ink); }
+.ns3-bar { display: flex; gap: 3px; height: 14px; }
+.ns3-bar i { min-width: 2px; border-radius: 4px; }
+.ns3 i.r { background: var(--p9-ink); }
+.ns3 i.m { background: repeating-linear-gradient(45deg, var(--p9-soft) 0 1.5px, transparent 1.5px 5px), repeating-linear-gradient(-45deg, var(--p9-soft) 0 1.5px, transparent 1.5px 5px), var(--p9-pill); }
+.ns3 i.x { background: var(--p9-pill); }
+.ns3 i.o { background: var(--p9-pill-off); }
+.ns3-key { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; color: var(--p9-soft); }
+.ns3-key span { display: inline-flex; align-items: center; gap: 6px; }
+.ns3-key i { width: 12px; height: 12px; border-radius: 3px; }
+.ns3-key b { font-weight: 600; color: var(--p9-ink); }
+/* 4 · a box score, map by map, the total under a rule */
+.ns4 { width: 100%; border-collapse: collapse; font-size: 14px; }
+.ns4 th, .ns4 td { padding: 6px 0; text-align: right; font-variant-numeric: tabular-nums; }
+.ns4 th:first-child { text-align: left; }
+.ns4 thead th { padding-top: 0; font-size: 12px; font-weight: 500; color: var(--p9-soft); }
+.ns4 thead th:first-child { font-size: 18px; font-weight: 600; color: var(--p9-ink); }
+.ns4 tbody th { font-weight: 500; color: var(--p9-soft); }
+.ns4 td { width: 64px; font-weight: 600; color: var(--p9-ink); }
+.ns4 tfoot th, .ns4 tfoot td { padding-top: 10px; font-size: 18px; font-weight: 600; color: var(--p9-ink); box-shadow: inset 0 1px 0 var(--p9-line); }
+/* 5 · a ring: the share of your called picks that were right */
+.ns5 { display: flex; align-items: center; gap: 16px; }
+.ns5 .ns5-ring { width: 72px; height: 72px; }
+.ns5 .ns5-ring b { font-size: 18px; }
+.ns5 .ns5-ring small { font-size: 11px; color: var(--p9-soft); }
+.ns5-t { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.ns5-t b { font-size: 22px; font-weight: 600; letter-spacing: -.02em; color: var(--p9-ink); }
+.ns5-t small { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--p9-soft); }
+.ns5-t .ns-mark { width: 16px; height: 16px; }
+/* where 3–5 sit: the top of the side on the desktop, under the hero on a phone */
+.dx-side.night .dx-card.ns-card { flex: none; }
+.p9p .p9p-nscard { margin: 0 0 20px; }

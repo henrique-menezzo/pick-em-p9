@@ -151,6 +151,7 @@ function RaceList({ title, start = 'open', dense }: { title?: string; start?: Fi
  *  under it, the actions on the right, the map, Polymarket and the legend at the foot. */
 function DxMap({ noSave }: { noSave?: boolean }) {
   const live = useLive();
+  const scoreLook = useStore((s) => s.scoreLook);
   const t = useStore((s) => s.t);
   const picks = useStore((s) => s.picks);
   const { left, locked } = useCountdown();
@@ -159,9 +160,11 @@ function DxMap({ noSave }: { noSave?: boolean }) {
     <section className="e-map dx-map">
       {/* the hero over the game carries the sponsor and the name (Figma 464:12099): the card keeps only
           the deadline, at its top left */}
-      <header className="dx-mhead dx-lockhead">
+{live && scoreLook === 2 ? <header className="dx-mhead dx-lockhead"><NightScore look={2} /></header> : (
+            <header className="dx-mhead dx-lockhead">
         <p className="dx-mlock num">{sc ? <><i className="sd live-dot" />Live · {sc.called} of {ALL.length} called</> : locked ? 'Picks are locked' : <>Lock in <b>{left}</b></>}</p>
       </header>
+      )}
       {/* on the night the replay sits where the picking actions were, out of the way of the cards */}
       <div className={'dx-mact' + (live ? ' dx-tl' : '')}>{live ? <Foot /> : <CatActions noSave={noSave} />}</div>
       <MapBox />
@@ -193,9 +196,11 @@ function CountCard({ all }: { all?: boolean }) {
  *  (or the two counts, as in the Figma). On the night: the show, the score, the race being counted. */
 function Side({ children, cls = '', noRace, partOnly, before, after, bare }: { children?: ReactNode; cls?: string; noRace?: boolean; partOnly?: boolean; before?: ReactNode; after?: ReactNode; bare?: boolean }) {
   const live = useLive();
+  const scoreLook = useStore((s) => s.scoreLook);
   if (live && !noRace) {
     return (
       <aside className="e-panel dx-side night">
+        {scoreLook >= 3 && <div className="dx-card ns-card"><NightScore look={scoreLook} /></div>}
         <div className="dx-card flat"><LiveVideo bare /></div>
         <div className="dx-card"><RaceCard className="inner e-nightrace dx-race" /></div>
         {/* the squares again, now as the answer sheet: a check where you were right, an ✕ where not */}
@@ -1203,6 +1208,66 @@ function PartDone() {
   );
 }
 
+/** Election night: how many you have right and missed, all three maps together, and map by map. */
+function useNight() {
+  const picks = useStore((s) => s.picks);
+  const t = useStore((s) => s.t);
+  const all = liveScore(picks, t);
+  const parts = TABS.map((k) => ({ k, ...liveScore(picks, t, k) }));
+  return { ...all, out: all.total - all.called, none: all.called - all.correct - all.missed, parts };
+}
+const ScoreMark = ({ ok }: { ok: boolean }) => (
+  <span className={'ns-mark ' + (ok ? 'ok' : 'no')} aria-hidden><Icon name={ok ? 'check' : 'x'} size={ok ? 12 : 11} stroke={3.2} /></span>
+);
+/** The overall score on election night, in one of five looks (the review switch, ?score=1–5). */
+function NightScore({ look }: { look: number }) {
+  const n = useNight();
+  const said = `${n.correct} right, ${n.missed} missed, ${n.called} of ${n.total} races called`;
+  if (look === 1) return (
+    <div className="ns ns1" role="group" aria-label={said}>
+      <span className="ns-fig"><ScoreMark ok /><b className="num">{n.correct}</b><small>right</small></span>
+      <span className="ns-fig"><ScoreMark ok={false} /><b className="num">{n.missed}</b><small>missed</small></span>
+      <span className="ns-out num">{n.called} of {n.total} called{n.out ? ` · ${n.out} still out` : ''}</span>
+    </div>
+  );
+  if (look === 2) return (
+    <p className="ns ns2 num" aria-label={said}>
+      <ScoreMark ok /><b>{n.correct}</b> right<ScoreMark ok={false} /><b>{n.missed}</b> missed<small>{n.called} of {n.total} called</small>
+    </p>
+  );
+  if (look === 3) return (
+    <div className="ns ns3" role="group" aria-label={said}>
+      <div className="ns3-top"><b>Your night</b><span className="num">{n.called} of {n.total} called</span></div>
+      <div className="ns3-bar" aria-hidden>
+        <i className="r" style={{ flexGrow: n.correct }} /><i className="m" style={{ flexGrow: n.missed }} />
+        {n.none > 0 && <i className="x" style={{ flexGrow: n.none }} />}<i className="o" style={{ flexGrow: n.out }} />
+      </div>
+      <div className="ns3-key num">
+        <span><i className="r" /><b>{n.correct}</b> right</span>
+        <span><i className="m" /><b>{n.missed}</b> missed</span>
+        <span><i className="o" /><b>{n.out}</b> still out</span>
+      </div>
+    </div>
+  );
+  if (look === 4) return (
+    <table className="ns ns4" aria-label="Your night, map by map">
+      <thead><tr><th scope="col">Your night</th><th scope="col">Right</th><th scope="col">Missed</th><th scope="col">Out</th></tr></thead>
+      <tbody>{n.parts.map((p) => <tr key={p.k}><th scope="row">{TAB_LABEL[p.k]}</th><td className="num">{p.correct}</td><td className="num">{p.missed}</td><td className="num">{p.total - p.called}</td></tr>)}</tbody>
+      <tfoot><tr><th scope="row">Total</th><td className="num">{n.correct}</td><td className="num">{n.missed}</td><td className="num">{n.out}</td></tr></tfoot>
+    </table>
+  );
+  const share = n.correct + n.missed ? Math.round((n.correct / (n.correct + n.missed)) * 100) : 0;
+  return (
+    <div className="ns ns5" role="group" aria-label={`${share}% right. ${said}`}>
+      <span className="dx-ring-wrap ns5-ring"><Ring v={share} /><b className="num">{share}<small>%</small></b></span>
+      <span className="ns5-t">
+        <b className="num">{n.correct} of {n.correct + n.missed} right</b>
+        <small className="num"><ScoreMark ok={false} />{n.missed} missed · {n.called} of {n.total} called</small>
+      </span>
+    </div>
+  );
+}
+
 /** On a phone there is no card header, so the deadline goes under the hero. */
 function HeroLock() {
   const live = useLive();
@@ -1216,10 +1281,11 @@ function HeroLock() {
 function ThePage() {
   const tab = useStore((s) => s.tab);
   const live = useLive();
+  const scoreLook = useStore((s) => s.scoreLook);
   const MapCard6b = () => <div className="dx-card p22-map"><BoardHead head="seg" /></div>;
   return (
     <div className={'v vE r big rows mtw mtw-folder dx dx7 p8 p22 p9 hero-on sel-' + TABS.indexOf(tab)}>
-      <Hero presented={<Presented />} />
+      <Hero presented={<Presented />} meta={live && scoreLook === 1 ? <NightScore look={1} /> : undefined} />
       {/* Save (Share on the night) acts on every map at once, so it sits on the card itself, in a tab of
           its own at the card's top right, not on any one part; Autofill and the refresh stay inside */}
       <div className="p9-tabs"><MapTabs look="folder" /><div className="p9-savetab">{live ? <ShareButton /> : <SaveMaps />}</div></div>
@@ -1235,6 +1301,7 @@ function ThePage() {
 // candidates side by side, and the actions.
 export function P9Phone() {
   const tab = useStore((s) => s.tab);
+  const scoreLook = useStore((s) => s.scoreLook);
   const setTab = useStore((s) => s.setTab);
   const setTour = useStore((s) => s.setTour);
   const user = useStore((s) => s.user);
@@ -1267,7 +1334,8 @@ export function P9Phone() {
 
       <main className="p9p-play">
         {/* the hero carries the sponsor, the name and the deadline; on the night, Share under them */}
-        <Hero presented={<Presented />} meta={<><HeroLock />{live && <ShareButton />}</>} />
+        <Hero presented={<Presented />} meta={<>{live && scoreLook === 1 ? <NightScore look={1} /> : <HeroLock />}{live && <ShareButton />}</>} />
+        {live && scoreLook >= 3 && <div className="dx-card p9p-card p9p-nscard"><NightScore look={scoreLook} /></div>}
 
 
         <div className="p9p-tabs" role="tablist" aria-label="Parts of the game">
@@ -1279,6 +1347,7 @@ export function P9Phone() {
           ))}
         </div>
 
+        {live && scoreLook === 2 && <div className="p9p-ns"><NightScore look={2} /></div>}
         <div className="p9p-map"><MapBox /></div>
         <Legend />
 

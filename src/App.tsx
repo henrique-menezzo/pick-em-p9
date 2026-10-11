@@ -360,6 +360,7 @@ function ViewSwitch() {
       <MapSwitch />
       <span className="vs-div" />
       <AfSwitch />
+      <ScoreSwitch />
       <span className="vs-div" />
       <ThemeSwitch />
     </div>,
@@ -407,6 +408,25 @@ function MapSwitch() {
 /** Autofill's picks are the same colour as yours. Three ways to tell them apart anyway, to compare:
  *  the choice sits on <html> so the cards drawn outside the page follow it too. */
 const AF_LOOKS = ['Nothing on the map, the source in words only', 'A check on your own picks', 'A spark on Autofill\'s picks'];
+/** Election night's overall score, five ways to show it (and 0, as it was), for review. */
+const SCORE_LOOKS = ['In the hero: right and missed as big figures', 'On the map\'s top line', 'A bar of all 110 races', 'A box score, map by map', 'A ring: the share you got right'];
+function ScoreSwitch() {
+  const n = useStore((s) => s.scoreLook);
+  const set = useStore((s) => s.setScoreLook);
+  return (
+    <div className="vs-seg vs-map">
+      {SCORE_LOOKS.map((tip, i) => (
+        <Tip key={i} text={`Score ${i + 1}: ${tip}`}>
+          <button className={n === i + 1 ? 'on' : ''} onClick={() => set(n === i + 1 ? 0 : i + 1)} aria-pressed={n === i + 1} aria-label={`Score look ${i + 1}, ${tip}`}>
+            {i === 0 && <span className="vs-n">Score</span>} {i + 1}
+            {n === i + 1 && <motion.span layoutId="vs-score-hl" className="hl" initial={false} transition={{ type: 'spring', stiffness: 500, damping: 38 }} />}
+          </button>
+        </Tip>
+      ))}
+    </div>
+  );
+}
+
 function AfSwitch() {
   const n = useStore((s) => s.afLook);
   const set = useStore((s) => s.setAfLook);
