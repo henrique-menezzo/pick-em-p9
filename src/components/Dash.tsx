@@ -151,24 +151,22 @@ function RaceList({ title, start = 'open', dense }: { title?: string; start?: Fi
  *  under it, the actions on the right, the map, Polymarket and the legend at the foot. */
 function DxMap({ noSave }: { noSave?: boolean }) {
   const live = useLive();
-  const scoreLook = useStore((s) => s.scoreLook);
+  const tab = useStore((s) => s.tab);
   const t = useStore((s) => s.t);
   const picks = useStore((s) => s.picks);
   const { left, locked } = useCountdown();
-  const sc = live ? liveScore(picks, t) : null;
+  const sc = live ? liveScore(picks, t, tab) : null;
   return (
     <section className="e-map dx-map">
       {/* the hero over the game carries the sponsor and the name (Figma 464:12099): the card keeps only
           the deadline, at its top left */}
-{live && scoreLook === 2 ? <header className="dx-mhead dx-lockhead"><NightScore look={2} /></header> : (
-            <header className="dx-mhead dx-lockhead">
-        <p className="dx-mlock num">{sc ? <><i className="sd live-dot" />Live · {sc.called} of {ALL.length} called</> : locked ? 'Picks are locked' : <>Lock in <b>{left}</b></>}</p>
+<header className="dx-mhead dx-lockhead">
+        <p className="dx-mlock num">{sc ? <LiveLine sc={sc} /> : locked ? 'Picks are locked' : <>Lock in <b>{left}</b></>}</p>
       </header>
-      )}
       {/* on the night the replay sits where the picking actions were, out of the way of the cards */}
       <div className={'dx-mact' + (live ? ' dx-tl' : '')}>{live ? <Foot /> : <CatActions noSave={noSave} />}</div>
       <MapBox />
-      <div className={'dx-mfoot' + (live && scoreLook === 7 ? ' ns7-on' : '')}>{live && scoreLook === 7 && <NightScore look={7} />}<Legend /></div>
+      <div className="dx-mfoot"><Legend /></div>
     </section>
   );
 }
@@ -196,11 +194,9 @@ function CountCard({ all }: { all?: boolean }) {
  *  (or the two counts, as in the Figma). On the night: the show, the score, the race being counted. */
 function Side({ children, cls = '', noRace, partOnly, before, after, bare }: { children?: ReactNode; cls?: string; noRace?: boolean; partOnly?: boolean; before?: ReactNode; after?: ReactNode; bare?: boolean }) {
   const live = useLive();
-  const scoreLook = useStore((s) => s.scoreLook);
   if (live && !noRace) {
     return (
       <aside className="e-panel dx-side night">
-        {scoreLook >= 3 && scoreLook <= 5 && <div className="dx-card ns-card"><NightScore look={scoreLook} /></div>}
         <div className="dx-card flat"><LiveVideo bare /></div>
         <div className="dx-card"><RaceCard className="inner e-nightrace dx-race" /></div>
         {/* the squares again, now as the answer sheet: a check where you were right, an ✕ where not */}
@@ -684,13 +680,10 @@ function Board8({ head = 'none', row = 'frac', done = 'check', dot, title = true
   const parts = TABS.map((k) => usePart(k));
   const pop = useCellPop();
   const wave = useAutoWave();
-  const scoreLook = useStore((s) => s.scoreLook);
   return (
     <section className={'dx-board p8-board row-' + row + (dot ? ' dots' : '') + (wave ? ' wave' : '')} aria-label="Every race">
       <AnimatePresence>{pop.at && <CellPop key="pop" {...pop.at} onEnter={pop.stay} onLeave={pop.leave} onClose={pop.close} />}</AnimatePresence>
-      {title && head === 'none' && (live && scoreLook === 6
-        ? <h2 className="dx-h ns6-h"><span>Every race</span><NightScore look={6} /></h2>
-        : <h2 className="dx-h">Every race</h2>)}
+      {title && head === 'none' && <h2 className="dx-h">Every race</h2>}
       <BoardHead head={head} />
       {parts.map((p) => {
         const k = p.k;
@@ -1211,90 +1204,36 @@ function PartDone() {
   );
 }
 
-/** Election night: how many you have right and missed, all three maps together, and map by map. */
-function useNight() {
-  const picks = useStore((s) => s.picks);
-  const t = useStore((s) => s.t);
-  const all = liveScore(picks, t);
-  const parts = TABS.map((k) => ({ k, ...liveScore(picks, t, k) }));
-  return { ...all, out: all.total - all.called, none: all.called - all.correct - all.missed, parts };
-}
-const ScoreMark = ({ ok }: { ok: boolean }) => (
-  <span className={'ns-mark ' + (ok ? 'ok' : 'no')} aria-hidden><Icon name={ok ? 'check' : 'x'} size={ok ? 12 : 11} stroke={3.2} /></span>
-);
-/** The overall score on election night, in one of five looks (the review switch, ?score=1–5). */
-function NightScore({ look }: { look: number }) {
-  const n = useNight();
-  const said = `${n.correct} right, ${n.missed} missed, ${n.called} of ${n.total} races called`;
-  if (look === 1) return (
-    <div className="ns ns1" role="group" aria-label={said}>
-      <span className="ns-fig"><ScoreMark ok /><b className="num">{n.correct}</b><small>right</small></span>
-      <span className="ns-fig"><ScoreMark ok={false} /><b className="num">{n.missed}</b><small>missed</small></span>
-      <span className="ns-out num">{n.called} of {n.total} called{n.out ? ` · ${n.out} still out` : ''}</span>
-    </div>
-  );
-  if (look === 2) return (
-    <p className="ns ns2 num" aria-label={said}>
-      <ScoreMark ok /><b>{n.correct}</b> right<ScoreMark ok={false} /><b>{n.missed}</b> missed<small>{n.called} of {n.total} called</small>
-    </p>
-  );
-  if (look === 3) return (
-    <div className="ns ns3" role="group" aria-label={said}>
-      <div className="ns3-top"><b>Your night</b><span className="num">{n.called} of {n.total} called</span></div>
-      <div className="ns3-bar" aria-hidden>
-        <i className="r" style={{ flexGrow: n.correct }} /><i className="m" style={{ flexGrow: n.missed }} />
-        {n.none > 0 && <i className="x" style={{ flexGrow: n.none }} />}<i className="o" style={{ flexGrow: n.out }} />
-      </div>
-      <div className="ns3-key num">
-        <span><i className="r" /><b>{n.correct}</b> right</span>
-        <span><i className="m" /><b>{n.missed}</b> missed</span>
-        <span><i className="o" /><b>{n.out}</b> still out</span>
-      </div>
-    </div>
-  );
-  if (look === 4) return (
-    <table className="ns ns4" aria-label="Your night, map by map">
-      <thead><tr><th scope="col">Your night</th><th scope="col">Right</th><th scope="col">Missed</th><th scope="col">Out</th></tr></thead>
-      <tbody>{n.parts.map((p) => <tr key={p.k}><th scope="row">{TAB_LABEL[p.k]}</th><td className="num">{p.correct}</td><td className="num">{p.missed}</td><td className="num">{p.total - p.called}</td></tr>)}</tbody>
-      <tfoot><tr><th scope="row">Total</th><td className="num">{n.correct}</td><td className="num">{n.missed}</td><td className="num">{n.out}</td></tr></tfoot>
-    </table>
-  );
-  if (look === 6) return (
-    <span className="ns ns6 num" aria-label={said}><ScoreMark ok /><b>{n.correct}</b> right<ScoreMark ok={false} /><b>{n.missed}</b> missed</span>
-  );
-  if (look === 7) return (
-    <p className="ns ns7 num" aria-label={said}><ScoreMark ok /><b>{n.correct}</b> right<ScoreMark ok={false} /><b>{n.missed}</b> missed<small>{n.called} of {n.total} called</small></p>
-  );
-  const share = n.correct + n.missed ? Math.round((n.correct / (n.correct + n.missed)) * 100) : 0;
+/** Election night's line for the map on screen: how many of its races are called, and, once you have
+ *  a pick among them, the share of those you got right. */
+function LiveLine({ sc }: { sc: ReturnType<typeof liveScore> }) {
+  const done = sc.correct + sc.missed;
   return (
-    <div className="ns ns5" role="group" aria-label={`${share}% right. ${said}`}>
-      <span className="dx-ring-wrap ns5-ring"><Ring v={share} /><b className="num">{share}<small>%</small></b></span>
-      <span className="ns5-t">
-        <b className="num">{n.correct} of {n.correct + n.missed} right</b>
-        <small className="num"><ScoreMark ok={false} />{n.missed} missed · {n.called} of {n.total} called</small>
-      </span>
-    </div>
+    <>
+      <i className="sd live-dot" />Live · {sc.called} of {sc.total} called
+      {done > 0 && <span className="ll-right"> · <b>{Math.round((sc.correct / done) * 100)}%</b> right</span>}
+    </>
   );
 }
 
 /** On a phone there is no card header, so the deadline goes under the hero. */
 function HeroLock() {
   const live = useLive();
+  const tab = useStore((s) => s.tab);
   const t = useStore((s) => s.t);
   const picks = useStore((s) => s.picks);
   const { left, locked } = useCountdown();
-  const sc = live ? liveScore(picks, t) : null;
-  return <p className="h-lock num">{sc ? <><i className="sd live-dot" />Live · {sc.called} of {ALL.length} called</> : locked ? 'Picks are locked' : <>Lock in <b>{left}</b></>}</p>;
+  const sc = live ? liveScore(picks, t, tab) : null;
+  return <p className="h-lock num">{sc ? <LiveLine sc={sc} /> : locked ? 'Picks are locked' : <>Lock in <b>{left}</b></>}</p>;
 }
 
 function ThePage() {
   const tab = useStore((s) => s.tab);
   const live = useLive();
-  const scoreLook = useStore((s) => s.scoreLook);
   const MapCard6b = () => <div className="dx-card p22-map"><BoardHead head="seg" /></div>;
   return (
     <div className={'v vE r big rows mtw mtw-folder dx dx7 p8 p22 p9 hero-on sel-' + TABS.indexOf(tab)}>
-      <Hero presented={<Presented />} meta={live && scoreLook === 1 ? <NightScore look={1} /> : undefined} />
+      <Hero presented={<Presented />} />
       {/* Save (Share on the night) acts on every map at once, so it sits on the card itself, in a tab of
           its own at the card's top right, not on any one part; Autofill and the refresh stay inside */}
       <div className="p9-tabs"><MapTabs look="folder" /><div className="p9-savetab">{live ? <ShareButton /> : <SaveMaps />}</div></div>
@@ -1310,7 +1249,6 @@ function ThePage() {
 // candidates side by side, and the actions.
 export function P9Phone() {
   const tab = useStore((s) => s.tab);
-  const scoreLook = useStore((s) => s.scoreLook);
   const setTab = useStore((s) => s.setTab);
   const setTour = useStore((s) => s.setTour);
   const user = useStore((s) => s.user);
@@ -1343,8 +1281,7 @@ export function P9Phone() {
 
       <main className="p9p-play">
         {/* the hero carries the sponsor, the name and the deadline; on the night, Share under them */}
-        <Hero presented={<Presented />} meta={<>{live && scoreLook === 1 ? <NightScore look={1} /> : <HeroLock />}{live && <ShareButton />}</>} />
-        {live && scoreLook >= 3 && scoreLook <= 5 && <div className="dx-card p9p-card p9p-nscard"><NightScore look={scoreLook} /></div>}
+        <Hero presented={<Presented />} meta={<><HeroLock />{live && <ShareButton />}</>} />
 
 
         <div className="p9p-tabs" role="tablist" aria-label="Parts of the game">
@@ -1356,10 +1293,8 @@ export function P9Phone() {
           ))}
         </div>
 
-        {live && scoreLook === 2 && <div className="p9p-ns"><NightScore look={2} /></div>}
         <div className="p9p-map"><MapBox /></div>
         <Legend />
-        {live && scoreLook === 7 && <div className="p9p-ns7"><NightScore look={7} /></div>}
 
         {/* the night: the replay, then the show, then the score */}
         {live && <div className="p9p-night"><Foot /></div>}

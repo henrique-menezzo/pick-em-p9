@@ -89,7 +89,8 @@ if (Q.has('reset')) {
   });
   const s = useStore.getState();
   // ?fill=1 — screenshot helper: a complete map picked like the polls (swaps a few so there are misses)
-  if (Q.has('fill')) useStore.setState({ picks: Object.fromEntries(ALL.map((r, i) => [r.id, i % 5 === 2 ? (r.poll === 'R' ? 'D' : 'R') : r.poll])) });
+  // ?fill=2 — the same, with every third race left without a pick
+  if (Q.has('fill')) useStore.setState({ picks: Object.fromEntries(ALL.map((r, i) => [r.id, i % 5 === 2 ? (r.poll === 'R' ? 'D' : 'R') : r.poll] as const).filter((_, i) => Q.get('fill') !== '2' || i % 3 !== 0)) });
   if (V.empty) useStore.setState({ picks: {}, savedAt: null, tab: 'senate', cursor: { senate: RACES.senate[0].id, gov: RACES.gov[0].id, house: RACES.house[0].id } });
   if (Q.has('night')) s.setLive(Q.get('night') !== '0');
   if (Q.has('t')) s.setT(+Q.get('t')!);
@@ -294,11 +295,11 @@ function useBuckets() {
     // the misses split by who won the race, the colour the state is drawn in
     const missed = list.filter((r) => picks[r.id] && statusAt(r.id, t).status === 'called' && picks[r.id] !== RESULTS[r.id].winner);
     const mR = missed.filter((r) => RESULTS[r.id].winner === 'R').length;
-    return { live, a: sc.correct, b: sc.missed, mR, mD: missed.length - mR, open: list.length - sc.correct - sc.missed };
+    return { live, a: sc.correct, b: sc.missed, mR, mD: missed.length - mR, open: list.length - sc.called, np: sc.called - sc.correct - sc.missed };
   }
   const R = list.filter((r) => picks[r.id] === 'R').length;
   const D = list.filter((r) => picks[r.id] === 'D').length;
-  return { live, a: R, b: D, mR: 0, mD: 0, open: list.length - R - D };
+  return { live, a: R, b: D, mR: 0, mD: 0, open: list.length - R - D, np: 0 };
 }
 
 /** Plain progress: how much of the map is picked. The R/D split is in the legend. */
@@ -308,13 +309,14 @@ function Progress() {
 }
 
 export function Legend() {
-  const { live, a, b, mR, mD, open } = useBuckets();
+  const { live, a, b, mR, mD, open, np } = useBuckets();
   return (
     <div className="legend">
       {live ? (
         <>
           <span><i style={{ background: 'linear-gradient(90deg, var(--R) 50%, var(--D) 50%)' }} />Right <b className="num">{a}</b></span>
           <span>Missed <i className="lg-miss r" /><b className="num">{mR}</b><i className="lg-miss d" /><b className="num">{mD}</b></span>
+          {np > 0 && <span><i className="lg-np" />No pick <b className="num">{np}</b></span>}
           <span><i style={{ background: 'var(--dot-pending)' }} />To call <b className="num">{open}</b></span>
         </>
       ) : (
@@ -360,7 +362,6 @@ function ViewSwitch() {
       <MapSwitch />
       <span className="vs-div" />
       <AfSwitch />
-      <ScoreSwitch />
       <span className="vs-div" />
       <ThemeSwitch />
     </div>,
@@ -408,25 +409,6 @@ function MapSwitch() {
 /** Autofill's picks are the same colour as yours. Three ways to tell them apart anyway, to compare:
  *  the choice sits on <html> so the cards drawn outside the page follow it too. */
 const AF_LOOKS = ['Nothing on the map, the source in words only', 'A check on your own picks', 'A spark on Autofill\'s picks'];
-/** Election night's overall score, five ways to show it (and 0, as it was), for review. */
-const SCORE_LOOKS = ['In the hero: right and missed as big figures', 'On the map\'s top line', 'A bar of all 110 races', 'A box score, map by map', 'A ring: the share you got right', 'Beside the title of Every race', 'At the foot of the map, left of the legend'];
-function ScoreSwitch() {
-  const n = useStore((s) => s.scoreLook);
-  const set = useStore((s) => s.setScoreLook);
-  return (
-    <div className="vs-seg vs-map">
-      {SCORE_LOOKS.map((tip, i) => (
-        <Tip key={i} text={`Score ${i + 1}: ${tip}`}>
-          <button className={n === i + 1 ? 'on' : ''} onClick={() => set(n === i + 1 ? 0 : i + 1)} aria-pressed={n === i + 1} aria-label={`Score look ${i + 1}, ${tip}`}>
-            {i === 0 && <span className="vs-n">Score</span>} {i + 1}
-            {n === i + 1 && <motion.span layoutId="vs-score-hl" className="hl" initial={false} transition={{ type: 'spring', stiffness: 500, damping: 38 }} />}
-          </button>
-        </Tip>
-      ))}
-    </div>
-  );
-}
-
 function AfSwitch() {
   const n = useStore((s) => s.afLook);
   const set = useStore((s) => s.setAfLook);

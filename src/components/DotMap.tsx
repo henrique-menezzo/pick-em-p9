@@ -167,9 +167,12 @@ export default function DotMap({ fit }: { fit?: boolean }) {
       const now = statusAt(race.id, t);
       if (now.status === 'called') {
         const w = RESULTS[race.id].winner;
-        // right = the winner's colour at full strength; missed = the same colour, well faded back
+        // right = the winner's colour at full strength; missed = the same colour, well faded back;
+        // no pick of yours = the winner's colour barely there, so it never reads as one you got right
         const miss = !!pick && pick !== w;
-        out[st] = miss
+        out[st] = !pick
+          ? { cls: 'np' + (sel ? ' sel' : '') + hv, c: COLOR[w], o: sel || hv ? 0.42 : 0.24, label: false }
+          : miss
           ? { cls: 'pk miss' + (sel ? ' sel' : '') + hv, c: COLOR[w], o: (sel || hv ? 0.7 : 0.5) * (off ? 0.8 : 1), label: false }
           : { cls: 'pk ' + (sel ? 'sel' : '') + hv, c: COLOR[w], o: dim, label: true };
       } else {

@@ -51,8 +51,6 @@ interface State {
   mapKind: MapKind;
   /** review switch: how Autofill's picks are told apart from yours (1 nothing on the map, 2 a check on yours, 3 a spark on Autofill's) */
   afLook: number;
-  /** Election night: how the overall score is shown (0 = as before, 1–5 the options under review) */
-  scoreLook: number;
   layout: number;
   setLayout(n: number): void;
   /** the opening transition: the waveform, then the screen assembling itself, then the game */
@@ -93,7 +91,6 @@ interface State {
   setTheme(theme: Theme): void;
   setMapKind(kind: MapKind): void;
   setAfLook(n: number): void;
-  setScoreLook(n: number): void;
   /** Election Night needs an account and a saved map. */
   goLive(on: boolean): void;
 }
@@ -144,7 +141,6 @@ export const useStore = create<State>()(
       theme: (new URLSearchParams(location.search).get('theme') as Theme) || 'dark',
       mapKind: (new URLSearchParams(location.search).get('map') === '2' ? 'dots' : 'shape'),
       afLook: 1,
-      scoreLook: Math.min(7, Math.max(0, Number(new URLSearchParams(location.search).get('score')) || 0)),
       layout: 1,
       setLayout: (layout) => set({ layout, hoverId: null }),
       phase: 'intro',
@@ -288,7 +284,6 @@ export const useStore = create<State>()(
       // the spotlight and the tour read the map straight from the DOM, so swapping it ends any hover
       setMapKind: (mapKind) => set({ mapKind, hoverId: null }),
       setAfLook: (afLook) => set({ afLook }),
-      setScoreLook: (scoreLook) => set({ scoreLook }),
       setPhase: (phase) => set({ phase }),
       setTour: (tour) => set({ tour, tourDone: tour === null ? true : get().tourDone }),
       goLive: (on) => {
