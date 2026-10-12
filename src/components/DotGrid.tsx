@@ -33,8 +33,11 @@ for (const [st, pts] of Object.entries(grid.states as Record<string, number[][]>
 }
 const ORDER = Object.keys(BY_ST);
 // Map 2 is drawn at exactly map 1's size: the same country width, on the same centre. Map 1 fits the hub's
-// 975 × 610 box into the same stage, and its country spans this, in its own units:
-const HUB = { w: 975, h: 610, x0: -57.63, y0: 12.98, x1: 957.06, y1: 606.57 };
+// 975 × 610 box into the same stage, and its lower 48 span this, in its own units. The lower 48, not
+// the whole drawing: map 1's Alaska hangs 57 units off the left of its box, and matching the dots'
+// Washington to that edge made map 2 8% wider than map 1 and pushed it left, off the edge on a phone
+// (the dots' own Alaska sits inside their country's box, under the west coast)
+const HUB = { w: 975, h: 610, x0: 18.48, y0: 12.98, x1: 957.06, y1: 606.57 };
 // …and the dots' country, in theirs (the seam dots are never seen, so they do not count)
 const DOTS_BOX = CELLS.filter((c) => !c.seam).reduce((a, c) => ({ x0: Math.min(a.x0, c.x - c.r), y0: Math.min(a.y0, c.y - c.r), x1: Math.max(a.x1, c.x + c.r), y1: Math.max(a.y1, c.y + c.r) }), { x0: Infinity, y0: Infinity, x1: -Infinity, y1: -Infinity });
 function matchMap1(bw: number, bh: number) {
