@@ -1280,8 +1280,8 @@ export function P9Phone() {
       </header>
 
       <main className="p9p-play">
-        {/* the hero carries the sponsor, the name and the deadline; on the night, Share under them */}
-        <Hero presented={<Presented />} meta={<><HeroLock />{live && <ShareButton />}</>} />
+        {/* the hero carries the sponsor, the name and the deadline (on the night, the live line) */}
+        <Hero presented={<Presented />} meta={<HeroLock />} />
 
 
         <div className="p9p-tabs" role="tablist" aria-label="Parts of the game">
@@ -1296,8 +1296,9 @@ export function P9Phone() {
         <div className="p9p-map"><MapBox /></div>
         <Legend />
 
-        {/* the night: the replay, then the show, then the score */}
-        {live && <div className="p9p-night"><Foot /></div>}
+        {/* the night: Share and the replay in one row under the map they are about, then the show,
+            then the score */}
+        {live && <div className="p9p-night"><ShareButton /><Foot /></div>}
         {live && <div className="p9p-vid"><LiveVideo bare /></div>}
         <div className="p9p-cards">
           <div className="dx-card p22-map p9p-card"><BoardHead head="seg" /></div>
