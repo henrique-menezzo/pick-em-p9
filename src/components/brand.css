@@ -16,10 +16,7 @@
 .hero .e-pres { font-size: 12px; color: var(--p9-soft); }
 .p9 .hero .e-pres i { color: #6b6b6b; }
 .hero .h-title { position: relative; top: -4px; margin: 0; font-size: 44px; line-height: 32px; font-weight: 600; letter-spacing: -1.2px; white-space: nowrap; color: var(--p9-ink); }
-.hero .h-tag { font-size: 16px; line-height: 19px; }
-.hero .h-tag span { color: var(--p9-ink); }
-.hero .h-words { display: flex; flex-direction: column; gap: 10px; }
-.hero .h-about { margin: 0; font-size: 14px; line-height: 1.45; color: var(--p9-soft); }
+.hero .h-about { margin: 0; font-size: 16px; line-height: 1.4; color: var(--p9-soft); }
 .hero .h-about span { display: block; text-wrap: balance; }
 .hero .h-w { flex: 0 1 341px; min-width: 0; height: 172px; margin: -27.5px 0; }
 .hero .h-lock { margin: 0; font-size: 14px; color: var(--p9-soft); }
@@ -36,8 +33,7 @@
 .p9p .hero { flex-direction: column-reverse; align-items: center; gap: 24px; margin: 16px 0 32px; text-align: center; }
 .p9p .hero .h-head { align-items: center; gap: 16px; }
 .p9p .hero .h-title { top: 0; font-size: 32px; line-height: 1; letter-spacing: -.03em; white-space: normal; text-wrap: balance; }
-.p9p .hero .h-tag { font-size: 15px; line-height: 1.35; text-wrap: balance; }
-.p9p .hero .h-words { align-items: center; gap: 8px; text-align: center; }
+.p9p .hero .h-about { font-size: 14px; text-align: center; } /* 14px: each sentence still fits on a line */
 .p9p .hero .h-w { flex: none; width: 100%; height: 100px; margin: 0; }
 .p9p .hero .h-lock { margin-top: 4px; }
 .p9p .hero .sh-btn { height: 44px; padding: 0 18px; border-radius: 999px; background: var(--p9-pill); font-size: 14px; font-weight: 600; }
@@ -59,8 +55,7 @@
   :is(.p6.enter > .nav, .p9p.enter .p9p-top) { animation: pe-drop .7s var(--pe) calc(var(--land) - .1s) both; }
   :is(.p6, .p9p).enter .hero .e-pres { animation: pe-blur .7s var(--pe) var(--land) both; }
   :is(.p6, .p9p).enter .hero .h-title .hw { animation: pe-word .8s var(--pe) calc(var(--land) + .05s + var(--i) * .06s) both; }
-  :is(.p6, .p9p).enter .hero .h-tag .hw { animation: pe-blur .7s var(--pe) calc(var(--land) + .22s + var(--i) * .035s) both; }
-  :is(.p6, .p9p).enter .hero .h-about { animation: pe-blur .7s var(--pe) calc(var(--land) + .34s) both; }
+  :is(.p6, .p9p).enter .hero .h-about { animation: pe-blur .7s var(--pe) calc(var(--land) + .24s) both; }
   :is(.p6, .p9p).enter .hero .h-lock { animation: pe-blur .7s var(--pe) calc(var(--land) + .4s) both; }
   .p6.enter .p9-tabs { animation: pe-rise .7s var(--pe) calc(var(--land) + .15s) both; }
   .p6.enter .e-cards { animation: pe-rise .8s var(--pe) calc(var(--land) + .2s) both; }
@@ -121,13 +116,11 @@ body:has(.p9p) .auth-dim { backdrop-filter: none; }
 body:has(.p9p) .auth-x { top: 10px; right: 10px; width: 44px; height: 44px; }
 /* short phones (an iPhone SE): a tighter hero, so the map starts above the picks panel */
 @media (max-width: 760px) and (max-height: 720px) {
-  .p9p .hero { gap: 12px; margin: 4px 0 14px; }
-  .p9p .hero .h-head { gap: 8px; }
-  .p9p .hero .h-w { height: 48px; }
+  .p9p .hero { gap: 14px; margin: 8px 0 20px; }
+  .p9p .hero .h-head { gap: 10px; }
+  .p9p .hero .h-w { height: 60px; }
   .p9p .hero .h-title { font-size: 28px; }
-  .p9p .hero .h-tag { font-size: 14px; }
-  .p9p .hero .h-words { gap: 4px; }
-  .p9p .hero .h-about { font-size: 13px; line-height: 1.4; }
+  .p9p .hero .h-about { font-size: 13px; }
 }
 
 /* election night's show: bigger or smaller, never hidden. Bigger, it glides out of its card to the

@@ -101,12 +101,8 @@ export function Hero({ presented, meta }: { presented: React.ReactNode; meta?: R
       <div className="h-head">
         {presented}
         <h2 className="h-title">{words('The Midterms Pick’em')}</h2>
-        {/* the line, and right under it what the game is and what it is for */}
-        <div className="h-words">
-          <p className="btag h-tag"><b>{words('The nation speaks.')}</b> <span>{words('Can you predict their voices?', 3)}</span></p>
-          {/* a sentence to a line where there is room for it */}
-          <p className="h-about"><span>Pick the winner in each of the top 100 races.</span> <span>Finish with the top score and win a year of All Access.</span></p>
-        </div>
+        {/* what the game is and what it is for, a sentence to a line where there is room for it */}
+        <p className="h-about"><span>Pick the winner in each of the top 100 races.</span> <span>Finish with the top score and win a year of All Access.</span></p>
         {meta}
       </div>
       <Wave className="h-w" />
