@@ -1078,12 +1078,12 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .intro.leaving .intro-bg { opacity: 0; }
 .intro-mark { --cw: min(760px, 58vw); position: relative; display: flex; flex-direction: column; align-items: center; }
 .intro-mark canvas { width: var(--cw); display: block; }
-/* the line as the branding team sets it on the web: the first sentence red and heavier, the question in
-   ink (white on dark, black on light) */
-.intro-line { margin: calc(var(--cw) * .035) 0 0; width: max-content; max-width: 90vw; transform-origin: 0 0; font-size: 20px; line-height: 1.35; text-align: center; color: var(--p9-ink); }
+/* the line as the branding team sets it on the web (their frame, Oct 16): all of it in Light, the first
+   sentence red, the question in ink (white on dark, black on light) */
+.intro-line { margin: calc(var(--cw) * .035) 0 0; width: max-content; max-width: 90vw; transform-origin: 0 0; font-size: 20px; font-weight: 300; line-height: 1.35; text-align: center; color: var(--p9-ink); }
 .intro-line .iw { display: inline-block; margin-right: .26em; }
 .intro-line .iw:last-child { margin-right: 0; }
-.intro-line .iw.b { font-weight: 600; color: #fb1616; }
+.intro-line .iw.b { color: #fb1517; }
 /* on a phone the opening is the wave alone, as in the asset without the line */
 @media (max-width: 760px) { .intro-mark { --cw: 82vw; } .intro-line { display: none; } }
 /* while the opening's row and line are in the air, the page's own wait out of sight */

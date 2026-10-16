@@ -20,10 +20,10 @@
 .hero .h-about span { display: block; text-wrap: balance; }
 .hero .h-wave { flex: 0 1 341px; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 10px; }
 .hero .h-w { width: 100%; aspect-ratio: 3072 / 1260; }
-/* the line as the branding team sets it on the web: the first sentence red and heavier, the question in
-   ink (white on dark, black on light). Red and blue is for images that have to work on either */
-.hero .h-line { margin: 0; font-size: 14px; line-height: 1.3; text-align: center; text-wrap: balance; color: var(--p9-ink); }
-.hero .h-line b { font-weight: 600; color: #fb1616; }
+/* the line as the branding team sets it on the web (their frame, Oct 16): all of it in Light, the first
+   sentence red, the question in ink (white on dark, black on light). Red and blue is for images */
+.hero .h-line { margin: 0; font-size: 14px; font-weight: 300; line-height: 1.3; text-align: center; text-wrap: balance; color: var(--p9-ink); }
+.hero .h-line b { font-weight: inherit; color: #fb1517; }
 .hero .h-lock { margin: 0; font-size: 14px; color: var(--p9-soft); }
 .hero .h-lock b { font-weight: 600; color: var(--p9-ink); }
 

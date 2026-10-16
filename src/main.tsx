@@ -1,5 +1,6 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+import '@fontsource/libre-franklin/300.css';
 import '@fontsource/libre-franklin/400.css';
 import '@fontsource/libre-franklin/500.css';
 import '@fontsource/libre-franklin/600.css';
