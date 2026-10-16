@@ -18,7 +18,11 @@
 .hero .h-title { position: relative; top: -4px; margin: 0; font-size: 44px; line-height: 32px; font-weight: 600; letter-spacing: -1.2px; white-space: nowrap; color: var(--p9-ink); }
 .hero .h-about { margin: 0; font-size: 16px; line-height: 1.4; color: var(--p9-soft); }
 .hero .h-about span { display: block; text-wrap: balance; }
-.hero .h-w { flex: 0 1 341px; min-width: 0; height: 172px; margin: -27.5px 0; }
+.hero .h-wave { flex: 0 1 341px; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.hero .h-w { width: 100%; aspect-ratio: 3072 / 1260; }
+/* the line in the asset's colours: the first sentence red and bold, the question blue */
+.hero .h-line { margin: 0; font-size: 14px; line-height: 1.3; text-align: center; text-wrap: balance; color: #006eff; }
+.hero .h-line b { font-weight: 600; color: #fb1616; }
 .hero .h-lock { margin: 0; font-size: 14px; color: var(--p9-soft); }
 .hero .h-lock b { font-weight: 600; color: var(--p9-ink); }
 
@@ -34,7 +38,9 @@
 .p9p .hero .h-head { align-items: center; gap: 16px; }
 .p9p .hero .h-title { top: 0; font-size: 32px; line-height: 1; letter-spacing: -.03em; white-space: normal; text-wrap: balance; }
 .p9p .hero .h-about { font-size: 14px; text-align: center; } /* 14px: each sentence still fits on a line */
-.p9p .hero .h-w { flex: none; width: 100%; height: 100px; margin: 0; }
+.p9p .hero .h-wave { flex: none; width: 100%; }
+.p9p .hero .h-w { height: 100px; aspect-ratio: auto; }
+.p9p .hero .h-line { display: none; }
 .p9p .hero .h-lock { margin-top: 4px; }
 .p9p .hero .sh-btn { height: 44px; padding: 0 18px; border-radius: 999px; background: var(--p9-pill); font-size: 14px; font-weight: 600; }
 
@@ -52,6 +58,7 @@
 .p9p.pre { opacity: 0; }
 @media (prefers-reduced-motion: no-preference) {
   .p9, .p6:has(.p9) { --pe: cubic-bezier(.2, .7, .2, 1); --land: .45s; }
+  .p6.enter .hero .h-line { animation: pe-blur .7s var(--pe) calc(var(--land) + .15s) both; }
   :is(.p6, .p9p).enter .hero .h-w { animation: pe-wave .9s var(--pe) calc(var(--land) - .05s) both; } /* once the opening has faded (.38s) */
   :is(.p6.enter > .nav, .p9p.enter .p9p-top) { animation: pe-drop .7s var(--pe) calc(var(--land) - .1s) both; }
   :is(.p6, .p9p).enter .hero .e-pres { animation: pe-blur .7s var(--pe) var(--land) both; }

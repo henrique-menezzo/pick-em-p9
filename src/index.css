@@ -1083,7 +1083,8 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .intro-line .iw { display: inline-block; margin-right: .26em; }
 .intro-line .iw:last-child { margin-right: 0; }
 .intro-line .iw.b { font-weight: 600; color: #fb1616; }
-@media (max-width: 760px) { .intro-mark { --cw: 82vw; } .intro-line { font-size: 15px; white-space: nowrap; } }
+/* on a phone the opening is the wave alone, as in the asset without the line */
+@media (max-width: 760px) { .intro-mark { --cw: 82vw; } .intro-line { display: none; } }
 /* while the opening's row and line are in the air, the page's own wait out of sight */
 .intro svg { overflow: visible; }
 /* the loader is the reference loop: a row of circles with a wave running through it. The fade and

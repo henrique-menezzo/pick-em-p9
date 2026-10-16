@@ -65,7 +65,12 @@ export function Hero({ presented, meta }: { presented: React.ReactNode; meta?: R
         <p className="h-about"><span>Pick the winner in each of the top 100 races.</span> <span>Finish with the top score and win a year of All Access.</span></p>
         {meta}
       </div>
-      <Wave className="h-w" />
+      {/* the wave with the brand's line under it, as the branding team's asset sets them (on a phone,
+          the wave alone) */}
+      <div className="h-wave">
+        <Wave className="h-w" />
+        <p className="h-line"><b>The Nation Speaks.</b> Can you predict their voices?</p>
+      </div>
     </section>
   );
 }
