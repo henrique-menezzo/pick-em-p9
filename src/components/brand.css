@@ -38,20 +38,21 @@
 .p9p .hero .h-lock { margin-top: 4px; }
 .p9p .hero .sh-btn { height: 44px; padding: 0 18px; border-radius: 999px; background: var(--p9-pill); font-size: 14px; font-weight: 600; }
 
-/* the page coming in once the opening's wave has landed (Intro.tsx): the wave gets the empty page to
-   itself first, then everything comes out of a blur, in turn, measured from --land (the landing):
-   the nav, Presented by, the name word by word, the line word by word, the parts and the card; the
-   states light up from west to east, the side's cards one after another. The hero itself never moves,
-   so the spot the wave flies to stays where it was measured. App.tsx holds the tour until this ends. */
+/* the page coming in once the opening has faded (Intro.tsx): everything comes out of a blur, in turn,
+   measured from --land: the hero's wave first, then the nav, Presented by, the name word by word, the
+   line, the parts and the card; the states light up from west to east, the side's cards one after
+   another. App.tsx holds the tour until this ends. */
 @keyframes pe-blur { from { opacity: 0; filter: blur(12px); } to { opacity: 1; filter: blur(0); } }
 @keyframes pe-rise { from { opacity: 0; filter: blur(10px); transform: translateY(10px); } to { opacity: 1; filter: blur(0); transform: none; } }
 @keyframes pe-word { from { opacity: 0; filter: blur(10px); transform: translateY(.3em); } to { opacity: 1; filter: blur(0); transform: none; } }
 @keyframes pe-drop { from { opacity: 0; filter: blur(8px); transform: translateY(-8px); } to { opacity: 1; filter: blur(0); transform: none; } }
+@keyframes pe-wave { from { opacity: 0; filter: blur(10px); transform: scale(.96); } to { opacity: 1; filter: blur(0); transform: none; } }
 @keyframes st-sweep { from { opacity: 0; transform: scale(.94); } to { opacity: 1; transform: none; } }
 .hero .hw { display: inline-block; }
 .p9p.pre { opacity: 0; }
 @media (prefers-reduced-motion: no-preference) {
   .p9, .p6:has(.p9) { --pe: cubic-bezier(.2, .7, .2, 1); --land: .45s; }
+  :is(.p6, .p9p).enter .hero .h-w { animation: pe-wave .9s var(--pe) calc(var(--land) - .05s) both; } /* once the opening has faded (.38s) */
   :is(.p6.enter > .nav, .p9p.enter .p9p-top) { animation: pe-drop .7s var(--pe) calc(var(--land) - .1s) both; }
   :is(.p6, .p9p).enter .hero .e-pres { animation: pe-blur .7s var(--pe) var(--land) both; }
   :is(.p6, .p9p).enter .hero .h-title .hw { animation: pe-word .8s var(--pe) calc(var(--land) + .05s + var(--i) * .06s) both; }

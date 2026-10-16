@@ -1082,10 +1082,8 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .intro-line .iw { display: inline-block; margin-right: .26em; }
 .intro-line .iw:last-child { margin-right: 0; }
 .intro-line .iw.b { font-weight: 600; color: var(--p9-ink, #fafafa); }
-.intro-air { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; }
 @media (max-width: 760px) { .intro-mark { --cw: 82vw; } .intro-line { font-size: 15px; white-space: nowrap; } }
 /* while the opening's row and line are in the air, the page's own wait out of sight */
-html.fly canvas.bw { opacity: 0; }
 .intro svg { overflow: visible; }
 /* the loader is the reference loop: a row of circles with a wave running through it. The fade and
    the swing are on different properties, so one never cancels the other. */

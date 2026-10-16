@@ -12,12 +12,9 @@ const TV1: [number, number, number, string][] = [
   [740.0, 69.3, 321.3, '#CC003B'], [791.0, 32.7, 562.5, '#FC002C'], [879.6, 144.5, 209.0, '#FC002C'], [1002.2, 100.6, 100.6, '#99003B'],
   [1066.1, 36.1, 36.1, '#01CEFB'], [1123.3, 78.1, 78.1, '#0F45DB'], [1184.3, 55.7, 55.7, '#0017A3'], [1256.6, 46.9, 46.9, '#001B7E'],
 ];
-/** The opening hands its wave over to the page's (Intro.tsx): until `hold` every wave on the page stays
-    at rest, the frame exactly as drawn, then its swell eases in. REST keeps each canvas's capsules at
-    rest, in its own pixels, so the opening knows where each one has to land. */
+/** After the opening (Intro.tsx): until `hold` every wave on the page stays at rest, the frame exactly
+    as drawn, then a ripple runs through it and its swell eases in. */
 export const intro = { hold: 0 };
-export type RestBar = { p: number; w: number; h: number; c: string; round: boolean };
-export const REST = new WeakMap<HTMLCanvasElement, { bars: RestBar[]; vertical: boolean; mid: number }>();
 
 /** The brand's wave (TV - 1), the whole row in its box, a slow swell running through it (the frame as
  *  drawn with reduced motion, or while the opening still holds it). anchor: where the row sits when the
@@ -49,7 +46,6 @@ export function Wave({ className = '', period = 4200, anchor = 0.5 }: { classNam
     // each capsule where it sits (p, along the row), its size, and f, its place in the row for the swell
     const bars = TV1.map(([x, w, h, c]) => ({ p: o + x * k, w: w * k, h: h * k, c, round: h <= w + 0.5, f: (x - lo) / len }));
     const mid = el.height / 2;
-    REST.set(el, { bars, vertical: false, mid });
     const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
     const hmax = Math.max(...bars.map((b) => b.h));
     // amp: how much of the swell shows, 0 while the opening still holds the waves at rest.
