@@ -119,8 +119,12 @@ export const CONTINUING = (() => {
   } catch { return false; }
 })();
 
-export type AutoSource = 'polls' | 'market';
-export const AUTO_NAME: Record<AutoSource, string> = { polls: 'DDHQ', market: 'Polymarket' };
+export type AutoSource = 'market' | 'random';
+export const AUTO_NAME: Record<AutoSource, string> = { market: 'Polymarket', random: 'Random' };
+/** How a sentence says where the picks came from: "filled from Polymarket", "filled at random". */
+export const AUTO_FROM: Record<AutoSource, string> = { market: 'from Polymarket', random: 'at random' };
+/** …and what a candidate it picked says in place of the party. */
+export const AUTO_BY: Record<AutoSource, string> = { market: 'Picked by Polymarket', random: 'Picked at random' };
 
 export const useStore = create<State>()(
   persist(
@@ -221,24 +225,25 @@ export const useStore = create<State>()(
       },
       // Only the races of the part you are in, and never one you picked yourself. Autofill can be run
       // again: it fills what is still open and swaps the races it filled before to the new source.
+      // Random run again flips its coins again.
       autofill: (source) => {
         const s = get();
         if (isLocked()) return;
-        const name = AUTO_NAME[source];
+        const from = AUTO_FROM[source];
         const cat = TAB_LABEL[s.tab];
         // an Autofill mark only counts while its pick is still there
         const isAuto = (id: string) => !!s.picks[id] && !!s.auto[id];
         const todo = RACES[s.tab].filter((r) => !s.picks[r.id] || isAuto(r.id));
         if (!todo.length) return s.say(`Every ${cat} race is your own pick`);
-        if (todo.every((r) => isAuto(r.id) && s.auto[r.id] === source)) return s.say(`${cat} is already filled from ${name}`);
+        if (source !== 'random' && todo.every((r) => isAuto(r.id) && s.auto[r.id] === source)) return s.say(`${cat} is already filled ${from}`);
         const swapped = todo.filter((r) => isAuto(r.id)).length;
         const picks = { ...s.picks };
         const auto = { ...s.auto };
-        for (const r of todo) { picks[r.id] = source === 'market' ? r.market : r.poll; auto[r.id] = source; }
+        for (const r of todo) { picks[r.id] = source === 'market' ? r.market : Math.random() < 0.5 ? 'R' : 'D'; auto[r.id] = source; }
         set({ picks, auto, savedAt: saveStamp(s), autoRun: s.autoRun + 1 });
         get().say(swapped
-          ? `${todo.length} ${cat} ${todo.length === 1 ? 'race' : 'races'} now from ${name}`
-          : `Filled ${todo.length} ${cat} ${todo.length === 1 ? 'race' : 'races'} from ${name}`);
+          ? `${todo.length} ${cat} ${todo.length === 1 ? 'race' : 'races'} now ${from}`
+          : `Filled ${todo.length} ${cat} ${todo.length === 1 ? 'race' : 'races'} ${from}`);
       },
       clearAuto: () => {
         const s = get();

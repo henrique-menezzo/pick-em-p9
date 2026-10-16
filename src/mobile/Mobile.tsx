@@ -378,8 +378,8 @@ function AutofillButton() {
             exit={{ opacity: 0, y: 6, scale: 0.98, transition: { duration: 0.12 } }}
             transition={{ type: 'spring', stiffness: 420, damping: 32 }}
           >
-            {([['polls', 'From the polls', 'Every open race goes the way the averages have it'],
-               ['market', 'From the market', 'Every open race goes the way the betting odds have it']] as const).map(([k, title, note]) => (
+            {([['market', 'Polymarket', 'Every open race goes the way the betting odds have it'],
+               ['random', 'Random', 'Every open race goes to a coin flip']] as const).map(([k, title, note]) => (
               <button key={k} onClick={() => { autofill(k); setOpen(false); }}>
                 <b>{title}</b><small>{note}</small>
               </button>

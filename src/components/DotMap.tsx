@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'motion/react';
 import us from '../data/usmap-hub.json';
 import { BY_ID, RESULTS, STATES, TAB_LABEL, raceIn, statusAt, type Side } from '../data/races';
-import { AUTO_NAME, useStore } from '../lib/store';
+import { AUTO_BY, useStore } from '../lib/store';
 import { Icon, PARTY, facePhoto, useAutoWave, useChangeFlag } from './ui';
 
 // ---- geometry ------------------------------------------------------------------------------------
@@ -434,7 +434,7 @@ function PickBadge({ svg, vb, badge, onDone }: { svg: React.RefObject<SVGSVGElem
                   <span className={'face ' + pick}><img src={facePhoto(pick)} alt="" /></span>
                   <span className="t">
                     <b>{race[pick]}</b>
-                    <small>{race.stateName} · {auto ? `Picked by ${AUTO_NAME[auto]}` : PARTY[pick]}</small>
+                    <small>{race.stateName} · {auto ? AUTO_BY[auto] : PARTY[pick]}</small>
                   </span>
                   <span className="ck"><Icon name="check" size={11} stroke={2.8} /></span>
                 </>

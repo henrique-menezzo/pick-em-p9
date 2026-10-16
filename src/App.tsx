@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'motion/react';
 import { popIn } from './lib/motion';
 import { ALL, RESULTS, TAB_LABEL, TABS, T_MAX, clock, statusAt } from './data/races';
-import { AUTO_NAME, CONTINUING, LOCK_AT, isLocked, liveScore, useStore, type AutoSource } from './lib/store';
+import { AUTO_FROM, AUTO_NAME, CONTINUING, LOCK_AT, isLocked, liveScore, useStore, type AutoSource } from './lib/store';
 import DotMap from './components/DotMap';
 import DotGrid from './components/DotGrid';
 import Palette from './components/Palette';
@@ -542,7 +542,7 @@ export function Actions() {
   );
 }
 
-/** Autofill offers the two sources by name: DDHQ's polling data, or Polymarket. */
+/** Autofill offers two ways to fill a part: Polymarket's favourite in each race, or a coin flip. */
 export function AutofillButton() {
   const tab = useStore((s) => s.tab);
   const autofill = useStore((s) => s.autofill);
@@ -563,10 +563,10 @@ export function AutofillButton() {
   // what Autofill has filled in this part, and from where (one source per part: running it again swaps it)
   const filled = RACES[tab].filter((r) => picks[r.id] && auto[r.id]);
   const using = filled.length ? auto[filled[0].id] : null;
-  const opts: [AutoSource, string][] = [['polls', 'The polling favourite in each race'], ['market', 'The market favourite in each race']];
+  const opts: [AutoSource, string][] = [['market', 'The market favourite in each race'], ['random', 'A coin flip in each race']];
   return (
     <div className="autofill">
-      <Tip text="Fill the races you have not picked, from DDHQ polling data or from Polymarket.">
+      <Tip text="Fill the races you have not picked, from Polymarket or at random.">
         <button className="btn" onClick={() => setOpen(!open)} disabled={isLocked()} aria-expanded={open}>
           <Icon name="wand" size={18} stroke={1.8} />
           Autofill<span className="af-cat"> {TAB_LABEL[tab]}</span>
@@ -578,13 +578,13 @@ export function AutofillButton() {
           <motion.div className="autofill-menu" {...popIn}>
             <p className="af-scope">
               {using
-                ? <>{filled.length} {TAB_LABEL[tab]} {filled.length === 1 ? 'race is' : 'races are'} filled from {AUTO_NAME[using]}. Pick the other source to swap them. Your own picks always stay.</>
+                ? <>{filled.length} {TAB_LABEL[tab]} {filled.length === 1 ? 'race is' : 'races are'} filled {AUTO_FROM[using]}. Pick the other option to swap them. Your own picks always stay.</>
                 : <>Fills the {TAB_LABEL[tab]} races you have not picked. Your own picks always stay.</>}
             </p>
             {opts.map(([k, sub]) => (
               <button key={k} className={using === k ? 'af-on' : undefined} onClick={() => pick(k)}>
-                <b>{k === 'polls' ? 'Polling data · DDHQ' : 'Polymarket'}</b>
-                <small>{using === k ? 'In use' : sub}</small>
+                <b>{AUTO_NAME[k]}</b>
+                <small>{using === k ? (k === 'random' ? 'In use · pick again to reshuffle' : 'In use') : sub}</small>
                 {using === k && <span className="af-ck" aria-hidden><Icon name="check" size={14} stroke={2.6} /></span>}
               </button>
             ))}

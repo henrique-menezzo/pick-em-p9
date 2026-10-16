@@ -1,6 +1,6 @@
 import { RESULTS, statusAt, clock, type Race, type Side } from '../data/races';
 import { useEffect, useRef, useState } from 'react';
-import { AUTO_NAME, useStore } from '../lib/store';
+import { AUTO_BY, useStore } from '../lib/store';
 
 export const PARTY: Record<Side, string> = { R: 'Republican', D: 'Democrat' };
 
@@ -103,13 +103,13 @@ export function CandidateRow({ race, side, advance }: { race: Race; side: Side; 
   const off = !!pick && !on;
   // the pick came from Autofill: the candidate it chose says by whom, in place of the party (the face
   // and the check already carry the party's colour)
-  const af = on && auto ? AUTO_NAME[auto] : null;
+  const af = on && auto ? AUTO_BY[auto] : null;
   return (
     <button className={`cand ${side === 'R' ? 'r' : 'd'} ${on ? 'on' : ''} ${off ? 'off' : ''}${af ? ' af' : ''}`} onClick={() => toggle(race.id, side, { advance })}>
       <Face side={side} />
       <span className="t">
         <span className="n">{name}</span>
-        <span className="p">{af ? <span className="af-from"><Icon name="wand" size={12} stroke={2} />Picked by {af}</span> : PARTY[side]}</span>
+        <span className="p">{af ? <span className="af-from"><Icon name="wand" size={12} stroke={2} />{af}</span> : PARTY[side]}</span>
       </span>
       {on && <span className="ck on"><Icon name="check" size={12} stroke={2.8} /></span>}
     </button>

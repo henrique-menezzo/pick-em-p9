@@ -1,25 +1,14 @@
 // The Midterms' own branding on the game (P10, option 42, chosen Oct 11): Presented by, the name and the
-// brand's line over the game, the brand's wave (TV - 1) beside them, alive the way the opening is.
+// brand's line over the game, the brand's wave (TV - 1, animated) beside them, the same as the opening's.
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import '@fontsource/libre-franklin/400-italic.css';
 import './brand.css';
+import { drawWave } from './WaveAnim';
 
-/** The brand's wave, from the branding team's "TV - 1" frame (Figma 461:9950): each capsule's centre,
-    width, height and colour, in the frame's own pixels (1280 × 720, the row centred on y 359.5). */
-const TV1: [number, number, number, string][] = [
-  [-2.7, 60.5, 72.3, '#01CEFB'], [85.2, 60.5, 109.4, '#006EFF'], [173.1, 60.5, 168.0, '#0017A3'], [297.6, 143.6, 206.1, '#001B7E'],
-  [413.3, 60.5, 261.7, '#17075D'], [505.8, 97.2, 394.5, '#33003B'], [590.5, 58.6, 469.7, '#65003A'], [661.1, 88.4, 239.7, '#99003B'],
-  [740.0, 69.3, 321.3, '#CC003B'], [791.0, 32.7, 562.5, '#FC002C'], [879.6, 144.5, 209.0, '#FC002C'], [1002.2, 100.6, 100.6, '#99003B'],
-  [1066.1, 36.1, 36.1, '#01CEFB'], [1123.3, 78.1, 78.1, '#0F45DB'], [1184.3, 55.7, 55.7, '#0017A3'], [1256.6, 46.9, 46.9, '#001B7E'],
-];
-/** After the opening (Intro.tsx): until `hold` every wave on the page stays at rest, the frame exactly
-    as drawn, then a ripple runs through it and its swell eases in. */
-export const intro = { hold: 0 };
-
-/** The brand's wave (TV - 1), the whole row in its box, a slow swell running through it (the frame as
- *  drawn with reduced motion, or while the opening still holds it). anchor: where the row sits when the
- *  box is wider than it (0 the start, .5 the middle, 1 the end). */
-export function Wave({ className = '', period = 4200, anchor = 0.5 }: { className?: string; period?: number; anchor?: number }) {
+/** The brand's wave, animated (WaveAnim.ts), as large as it fits in its box. `anchor`: where it sits
+ *  when the box is wider than it (0 the start, .5 the middle, 1 the end). Still, on its first frame,
+ *  with reduced motion. */
+export function Wave({ className = '', anchor = 0.5 }: { className?: string; anchor?: number }) {
   const cvs = useRef<HTMLCanvasElement>(null);
   const [size, setSize] = useState<{ w: number; h: number } | null>(null);
   useLayoutEffect(() => {
@@ -38,41 +27,16 @@ export function Wave({ className = '', period = 4200, anchor = 0.5 }: { classNam
     el.width = Math.round(size.w * dpr);
     el.height = Math.round(size.h * dpr);
     const g = el.getContext('2d')!;
-    // the whole row in the box, as large as it fits, with room above and below for the swell
-    const lo = Math.min(...TV1.map(([x, w]) => x - w / 2)), hi = Math.max(...TV1.map(([x, w]) => x + w / 2));
-    const len = hi - lo, tall = Math.max(...TV1.map(([, , h]) => h));
-    const k = Math.min(el.width / len, el.height / (tall * 1.18));
-    const o = (el.width - len * k) * anchor - lo * k;
-    // each capsule where it sits (p, along the row), its size, and f, its place in the row for the swell
-    const bars = TV1.map(([x, w, h, c]) => ({ p: o + x * k, w: w * k, h: h * k, c, round: h <= w + 0.5, f: (x - lo) / len }));
-    const mid = el.height / 2;
-    const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const hmax = Math.max(...bars.map((b) => b.h));
-    // amp: how much of the swell shows, 0 while the opening still holds the waves at rest.
-    // since: how long ago the opening's row landed here; for a moment after, one ripple runs through
-    // the wave from left to right, the landing felt, before the slow swell takes over
-    const draw = (t: number, amp: number, since = -1) => {
+    const paint = (now: number | null) => {
       g.clearRect(0, 0, el.width, el.height);
-      for (const b of bars) {
-        const ph = amp * Math.sin(2 * Math.PI * (t / period - b.f));
-        // (the short capsules jump the most; the tallest stays inside the room its box keeps for it)
-        const rip = since >= 0 && since < 1600 ? 0.42 * (1 - 0.65 * (b.h / hmax)) * Math.exp(-(((since - 60 - b.f * 560) / 130) ** 2)) : 0;
-        const w = b.round ? b.w * (1 + 0.06 * ph + 0.35 * rip) : b.w;
-        const h = b.round ? b.h * (1 + 0.06 * ph + 0.35 * rip) : Math.max(w, b.h * (1 + 0.16 * ph + rip));
-        const r = Math.min(w, h) / 2;
-        g.fillStyle = b.c;
-        g.beginPath();
-        g.roundRect(b.p - w / 2, mid - h / 2, w, h, r);
-        g.fill();
-      }
+      drawWave(g, now, { x: 0, y: 0, w: el.width, h: el.height }, anchor);
     };
-    if (still) { draw(0, 0); return; }
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) { paint(null); return; }
     let raf = 0;
-    const t0 = performance.now();
-    const frame = (now: number) => { draw(now - t0, Math.min(1, Math.max(0, (now - intro.hold - 500) / 1100)), intro.hold ? now - intro.hold : -1); raf = requestAnimationFrame(frame); };
+    const frame = (now: number) => { paint(now); raf = requestAnimationFrame(frame); };
     raf = requestAnimationFrame(frame);
     return () => cancelAnimationFrame(raf);
-  }, [size, period, anchor]);
+  }, [size, anchor]);
   return <canvas ref={cvs} className={'bw ' + className} aria-hidden />;
 }
 

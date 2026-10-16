@@ -1078,10 +1078,11 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .intro.leaving .intro-bg { opacity: 0; }
 .intro-mark { --cw: min(760px, 58vw); position: relative; display: flex; flex-direction: column; align-items: center; }
 .intro-mark canvas { width: var(--cw); display: block; }
-.intro-line { margin: calc(var(--cw) * -0.04) 0 0; width: max-content; max-width: 90vw; transform-origin: 0 0; font-size: 20px; line-height: 1.35; text-align: center; color: var(--p9-soft, #8f8f8f); }
+/* the line as the branding team's asset sets it: the first sentence red and bold, the question blue */
+.intro-line { margin: calc(var(--cw) * .035) 0 0; width: max-content; max-width: 90vw; transform-origin: 0 0; font-size: 20px; line-height: 1.35; text-align: center; color: #006eff; }
 .intro-line .iw { display: inline-block; margin-right: .26em; }
 .intro-line .iw:last-child { margin-right: 0; }
-.intro-line .iw.b { font-weight: 600; color: var(--p9-ink, #fafafa); }
+.intro-line .iw.b { font-weight: 600; color: #fb1616; }
 @media (max-width: 760px) { .intro-mark { --cw: 82vw; } .intro-line { font-size: 15px; white-space: nowrap; } }
 /* while the opening's row and line are in the air, the page's own wait out of sight */
 .intro svg { overflow: visible; }
