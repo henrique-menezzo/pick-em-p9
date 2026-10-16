@@ -627,6 +627,12 @@ function Pct({ v, n, cls = '' }: { v: number; n: number; cls?: string }) {
   return <span className={'p8-pct num ' + cls}>{Math.round(shown)}<small>%</small></span>;
 }
 
+/** Under each part of the bar, its name and how much of it is filled: "Senate · 40%". */
+function SegLabel({ k, v, n }: { k: Tab; v: number; n: number }) {
+  const shown = useTween(pct(v, n));
+  return <span style={{ flexGrow: n }}>{TAB_LABEL[k]}<span aria-hidden> · </span><span className="num">{Math.round(shown)}%</span></span>;
+}
+
 /** The whole map in one number, over the board. */
 function BoardHead({ head }: { head: Head }) {
   const s = useTotal();
@@ -652,7 +658,7 @@ function BoardHead({ head }: { head: Head }) {
       <div className="p8-seg-bar" role="img" aria-label={parts.map((p) => `${TAB_LABEL[p.k]} ${p.done} of ${p.n}`).join(', ')}>
         {parts.map((p) => <span key={p.k} style={{ flexGrow: p.n }}><i style={{ width: pct(live ? p.right : p.done, p.n) + '%' }} /></span>)}
       </div>
-      <div className="p8-seg-lbl">{parts.map((p) => <span key={p.k} style={{ flexGrow: p.n }}>{TAB_LABEL[p.k]}</span>)}</div>
+      <div className="p8-seg-lbl">{parts.map((p) => <SegLabel key={p.k} k={p.k} v={live ? p.right : p.done} n={p.n} />)}</div>
     </div>
   );
   return null;

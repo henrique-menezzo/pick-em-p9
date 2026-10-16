@@ -336,7 +336,7 @@
 .p8-seg-bar span { flex-basis: 0; border-radius: 4px; background: var(--s3); overflow: hidden; }
 .p8-seg-bar i { display: block; height: 100%; background: var(--fg); border-radius: 4px; transition: width .4s cubic-bezier(.2, 0, 0, 1); }
 .p8-seg-lbl { display: flex; gap: 3px; font-size: 11px; color: var(--t3); }
-.p8-seg-lbl span { flex-basis: 0; }
+.p8-seg-lbl > span { flex-basis: 0; min-width: 0; white-space: nowrap; }
 
 /* a bar under each row */
 .p8-rowbar { display: block; height: 3px; border-radius: 3px; background: var(--s3); overflow: hidden; }
